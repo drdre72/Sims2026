@@ -1,0 +1,44 @@
+# --- Python ---
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# --- Bundled portable runtimes (re-fetch per README.md, do not commit) ---
+# Each is a large vendor binary; the lab is reproducible without them in git.
+# Logisim Evolution 5.0.0 + bundled Java 21
+logisim/
+# Ripes 2.3.1 portable Qt build
+ripes/
+# GTKWave install tree
+tools/gtkwave64/
+# GTKWave archive
+tools/gtkwave-*.zip
+
+# --- HDL / sim build artifacts ---
+# Waveforms and netlist dumps are regenerated from source; do not commit.
+*.vcd
+*.fst
+*.ghw
+*.vvp
+*.out
+build/
+# Yosys/Amaranth netlist JSON (regenerated); NOT *.ipynb (notebooks are source).
+/*.json
+build/*.json
+*_netlist.json
+top.json
+# Keep ipynb checkpoints out, but keep the notebooks themselves.
+.ipynb_checkpoints/
+
+# --- Yosys scripts need LF endings (see README gotchas) ---
+# (no ignore rule; just a reminder — save .ys as LF)
+
+# --- Jupyter ---
+# (notebooks/*.ipynb ARE committed; only checkpoints are excluded, handled above)
+
+# --- OS cruft ---
+Thumbs.db
+Desktop.ini
+.DS_Store
