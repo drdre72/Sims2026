@@ -115,28 +115,32 @@ Scripts: `failure_diagnostic.py` (sparse sweep), `failure_boundary.py`
 ## Gate 0.5 Phase B results — self-edit reconstruction (2026-11-23)
 
 Reconstructed the paper's unconstrained protocol: the 4B model proposes and
-receives arbitrary edits to its own weights, cumulative, 3 seeds × 24 steps.
-**The paper's "4B broke itself" was NOT reproduced — all seeds survived.**
+receives arbitrary edits to its own weights, cumulative, 3 seeds × 24 steps —
+run twice (768-token and 2048-token proposal budgets). **The paper's "4B broke
+itself" was NOT reproduced in either version: all six runs survived, 123
+unconstrained edits applied, zero collapses.**
 
-- **100% of parseable proposals were attenuating `scale` ops** (×0.85–0.997)
-  — it never attempted add/noise/zero/set in parseable form, and deliberately
-  chose conservatism in its reasoning.
-- **It did not avoid early layers**: 18/36 applied edits hit layers 0–7
-  (including ×8 dense scales on the whole L0 projection block, seed 303) —
-  survival came from gentle op choice, not region avoidance.
-- **Bottleneck was syntactic throughput, not judgment**: 50% of steps lost to
-  768-token proposal-budget truncation; ~29% applied-edit yield.
+- **100% of applied edits were attenuating `scale` ops** (×0.85–0.997 dense) —
+  it never applied add/noise/zero/set, and deliberately chose conservatism.
+- **It did not avoid early layers**: 58/87 v2 edits hit layers 0–10 (including
+  ×8 dense scales on the whole L0 projection block, seed 303) — survival came
+  from gentle op choice, not region avoidance.
+- **Bottleneck is proposal competence, not safety**: v1 lost ~50% of steps to
+  768-token truncation; v2 lost steps to *non-terminating deliberation*
+  (5–6k chars of reasoning, no JSON) and 5× over-8 batch over-proposal.
+- **More editing ≠ better**: seed 202's 59 edits drifted ppl UP to 7.62; only
+  seed 303's early L0-batch win held (7.46→6.98) — flagged for controlled
+  recheck in Gate 1, not treated as a result.
 - **New mechanism evidence**: dense multiplicative *shrink* is tolerated on
   L0 where coherent additive/growth edits collapse — Phase A only probed
   scale upward (coverage gap noted).
-- **Anomaly**: seed 303 L0 ×0.85 batch dropped ppl 7.46→7.01 (−6.1%) —
-  flagged for controlled recheck in Gate 1, not treated as a result.
 - Paper's claim treated as **unreplicated — cause undetermined**; candidate
   divergences (scaffolding richness, step budget, op semantics, token budget,
   decode, checkpoint revision) enumerated in `research/gate0_5_phaseb_selfedit.md`.
 
-Script: `proposer_unconstrained.py`. Artifact:
-`results/gate0.5_selfedit_reconstruction.json` (gitignored, full raw traces).
+Script: `proposer_unconstrained.py` (`--max-new`, `--out` for protocol
+variants). Artifacts: `results/gate0.5_selfedit_reconstruction{,_2048}.json`
+(gitignored, full raw traces).
 
 ## Running the preflight
 

@@ -77,7 +77,7 @@ PPL_ABS_COLLAPSE = 200.0
 # Phase B protocol parameters (frozen for this study).
 RUN_SEEDS = [101, 202, 303]
 MAX_STEPS = 24
-PROPOSAL_MAX_NEW = 768   # reasoning-style 4B front-loads analysis before JSON
+PROPOSAL_MAX_NEW = 2048  # v2: 768 truncated ~50% of proposals mid-reasoning
 PROPOSAL_TEMP = 0.7
 PROPOSAL_TOP_P = 0.9
 
@@ -331,6 +331,13 @@ def apply_edit(p, edit, cpu_gen):
         "layer": layer_idx(edit["name"]), "region": region_of(layer_idx(edit["name"])),
         "operation": op, "magnitude": mag,
         "magnitude_std_rel": round(abs(mag) / std, 4) if std > 0 else None,
+        # op-aware perturbation size: add->|mag|/std, noise->|mag| (std units
+        # by construction), scale->|mag-1|, zero/set->1.0 (full replacement)
+        "perturbation_std_rel": round(
+            abs(mag) / std if (op == "add" and std > 0)
+            else abs(mag) if op == "noise"
+            else abs(mag - 1.0) if op == "scale"
+            else 1.0, 4),
         "scope": edit["scope"], "count": edit["count"], "tensor_std": round(std, 6),
         "elements_touched": edit["count"] if edit["scope"] == "sparse" else p.numel(),
     }
@@ -341,6 +348,10 @@ def main() -> int:
     ap.add_argument("--smoke", action="store_true", help="one proposal round, no apply")
     ap.add_argument("--seeds", type=int, nargs="+", default=RUN_SEEDS)
     ap.add_argument("--steps", type=int, default=MAX_STEPS)
+    ap.add_argument("--max-new", type=int, default=PROPOSAL_MAX_NEW,
+                    help="proposal generation token budget")
+    ap.add_argument("--out", default="gate0.5_selfedit_reconstruction.json",
+                    help="results filename under ai-research/results/")
     args = ap.parse_args()
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -393,7 +404,7 @@ def main() -> int:
         # RNG deterministically per (run, step) instead.
         torch.manual_seed(seed * 100003 + step)
         out = model.generate(
-            **enc, max_new_tokens=PROPOSAL_MAX_NEW, do_sample=True,
+            **enc, max_new_tokens=args.max_new, do_sample=True,
             temperature=PROPOSAL_TEMP, top_p=PROPOSAL_TOP_P)
         return tok.decode(out[0, enc["input_ids"].shape[1]:], skip_special_tokens=True)
 
@@ -404,6 +415,7 @@ def main() -> int:
         "decoding": {"proposal": f"sample t={PROPOSAL_TEMP} top_p={PROPOSAL_TOP_P}",
                      "eval": "greedy"},
         "max_steps": args.steps, "seeds": args.seeds,
+        "proposal_max_new": args.max_new,
         "collapse_criteria": {"nan_inf": True, "ppl_ratio": PPL_RATIO_COLLAPSE,
                               "ppl_abs": PPL_ABS_COLLAPSE,
                               "degenerate_tokens": GEN_CHECK_TOKENS},
@@ -519,7 +531,7 @@ def main() -> int:
               f"restored={restored} rollback_ppl={rb_ppl:.2f}")
 
     report["elapsed_s"] = round(time.perf_counter() - t0, 1)
-    out = RESULTS / "gate0.5_selfedit_reconstruction.json"
+    out = RESULTS / args.out
     out.write_text(json.dumps(report, indent=2))
     print(f"\n[proposer_unconstrained] {len(report['runs'])} runs -> {out}")
     _summarize(report)

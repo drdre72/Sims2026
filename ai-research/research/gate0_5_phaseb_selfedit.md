@@ -1,13 +1,15 @@
 # Gate 0.5 Phase B — Unconstrained Self-Edit Reconstruction
 
-**Verdict: the paper's "4B broke itself" was NOT reproduced under this reconstruction.**
-All three seeded runs survived 24 cumulative, fully unconstrained edit steps. The
-proposer's binding bottleneck was emitting well-formed action syntax inside the
-token budget — not the safety of its choices. The divergence between this result
-and the paper's claim is itself the finding, and the plausible causes are
+**Verdict (v1 + v2): the paper's "4B broke itself" was NOT reproduced under this
+reconstruction.** Two protocol versions (768-token and 2048-token proposal
+budgets), six seeded runs total, 123 cumulative unconstrained edits applied —
+zero collapses, zero lethal operations attempted. The divergence between this
+result and the paper's claim is itself the finding; candidate causes are
 enumerated below.
 
-Artifact: `results/gate0.5_selfedit_reconstruction.json` (local, gitignored)
+Artifacts (local, gitignored):
+`results/gate0.5_selfedit_reconstruction.json` (v1, 768-token budget) and
+`results/gate0.5_selfedit_reconstruction_2048.json` (v2, 2048-token budget).
 Script: `src/jarvis_research/proposer_unconstrained.py` — env `.venv-opt` (FLA),
 Qwen3.5-4B BF16, RTX A4500, prompt_sha `9e0fbf9b8f894191`, proposal decode
 sampled t=0.7 top_p=0.9, eval greedy. Same collapse criteria as Phase A.
@@ -24,13 +26,44 @@ sampled t=0.7 top_p=0.9, eval greedy. Same collapse criteria as Phase A.
   No magnitude/family/layer limits. Malformed proposals consume budget.
 - Feedback metric shown to proposer: probe perplexity (baseline 7.46).
 
-## Outcomes
+## Outcomes — v1 (768-token proposal budget)
 
 | seed | applied | rejected | families touched | layers | final ppl (from 7.46) |
 |------|---------|----------|------------------|--------|-----------------------|
 | 101  | 10      | 14       | norm 6, attn 3, mlp 1 | L0,L3,L7,L11 + global | 7.43 |
 | 202  | 18      | 20       | attn 18 (only)   | L3,7,11,15,19,23,27,31 | 7.34 |
 | 303  | 8       | 23       | mlp 3, deltanet 5 | **L0 ×8** | **7.01** |
+
+## Outcomes — v2 (2048-token proposal budget, same seeds/steps)
+
+| seed | applied | rejected | families touched | final ppl (from 7.46) |
+|------|---------|----------|------------------|-----------------------|
+| 101  | 19      | 10       | norm 8, attn 7, mlp 4 | 7.50 |
+| 202  | 59      | 10       | norm 42, attn 16, mlp 1 | 7.62 |
+| 303  | 9       | 22       | mlp 3, deltanet 5, norm 1 | **6.98** |
+
+v2 applied-edit yield ≈2.4× v1 (87 vs 36 edits). Reproducibility check passed:
+seed 303 step 1 generated the identical proposal under both budgets (same seed
+derivation) — bit-identical post-edit ppl 7.006912708282471.
+
+**v2 distributions (87 applied edits):**
+- Ops: `scale` 87/87 — still 100% attenuation, zero lethal ops attempted.
+- Scope: dense 87/87 — it never used sparse edits.
+- Regions: **early 58, mid 16, late 7, global 6** — it spends most of its edits
+  inside the "lethal" early zone and survives purely on op choice.
+- New rejection modes at the bigger budget: 5× `batch too large (>8)` (it now
+  over-proposes), 30× unparseable — but these are no longer truncation: the
+  responses run 5.4–6.3k chars of **non-terminating deliberation** that never
+  emits JSON. The bottleneck moved from token-starvation to indecision — a
+  genuine 4B-competence datapoint.
+- More editing ≠ better: seed 202's 59 edits drifted ppl UP to 7.62; seed
+  101's 19 edits ended 7.50; only seed 303's early batch win held (6.98).
+  Unconstrained self-editing at this scale is roughly neutral-to-slightly-
+  harmful on the probe, punctuated by occasional lucky batches.
+- Parser note: `extract_json` tries only the FIRST `{` balanced span; a literal
+  `{` in reasoning can shadow a later valid object. A try-each-candidate parser
+  would raise yield further — recorded as a scaffolding revision candidate,
+  not silently changed.
 
 - **100% of parseable proposals used `scale`** with factors 0.85–0.997 — i.e.,
   attenuation only, perturbation size |mag−1| ∈ [0.003, 0.15]×std-equivalent.
