@@ -42,6 +42,7 @@ top.json
 ai-research/results/
 ai-research/data/
 ai-research/.venv/
+ai-research/.venv-opt/
 # Model download caches (HF cache, etc.)
 models/
 *.gguf

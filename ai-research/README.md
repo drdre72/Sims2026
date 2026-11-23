@@ -10,6 +10,7 @@ into the existing environment.
 ```
 ai-research/
   .venv/            # ignored; PyTorch 2.8.0+cu128, transformers 5.24.0
+  .venv-opt/        # ignored; same base + triton-windows + fla-core (FLA path)
   locks/            # frozen package manifests
   research/         # ROADMAP, preregistration, literature, reviewer log
   schemas/          # proposal/observation/checkpoint JSON schemas
@@ -43,8 +44,61 @@ rather than assuming optimized kernels.
 
 **Full report:** `results/gate0_hardware.json` (gitignored, local-only).
 
+## Gate 0.1 results — kernel A/B (2026-11-23)
+
+A/B compared the pure-PyTorch fallback (`.venv`) against a
+FLA-accelerated path (`.venv-opt`) on identical weights, prompts,
+greedy seeds.
+
+**Working native-Windows accelerated combination (verified):**
+`torch 2.8.0+cu128` + `transformers 5.24.0` + `triton-windows 3.9.0`
++ `fla-core 0.6.0`, Python 3.11, RTX A4500 (CC 8.6). triton-windows
+JIT-compiles kernels on this GPU. This resolves the roadmap's
+"do not assume native Windows support" concern with a concrete,
+tested combination.
+
+| Metric | Fallback | Accelerated (FLA) |
+|---|---|---|
+| fla delta-rule engaged | no | yes (chunk ×432, recurrent ×25704) |
+| determinism (5-run identical) | true | true |
+| edit/rollback bit-exact | true | true |
+| recurrent-state isolation | true | true |
+| peak VRAM | 8.296 GB | 8.288 GB |
+| tok/s — 128 / 512 / 1024 | 12.23 / 11.95 / 11.36 | 14.13 / 14.06 / 13.82 |
+
+**Speedup ~1.18x.** Below the 1.5x bar, but adopted anyway: the
+speedup carries *zero numerical cost* (all correctness invariants
+hold) and `.venv-opt` is already built — it is free throughput, not
+a fast-but-divergent kernel.
+
+**Decision: FLA is the measured default for Gate 0.5+.** The fallback
+`.venv` stays frozen as a reference path for cross-checks.
+
+**`causal_conv1d` — deferred.** Ships source-only (no wheels); needs
+`nvcc` + MSVC `cl.exe`, neither installed. It runs every decode step
+on all 24 DeltaNet layers, so it's the real residual bottleneck and
+the lever worth ~2-3x if pursued. Deferred: requires installing CUDA
+toolkit + VS Build Tools (~6-8 GB, invasive). Revisit if a study
+proves throughput-bound.
+
+**Full report:** `results/kernel_ab_{fallback,accelerated}.json`
+(gitignored, local-only). Script: `src/jarvis_research/kernel_ab.py`.
+
 ## Running the preflight
 
 ```powershell
 PYTHONPATH=ai-research/src ai-research\.venv\Scripts\python.exe ai-research\src\jarvis_research\preflight.py
 ```
+
+## Running the kernel A/B
+
+Two isolated envs; the only variable is the interpreter.
+
+```powershell
+# A — pure-PyTorch fallback (committed baseline path)
+ai-research\.venv\Scripts\python.exe ai-research\src\jarvis_research\kernel_ab.py --mode fallback
+# B — FLA-accelerated (Gate 0.5+ default)
+ai-research\.venv-opt\Scripts\python.exe ai-research\src\jarvis_research\kernel_ab.py --mode accelerated
+```
+
+Each writes `ai-research/results/kernel_ab_<mode>.json` (gitignored).
