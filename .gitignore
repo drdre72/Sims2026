@@ -38,6 +38,15 @@ top.json
 # --- Jupyter ---
 # (notebooks/*.ipynb ARE committed; only checkpoints are excluded, handled above)
 
+# --- ai-research (per ROADMAP_v1.2: results/data/models are local-only) ---
+ai-research/results/
+ai-research/data/
+ai-research/.venv/
+# Model download caches (HF cache, etc.)
+models/
+*.gguf
+*.safetensors
+
 # --- OS cruft ---
 Thumbs.db
 Desktop.ini
