@@ -84,6 +84,34 @@ proves throughput-bound.
 **Full report:** `results/kernel_ab_{fallback,accelerated}.json`
 (gitignored, local-only). Script: `src/jarvis_research/kernel_ab.py`.
 
+## Gate 0.5 Phase A results — failure surface (2026-11-23)
+
+Mapped where Qwen3.5-4B collapses under weight edits. **Key finding:
+the failure axis is coherence × position, not magnitude.**
+
+- **Sparse scalar edits never collapse** (0/136 probes): ≤512 scalars,
+  any family/region, up to 1.0×std / 0.5 absolute — all safe.
+- **Coherent/dense edits collapse** at family+layer-specific thresholds.
+- **Layer 0 is uniquely lethal** — a coherent +0.013 shift to
+  `linear_attn.conv1d`/`out_proj` explodes perplexity (7.5 → 1500+).
+  Fragility decays steeply with depth; mid/late layers robust.
+- **`dt_bias`/`A_log` (recurrence) are the MOST robust family** — never
+  collapsed, even under full zeroing or 128-step accumulation.
+- **Collapse = perplexity explosion**, not NaN — the failure is a
+  quality collapse; needs a ppl/degeneracy guard, not just NaN checks.
+
+**Derived Gate 1 surface:** sparse scalar additive edits only, ≤512
+scalars, |delta| ≤0.5 abs/×std, layers 11–31 only, whitelist
+{recurrence, mlp, deltanet_proj, attention}, forbid embedding/lm_head/
+norms. See `research/gate0_5_taxonomy.md` + `schemas/proposal.schema.json`.
+
+**Tension to note:** the provably-safe surface is likely low-leverage;
+leverage lives where it's fragile (early/coherent). Gate 1 tests whether
+the constraint lands "safe null" (outcome b).
+
+Scripts: `failure_diagnostic.py` (sparse sweep), `failure_boundary.py`
+(escalation). Artifacts: `results/gate0.5_*.json` (gitignored).
+
 ## Running the preflight
 
 ```powershell

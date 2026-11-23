@@ -1,0 +1,76 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "jarvis_research/proposal.schema.json",
+  "title": "Gate 1 constrained weight-edit proposal",
+  "comment": "Whitelist derived from gate0_5_taxonomy.md (Phase A evidence). The constraint forbids exactly the observed failure modes: coherent/dense ops, early layers, embedding/output tensors. Sparse scalar additive edits on mid/late layers were the only probe class that never collapsed (0/136).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "family",
+    "layers",
+    "operation",
+    "delta",
+    "rationale",
+    "predicted_effect"
+  ],
+  "properties": {
+    "family": {
+      "type": "string",
+      "description": "Tensor family to edit. Embedding/output and norm tensors are forbidden (catastrophic at input boundary; see taxonomy).",
+      "enum": [
+        "linear_attn.dt_bias",
+        "linear_attn.A_log",
+        "linear_attn.in_proj_qkv",
+        "linear_attn.in_proj_z",
+        "linear_attn.in_proj_b",
+        "linear_attn.in_proj_a",
+        "linear_attn.out_proj",
+        "self_attn.q_proj",
+        "self_attn.k_proj",
+        "self_attn.v_proj",
+        "self_attn.o_proj",
+        "mlp.gate_proj",
+        "mlp.up_proj",
+        "mlp.down_proj"
+      ]
+    },
+    "layers": {
+      "type": "array",
+      "description": "Layer indices to edit. Early layers (0-10) are forbidden: input-boundary edits propagate catastrophically (taxonomy depth gradient).",
+      "items": { "type": "integer", "minimum": 11, "maximum": 31 },
+      "minItems": 1,
+      "maxItems": 21,
+      "uniqueItems": true
+    },
+    "operation": {
+      "type": "string",
+      "description": "Only sparse scalar additive edits are allowed. scale/zero/set ops collapse the model (taxonomy: coherent ops lethal).",
+      "const": "add_sparse"
+    },
+    "delta": {
+      "type": "number",
+      "description": "Additive scalar applied to each selected element. Bound by taxonomy: |delta| <= 0.5 absolute AND <= 0.5 x std of target tensor (whichever binds).",
+      "minimum": -0.5,
+      "maximum": 0.5
+    },
+    "scalar_count": {
+      "type": "integer",
+      "description": "Number of tensor elements to edit (sparse subset). 512-scalar edits never collapsed in the sweep; cap below the coherence risk.",
+      "minimum": 1,
+      "maximum": 512
+    },
+    "rationale": {
+      "type": "string",
+      "description": "Proposer's reasoning for this edit (for the autopsy log).",
+      "maxLength": 2000
+    },
+    "predicted_effect": {
+      "type": "string",
+      "description": "Proposer's predicted effect on the eval metric (recorded for predicted-vs-actual analysis).",
+      "maxLength": 1000
+    }
+  },
+  "safety_net": {
+    "comment": "Beyond schema validation, the harness must: (1) verify each edited tensor is on the whitelist at the given layers; (2) apply under torch.no_grad(); (3) run a post-edit perplexity + degeneracy probe; (4) auto-rollback and score as collapse if ppl > 5x baseline or output degenerates. Schema validity alone is not proof of safety."
+  }
+}
