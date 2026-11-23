@@ -112,6 +112,32 @@ the constraint lands "safe null" (outcome b).
 Scripts: `failure_diagnostic.py` (sparse sweep), `failure_boundary.py`
 (escalation). Artifacts: `results/gate0.5_*.json` (gitignored).
 
+## Gate 0.5 Phase B results — self-edit reconstruction (2026-11-23)
+
+Reconstructed the paper's unconstrained protocol: the 4B model proposes and
+receives arbitrary edits to its own weights, cumulative, 3 seeds × 24 steps.
+**The paper's "4B broke itself" was NOT reproduced — all seeds survived.**
+
+- **100% of parseable proposals were attenuating `scale` ops** (×0.85–0.997)
+  — it never attempted add/noise/zero/set in parseable form, and deliberately
+  chose conservatism in its reasoning.
+- **It did not avoid early layers**: 18/36 applied edits hit layers 0–7
+  (including ×8 dense scales on the whole L0 projection block, seed 303) —
+  survival came from gentle op choice, not region avoidance.
+- **Bottleneck was syntactic throughput, not judgment**: 50% of steps lost to
+  768-token proposal-budget truncation; ~29% applied-edit yield.
+- **New mechanism evidence**: dense multiplicative *shrink* is tolerated on
+  L0 where coherent additive/growth edits collapse — Phase A only probed
+  scale upward (coverage gap noted).
+- **Anomaly**: seed 303 L0 ×0.85 batch dropped ppl 7.46→7.01 (−6.1%) —
+  flagged for controlled recheck in Gate 1, not treated as a result.
+- Paper's claim treated as **unreplicated — cause undetermined**; candidate
+  divergences (scaffolding richness, step budget, op semantics, token budget,
+  decode, checkpoint revision) enumerated in `research/gate0_5_phaseb_selfedit.md`.
+
+Script: `proposer_unconstrained.py`. Artifact:
+`results/gate0.5_selfedit_reconstruction.json` (gitignored, full raw traces).
+
 ## Running the preflight
 
 ```powershell
