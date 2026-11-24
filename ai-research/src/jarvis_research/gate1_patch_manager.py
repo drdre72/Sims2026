@@ -77,13 +77,21 @@ def _tensor_std(p: torch.Tensor) -> float:
     """Std without materializing an fp32 copy of the tensor.
 
     ``.float().std()`` allocates 2x the bf16 size; for ~1 GB Arm B tensors
-    that transient alone can exhaust VRAM. ``mean``/``pow`` accumulate in
-    fp32 internally and only allocate O(1) extra memory.
+    that transient alone can exhaust VRAM. Accumulate sum/sumsq over
+    chunks in fp32 so auxiliary memory stays O(chunk), not O(numel).
     """
-    d = p.detach()
-    m = d.mean()
-    var = d.pow(2).mean() - m * m
-    return float(var.clamp_min(0).sqrt().item())
+    d = p.detach().reshape(-1)
+    total = 0.0
+    sumsq = 0.0
+    chunk = 1 << 22  # ~4M elements per chunk
+    n = d.numel()
+    for start in range(0, n, chunk):
+        part = d[start:start + chunk].float()
+        total += float(part.sum().item())
+        sumsq += float(part.pow(2).sum().item())
+    mean = total / n
+    var = max(sumsq / n - mean * mean, 0.0)
+    return math.sqrt(var)
 
 
 # Arm A bounds (sparse additive, mid/late layers).

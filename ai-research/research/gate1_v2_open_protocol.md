@@ -122,8 +122,10 @@ quality-guard baseline. Still exploratory — NOT confirmatory evidence.
   that the proposer prompt AND every control (random, fixed-heuristic,
   adaptive) draw from identically. Proposals reference tensors by integer
   `param_id`; controls may still use exact names. Arm A catalog: 192 entries;
-  Arm B: 248 entries (includes 12 `mtp.layers.0` tensors — noted as catalog
-  contamination to review, consistent across all conditions).
+  Arm B: 248 entries. (An earlier draft of this note claimed 12
+  `mtp.layers.0` entries; that was wrong — `mtp.*` weights are in
+  `_keys_to_ignore_on_load_unexpected` and never enter `named_parameters()`,
+  so the catalog is pure language-model parameters.)
 - **Interface metadata.** Catalog rows carry numel and per-tensor legal
   bounds, eliminating the trial-and-error class of rejections (e.g.
   count > numel). Compact row format `id|L|fam|n=..|m=cap|c<=N` keeps the
@@ -196,5 +198,7 @@ informative control (deterministic, unexplained).
    account/NTFS restrictions, grading-code integrity, one-time opening.
 4. Capability suite is a coarse retention screen (13 tasks); confirmatory
    needs broader coverage before any capability claim.
-5. Catalog contains 12 `mtp.layers.0` entries in Arm B — decide whether
-   MTP-draft parameters belong in the legal edit surface.
+5. ~~Catalog contains 12 `mtp.layers.0` entries in Arm B~~ — resolved:
+   `mtp.*` weights are ignored at load (`_keys_to_ignore_on_load_unexpected`)
+   and never enter the catalog; the 248 Arm B entries are all
+   language-model parameters.
