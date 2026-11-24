@@ -37,20 +37,24 @@ and numel apply).
 magnitude MUST be inside its legal range; count MUST be inside the arm-wide
 count range and <= numel (omit count for scale_dense).
 Respect earlier rejection feedback. An invalid response consumes a step.
+To deliberately make no change, return {"edits":[],"abstain":true} —
+abstention is a valid outcome.
 """
+# HZN-IR-04 §5: the abstention instruction lives in the BASE prompt so
+# every A-condition (A0/A1/A2) shares it — an A1-vs-A0 difference then
+# cannot be attributed to the instruction alone.
 PROMPT_OBS = PROMPT + (
-    "To deliberately make no change, return "
-    "{\"edits\":[],\"abstain\":true} — abstention is a valid outcome.\n"
-    "Observation columns ar/hr are within-family ranks in [0,1]: ar ranks "
-    "mean output activation scale on practice text; hr ranks the "
-    "eps-stabilized ratio of activation on high- vs low-loss practice "
-    "text. These are correlational measurements of the unmodified "
-    "checkpoint, not causal evidence.\n")
+    "Observation columns ar/lc: ar is the within-family rank in [0,1] "
+    "of mean output activation scale on practice text; lc is the "
+    "signed, eps-stabilized log of the ratio of activation on high- vs "
+    "low-loss practice text at 2-decimal precision. These are "
+    "correlational measurements of the unmodified checkpoint, not "
+    "causal evidence.\n")
 
 PROMPT_VERSION = hashlib.sha256(
     (PROMPT + "enable_thinking=False|catalog-v5-compact").encode()).hexdigest()
 PROMPT_VERSION_OBS = hashlib.sha256(
-    (PROMPT_OBS + "enable_thinking=False|catalog-v6-obs").encode()).hexdigest()
+    (PROMPT_OBS + "enable_thinking=False|catalog-v7-obs-parity").encode()).hexdigest()
 MAX_NEW = 512
 TEMPERATURE = 0.7
 TOP_P = 0.9
@@ -98,15 +102,18 @@ def _catalog_line(entry: dict, fam_code: dict, uniform_mag: bool,
     if "count_max" in entry and entry["count_max"] < 512:
         line += f"|c<={entry['count_max']}"
     if obs:
-        # Ranks only in the prompt: the raw act/hi/lo/hilo stats stay in
-        # the machine-readable catalog. Emitting all four obs columns
-        # pushed the catalog prompt to ~12k tokens (preflight, arm B) —
+        # Proposer-visible evidence columns (HZN-IR-04 R1): ar = within-
+        # family activation rank; lc = signed log-contrast at the same
+        # 2-decimal precision interp-v2 consumes, so the model and the
+        # conventional algorithm see a bit-identical contrast channel.
+        # Raw stats stay in the machine-readable catalog only — a wider
+        # prompt pushed the catalog to ~12k tokens on the first pass,
         # back inside the prefill envelope that OOM'd the first pilot.
         if entry.get("obs_available"):
             line += (f"|ar={entry['obs_act_rank']:.2f}"
-                     f"|hr={entry['obs_hilo_rank']:.2f}")
+                     f"|lc={entry['obs_log_contrast']:+.2f}")
         else:
-            line += "|ar=NA|hr=NA"
+            line += "|ar=NA|lc=NA"
     return line
 
 
@@ -152,19 +159,36 @@ class SelfProposer:
                                             uniform_mag, self.obs)
                                           for e in self.catalog))
 
-    def propose(self, seed, step, practice_ce, history):
+    def _user_text(self, step, practice_ce, history):
         arm = self.patch_manager.arm
-        user = (f"Arm: {arm['name']}; OP={arm['operation']}\n"
+        return (f"Arm: {arm['name']}; OP={arm['operation']}\n"
                 f"Practice CE: {practice_ce:.6f}\n"
                 f"Previous practice-only feedback: {json.dumps(history[-4:])}\n"
                 f"LEGAL CATALOG ({len(self.catalog)} entries):\n"
                 f"{self._catalog_text}")
+
+    def _encode(self, step, practice_ce, history):
+        """Build the fully serialized chat prompt (system + user)."""
+        arm = self.patch_manager.arm
         prompt = PROMPT_OBS if self.obs else PROMPT
-        encoded = self.tokenizer.apply_chat_template(
+        return self.tokenizer.apply_chat_template(
             [{"role": "system", "content": prompt.replace("OP", arm["operation"])},
-             {"role": "user", "content": user}],
+             {"role": "user", "content": self._user_text(
+                 step, practice_ce, history)}],
             add_generation_prompt=True, return_tensors="pt", return_dict=True,
             enable_thinking=False)
+
+    def serialized_prompt_tokens(self, step=0, practice_ce=0.0,
+                                 history=None) -> int:
+        """Token count of the COMPLETE serialized prompt — instructions,
+        template framing and history included (HZN-IR-04 §5): the
+        catalog-text-only figure underreports the real prefill cost.
+        """
+        encoded = self._encode(step, practice_ce, history or [])
+        return int(encoded["input_ids"].shape[1])
+
+    def propose(self, seed, step, practice_ce, history):
+        encoded = self._encode(step, practice_ce, history)
         device = next(self.model.parameters()).device
         encoded = {k: v.to(device) for k, v in encoded.items()}
         torch.manual_seed(seed * 100003 + step)

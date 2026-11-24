@@ -287,6 +287,20 @@ def main() -> int:
     ap.add_argument("--adaptive-step-divisor", type=int, default=1,
                     help="adaptive iterations = ceil(steps/divisor); use 2 for "
                          "practice-evaluation-budget matching vs autonomous")
+    ap.add_argument("--budget-mode", choices=("interventions", "seconds"),
+                    default="interventions",
+                    help="interventions: fixed proposal allocation per "
+                         "condition (intervention-matched comparison). "
+                         "seconds: every condition gets the same "
+                         "--compute-budget-seconds of measured stage "
+                         "time (compute-matched comparison; enables "
+                         "H-OBS.3)")
+    ap.add_argument("--compute-budget-seconds", type=float, default=None,
+                    help="per-condition measured-compute ceiling in "
+                         "seconds mode")
+    ap.add_argument("--max-steps", type=int, default=64,
+                    help="safety cap on proposals per condition in "
+                         "seconds mode")
     ap.add_argument("--out", default="gate1_pilot_v2.json")
     ap.add_argument("--resume", action="store_true",
                     help="skip candidates already present in --out")
@@ -319,6 +333,13 @@ def main() -> int:
         ap.error("--steps must be positive")
     if args.adaptive_pool < 1 or args.adaptive_step_divisor < 1:
         ap.error("adaptive knobs must be positive")
+    if args.max_steps < 1:
+        ap.error("--max-steps must be positive")
+    if args.budget_mode == "seconds" and (
+            args.compute_budget_seconds is None
+            or args.compute_budget_seconds <= 0):
+        ap.error("--budget-mode seconds requires "
+                 "--compute-budget-seconds > 0")
     data_dir = AI_RESEARCH / "data" / "gate1_eval_v3"
     ev = Evaluator.load(
         data_dir / "practice.json",
@@ -414,6 +435,12 @@ def main() -> int:
         "max_new": args.max_new,
         "adaptive_pool": args.adaptive_pool,
         "adaptive_step_divisor": args.adaptive_step_divisor,
+        # Budget is protocol: the matching regime belongs in the
+        # manifest hash so intervention-matched and compute-matched
+        # records can never be silently mixed by --resume (HZN-IR-04 R3).
+        "budget_mode": args.budget_mode,
+        "compute_budget_seconds": args.compute_budget_seconds,
+        "max_steps": args.max_steps if args.budget_mode == "seconds" else None,
         "conditions": sorted(args.conditions),
     }
     manifest["sha256"] = hashlib.sha256(
@@ -429,7 +456,17 @@ def main() -> int:
                "observation_seconds": round(obs_seconds, 2),
                "peak_vram_bytes": (torch.cuda.max_memory_allocated()
                                    if torch.cuda.is_available() else None)}
+        # HZN-IR-04 reconciliation: mtp.* checkpoint tensors are never
+        # instantiated in the CausalLM named_parameters — record the
+        # live count so "excluded from the edit surface" is verified,
+        # not assumed (the earlier 236-row figure was miscounted; the
+        # guard never had tensors to remove).
+        pre["named_parameters"] = len(params)
+        pre["mtp_params_in_named_parameters"] = sum(
+            "mtp" in n for n in params)
         if obs_block:
+            avail = [g for g in obs_block["groups"].values()
+                     if g.get("available")]
             pre["observation"] = {
                 "n_groups": len(obs_block["groups"]),
                 "n_unexecuted": sum(1 for g in obs_block["groups"].values()
@@ -437,6 +474,11 @@ def main() -> int:
                 "eps": obs_block["eps"],
                 "hi_passages": obs_block["hi_passages"],
                 "lo_passages": obs_block["lo_passages"],
+                # Separate hi/lo sample counts and variance (R4 audit).
+                "min_n_hi": min((g["n_hi"] for g in avail), default=0),
+                "min_n_lo": min((g["n_lo"] for g in avail), default=0),
+                "max_var_hi": max((g["var_hi"] for g in avail), default=0),
+                "max_var_lo": max((g["var_lo"] for g in avail), default=0),
                 "checkpoint": obs_block["checkpoint_sha256"],
             }
             pre["arms"] = {}
@@ -448,14 +490,35 @@ def main() -> int:
                 pm = PatchManager(model, tok, make_arm_config(a), seed=0)
                 pr = SelfProposer(model, tok, pm, args.max_new,
                                   catalog_override=ann, obs=True)
-                n_tok = len(tok(pr._catalog_text).input_ids)
+                pr_blind = SelfProposer(model, tok, pm, args.max_new,
+                                        catalog_override=catalogs[a],
+                                        obs=False)
+                # Parameter -> hook attribution: catalog params sharing
+                # one hooked module receive ONE shared observation, not
+                # independent evidence (HZN-IR-04 §5).
+                per_group: Dict[str, int] = {}
+                for r in ann:
+                    per_group[r["obs_group"]] = (
+                        per_group.get(r["obs_group"], 0) + 1)
                 pre["arms"][a] = {
                     "catalog_rows": len(ann),
                     "obs_unavailable_rows": n_un,
-                    "catalog_prompt_tokens": n_tok,
+                    "obs_groups": len(per_group),
+                    "shared_hook_groups": sum(
+                        1 for n in per_group.values() if n > 1),
+                    "max_params_per_group": (max(per_group.values())
+                                             if per_group else 0),
+                    # FULL serialized prompt (system + user + template),
+                    # not catalog text alone.
+                    "serialized_prompt_tokens": {
+                        "A0": pr_blind.serialized_prompt_tokens(),
+                        "A1": pr.serialized_prompt_tokens(),
+                    },
                     "shuffle_effective_coverage_seed0":
                         sh["effective_coverage"],
                     "n_groups_shuffled": sh["n_groups_shuffled"],
+                    "shuffle_permutation_recorded": bool(
+                        sh.get("permutation")),
                 }
         out = RESULTS / args.out
         out.write_text(json.dumps(pre, indent=2), encoding="utf-8")
@@ -509,13 +572,26 @@ def main() -> int:
         },
         "manifest": manifest,
         "observation_seconds": round(obs_seconds, 2),
+        # R3: whether this run ENFORCED a compute-matched allocation or
+        # only matched intervention counts. H-OBS.3 (interpretive
+        # advantage) is declared unresolved unless seconds mode ran —
+        # a descriptive flag, not a hypothesis test.
+        "compute_matching": ("enforced" if args.budget_mode == "seconds"
+                             else "not_enforced_intervention_matched_only"),
+        "h_obs_3_status": (
+            "addressable: compute-matched allocation enforced"
+            if args.budget_mode == "seconds"
+            else "unresolved in this run: intervention-matched only"),
         "compute_accounting": ("observation_seconds is the shared "
-                               "collection cost, attributed to obs-fed "
-                               "conditions via obs_amortized_seconds per "
-                               "candidate; per-candidate stage_seconds "
-                               "record proposal/validation/application/"
-                               "quality/practice/selection/regression/"
-                               "capability/rollback separately"),
+                               "collection cost, amortized over the "
+                               "benefiting candidate records at report "
+                               "finalization (sum of per-record "
+                               "obs_amortized_seconds == "
+                               "observation_seconds); per-candidate "
+                               "stage_seconds record proposal/validation/"
+                               "application/quality/practice/selection/"
+                               "regression/capability/rollback "
+                               "separately"),
         "candidates": [],
     }
     out = RESULTS / args.out
@@ -596,7 +672,15 @@ def main() -> int:
                 n_steps = args.steps
                 if condition in ("B0", "B1", "B2"):
                     n_steps = max(1, math.ceil(args.steps / args.adaptive_step_divisor))
-                for step in range(n_steps):
+                # R3 compute-matched mode: the condition runs until its
+                # MEASURED stage-seconds reach the shared budget (or the
+                # safety cap / collapse rule fires). Intervention counts
+                # are then an outcome, not an allocation.
+                compute_budget = (args.compute_budget_seconds
+                                  if args.budget_mode == "seconds" else None)
+                step_limit = (args.max_steps if compute_budget is not None
+                              else n_steps)
+                for step in range(step_limit):
                     step_times = {stage: 0.0 for stage in stage_totals}
                     if condition in ("A0", "A1", "A2"):
                         raw, proposal, step_times["proposal"] = proposer.propose(
@@ -693,7 +777,11 @@ def main() -> int:
                         stage_totals[stage] += value
                     if failed:
                         break
+                    if (compute_budget is not None
+                            and sum(stage_totals.values()) >= compute_budget):
+                        break
 
+                n_steps_run = step + 1 if step_limit else 0
                 pm.finalize()
                 sel = ev.evaluate_selection(model, tok)
                 reg = ev.evaluate_regression(model, tok)
@@ -740,19 +828,26 @@ def main() -> int:
                     "capability": cap.to_dict(),
                     "capability_check": cap_check,
                     "transition_ledger": ledger,
-                    "n_steps_run": n_steps,
+                    "n_steps_run": n_steps_run,
                     "budget": {
+                        "mode": args.budget_mode,
                         "intervention_allocation": n_steps,
+                        "compute_budget_seconds": compute_budget,
+                        "compute_seconds_used": round(
+                            sum(stage_totals.values()), 2),
                         "pool": (args.adaptive_pool
                                  if condition in ("B0", "B1", "B2") else 1),
-                        "stopping_rule": ("collapse -> terminate trajectory; "
-                                          "else fixed step count"),
+                        "stopping_rule": (
+                            "collapse -> terminate; else "
+                            + ("measured compute >= budget OR "
+                               f"step=={args.max_steps}"
+                               if compute_budget is not None
+                               else "fixed step count")),
                     },
-                    "obs_amortized_seconds": (
-                        round(obs_seconds / max(1, sum(
-                            1 for c in args.conditions
-                            if c in ("A1", "A2", "B1", "B2"))), 2)
-                        if condition in ("A1", "A2", "B1", "B2") else 0.0),
+                    # Filled at report finalization: obs_seconds divided
+                    # across ALL benefiting records so the per-record
+                    # shares sum to the true shared cost (HZN-IR-04 R3).
+                    "obs_amortized_seconds": None,
                     "shuffle_info": shuffle_info,
                     "stage_seconds": stage_totals,
                     "candidate_wall_seconds": elapsed,
@@ -768,6 +863,19 @@ def main() -> int:
                       f"(delta {sel_delta:+.4f}) reg_passed={reg_passed} "
                       f"measured_s={pm.candidate.total_gpu_seconds:.1f} "
                       f"wall_s={elapsed:.1f}", flush=True)
+
+    # R3 amortization (HZN-IR-04): divide the shared collection cost
+    # across every candidate RECORD that benefits from it, so per-record
+    # obs_amortized_seconds sums to exactly observation_seconds — the
+    # previous per-candidate share overcounted by arms x seeds x steps.
+    _OBS_FED = ("A1", "A2", "B1", "B2")
+    benefiting = [c for c in report["candidates"]
+                  if c.get("condition") in _OBS_FED]
+    share = obs_seconds / len(benefiting) if benefiting else 0.0
+    for c in report["candidates"]:
+        c["obs_amortized_seconds"] = (round(share, 3)
+                                    if c.get("condition") in _OBS_FED
+                                    else 0.0)
 
     report["elapsed_seconds"] = round(time.perf_counter() - t0, 1)
     out = RESULTS / args.out

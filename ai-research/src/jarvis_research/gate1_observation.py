@@ -15,9 +15,13 @@ Key rules from the REV 1 spec:
 - The contrast ratio is eps-stabilized; unstable rows are flagged.
 - The shuffled placebo permutes WHOLE observation vectors at obs_group
   level within (family, layer-band) strata, preserving the joint feature
-  relationship; effective coverage is recorded.
+  relationship; every row sharing an obs_group receives the same
+  reassigned vector, the permutation is returned for audit, and
+  effective coverage is measured on the exact features the proposer
+  sees (HZN-IR-04 R2).
 - The conventional evidence interpreter (B1) is a FROZEN prespecified
-  rule; it is deliberately direction-agnostic.
+  rule; it is deliberately direction-agnostic and consumes the SAME
+  proposer-visible field shown to the model (HZN-IR-04 R1).
 """
 
 import hashlib
@@ -28,22 +32,30 @@ from typing import Dict, List, Optional
 
 import torch
 
-OBSERVATION_VERSION = "obs-v1"
+OBSERVATION_VERSION = "obs-v2"
 # Stabilization: eps = this fraction of the MEDIAN positive group RMS.
 # Frozen; changing it is a protocol change.
 EPS_FRACTION = 0.01
 # Layer bands for shuffle strata (layers grouped into bands of this size
 # so a stratum usually contains >1 observation group).
 SHUFFLE_LAYER_BAND = 8
+# Precision of the proposer-visible signed log-contrast column (lc).
+# The conventional interpreter consumes THIS rounded value, never the
+# raw statistic, so the evidence channel is bit-identical across
+# conditions (HZN-IR-04 R1).
+LOG_CONTRAST_DECIMALS = 2
 
-# Frozen conventional interpreter (HZN-IR-03 R1). B1 weights each catalog
-# row by the STRENGTH of its high/low-loss association, direction-
-# agnostic: s_i = minmax(|ln hilo_i|) within family, sampling weight
-# w_i = FLOOR + s_i. The floor keeps every row reachable; min-max keeps
-# the rule scale-free. Ties fall through to param_id order in the
-# weighted sampler. This rule is prespecified and must not be tuned on
+# Frozen conventional interpreter (HZN-IR-03 R1, parity-corrected per
+# HZN-IR-04 R1). interp-v2 weights each catalog row by the STRENGTH of
+# its proposer-visible contrast: s_i = minmax(|obs_log_contrast_i|)
+# within family, sampling weight w_i = FLOOR + s_i — the identical
+# 2-decimal lc value rendered in the model's catalog rows. The floor
+# keeps every row reachable; min-max keeps the rule scale-free. The
+# interpreter has ACCESS to every obs_* field on the row (same rows the
+# proposer's catalog is built from); the frozen rule uses only the
+# |lc| channel. This rule is prespecified and must not be tuned on
 # outcomes — any change bumps INTERPRETER_VERSION.
-INTERPRETER_VERSION = "interp-v1"
+INTERPRETER_VERSION = "interp-v2"
 INTERPRETER_FLOOR = 0.1
 
 
@@ -79,7 +91,7 @@ def resolve_hook_targets(model, catalog: List[dict]) -> Dict[int, str]:
 class _ModuleStats:
     """Scalar-only hook accumulator: running sums, no retained tensors."""
     __slots__ = ("n_hi", "n_lo", "rms_hi", "rms_lo", "max_abs",
-                 "per_passage_rms")
+                 "per_passage_rms", "hi_rms_list", "lo_rms_list")
 
     def __init__(self):
         self.n_hi = 0
@@ -88,6 +100,8 @@ class _ModuleStats:
         self.rms_lo = 0.0
         self.max_abs = 0.0
         self.per_passage_rms = []
+        self.hi_rms_list = []
+        self.lo_rms_list = []
 
     def add(self, output: torch.Tensor, hi: bool):
         x = output[0] if isinstance(output, tuple) else output
@@ -99,9 +113,11 @@ class _ModuleStats:
         if hi:
             self.n_hi += 1
             self.rms_hi += rms
+            self.hi_rms_list.append(rms)
         else:
             self.n_lo += 1
             self.rms_lo += rms
+            self.lo_rms_list.append(rms)
         self.max_abs = max(self.max_abs, mx)
         self.per_passage_rms.append(rms)
 
@@ -179,12 +195,20 @@ def collect_observations(model, tok, practice_texts: Dict[str, str],
         lo_m = g.rms_lo / g.n_lo if g.n_lo else 0.0
         mean = act
         var = (sum((r - mean) ** 2 for r in g.per_passage_rms) / n) if n else 0.0
+        # Separate high/low sample counts and variance (HZN-IR-04 §5):
+        # a pooled count/variance can hide a one-sided measurement.
+        var_hi = (sum((r - hi_m) ** 2 for r in g.hi_rms_list) / g.n_hi
+                  if g.n_hi else 0.0)
+        var_lo = (sum((r - lo_m) ** 2 for r in g.lo_rms_list) / g.n_lo
+                  if g.n_lo else 0.0)
         group_stats[path] = {
             "available": True,
             "act": act, "hi": hi_m, "lo": lo_m,
             "hilo": (hi_m + eps) / (lo_m + eps),
             "max_abs": g.max_abs,
             "variance": var, "n_samples": n,
+            "n_hi": g.n_hi, "n_lo": g.n_lo,
+            "var_hi": var_hi, "var_lo": var_lo,
             "hilo_unstable": lo_m <= eps,
         }
 
@@ -218,16 +242,30 @@ def stratified_split(texts: Dict[str, str], losses: Dict[str, float]):
 
 
 def _family_ranks(rows: List[dict], key: str):
-    """In-place [0,1] ranks of `key` within each family; single -> 0.5."""
+    """In-place tie-aware [0,1] midranks of `key` within each family.
+
+    Equal values receive equal ranks (the mean of the positions the tie
+    group occupies, normalized to [0,1]); a single member gets 0.5.
+    Breaking ties by param_id would inject artificial distinctions into
+    evidence the proposer sees (HZN-IR-04 R2).
+    """
     fams: Dict[str, List[dict]] = {}
     for r in rows:
         if r.get("obs_available"):
             fams.setdefault(r["family"], []).append(r)
     for members in fams.values():
-        members.sort(key=lambda r: (r[key], r["param_id"]))
+        members.sort(key=lambda r: r[key])
         n = len(members)
-        for i, r in enumerate(members):
-            r[f"{key}_rank"] = 0.5 if n == 1 else round(i / (n - 1), 4)
+        i = 0
+        while i < n:
+            j = i
+            while j + 1 < n and members[j + 1][key] == members[i][key]:
+                j += 1
+            # positions i..j (0-based) share the value; midrank position
+            rank = 0.5 if n == 1 else round((i + j) / 2 / (n - 1), 4)
+            for k in range(i, j + 1):
+                members[k][f"{key}_rank"] = rank
+            i = j + 1
 
 
 def _apply_group(row: dict, stats: dict):
@@ -236,9 +274,15 @@ def _apply_group(row: dict, stats: dict):
         return
     row["obs_available"] = True
     for k in ("act", "hi", "lo", "hilo", "variance", "n_samples",
-              "hilo_unstable"):
+              "n_hi", "n_lo", "var_hi", "var_lo", "hilo_unstable"):
         row[f"obs_{k}"] = round(stats[k], 6) if isinstance(
             stats[k], float) else stats[k]
+    # The proposer-visible contrast channel: signed, eps-stabilized log
+    # of the hi/lo activation ratio at fixed 2-decimal precision. Both
+    # the prompt renderer and interp-v2 consume THIS field, so the
+    # evidence channel is identical across model and algorithm (R1).
+    row["obs_log_contrast"] = round(math.log(stats["hilo"]),
+                                    LOG_CONTRAST_DECIMALS)
 
 
 def annotate_catalog(catalog: List[dict], obs: dict,
@@ -257,57 +301,93 @@ def annotate_catalog(catalog: List[dict], obs: dict,
     return out
 
 
+def _visible_signature(row: dict) -> tuple:
+    """The exact evidence features rendered to the proposer (ar, lc).
+
+    Effective placebo coverage is measured on THIS tuple, not on the
+    raw statistics: an association that moved but left the visible
+    features identical is not a real change for the A1-vs-A2
+    comparison (HZN-IR-04 R2).
+    """
+    return (row.get("obs_act_rank"), row.get("obs_log_contrast"))
+
+
 def shuffle_observations(annotated: List[dict], seed: int,
                          band: int = SHUFFLE_LAYER_BAND) -> dict:
-    """Seeded placebo: permute whole obs vectors within (family, band).
+    """Seeded placebo: permute whole obs vectors across unique obs_groups.
 
-    The joint (act, hi, lo, hilo, variance) relationship is preserved —
-    only its parameter correspondence moves. Ranks are recomputed after
-    permutation so they stay internally consistent. Returns a dict with
-    the shuffled catalog and coverage provenance: the fraction of
-    obs_groups whose association actually changed (HZN-IR-03 R2). A
-    stratum of one group cannot be permuted and counts as unchanged.
+    Groups (not rows) are the permutation unit: rows sharing an
+    obs_group are one deduplicated measurement, so every member row
+    receives the SAME reassigned vector — a shared hooked module can
+    never show its parameters conflicting observations (HZN-IR-04 R2).
+    The joint (act, hi, lo, hilo, ...) feature relationship moves
+    intact. Strata are (family, layer-band). Tie-aware ranks are
+    recomputed after permutation so they stay internally consistent.
+
+    Returns the shuffled catalog, the audit permutation
+    {obs_group: source_obs_group}, the group count, and the effective
+    coverage fraction measured on proposer-visible features (ar, lc).
+    A stratum of one group cannot be permuted and counts as unchanged.
     """
-    obs_keys = ("obs_act", "obs_hi", "obs_lo", "obs_hilo", "obs_variance",
-                "obs_n_samples", "obs_hilo_unstable", "obs_available",
-                "obs_act_rank", "obs_hilo_rank")
     rows = [dict(r) for r in annotated]
-    strata: Dict[tuple, List[int]] = {}
+    obs_keys = sorted({k for r in rows for k in r
+                       if k.startswith("obs_")
+                       and k not in ("obs_module", "obs_group")})
+    # Unique observation groups -> member row indices; stratum from the
+    # group's first row (a group is one hooked module: same family/layer).
+    group_rows: Dict[str, List[int]] = {}
+    group_sig_pre: Dict[str, tuple] = {}
     for i, r in enumerate(rows):
         if r.get("obs_available"):
-            strata.setdefault((r["family"], r["layer"] // band), []).append(i)
+            group_rows.setdefault(r["obs_group"], []).append(i)
+            group_sig_pre[r["obs_group"]] = _visible_signature(r)
+    strata: Dict[tuple, List[str]] = {}
+    for g, idxs in group_rows.items():
+        r0 = rows[idxs[0]]
+        strata.setdefault((r0["family"], r0["layer"] // band), []).append(g)
+
     rng = random.Random(seed)
-    changed = 0
-    total = 0
-    permutation = {}
-    for key, idxs in strata.items():
-        vals = [{k: rows[i].get(k) for k in obs_keys} for i in idxs]
-        order = list(range(len(idxs)))
+    permutation: Dict[str, str] = {}
+    vectors: Dict[str, dict] = {}
+    for key, groups in strata.items():
+        order = list(range(len(groups)))
         rng.shuffle(order)
-        total += len(idxs)
-        for i, j in zip(idxs, order):
-            original = {k: rows[i].get(k) for k in obs_keys}
-            if vals[j] != original:
-                changed += 1
-            permutation[rows[i]["obs_group"]] = rows[idxs[j]]["obs_group"]
+        for g, j in zip(groups, order):
+            src = groups[j]
+            permutation[g] = src
+            vectors[g] = {k: rows[group_rows[src][0]].get(k)
+                          for k in obs_keys}
+    for g, idxs in group_rows.items():
+        for i in idxs:
             for k in obs_keys:
-                rows[i][k] = vals[j][k]
+                rows[i][k] = vectors[g][k]
     # Recompute ranks on the permuted assignment for internal consistency.
     for r in rows:
         r.pop("obs_act_rank", None)
         r.pop("obs_hilo_rank", None)
     _family_ranks(rows, "obs_act")
     _family_ranks(rows, "obs_hilo")
+
+    changed = 0
+    for g, idxs in group_rows.items():
+        if _visible_signature(rows[idxs[0]]) != group_sig_pre[g]:
+            changed += 1
+    total = len(group_rows)
     return {"catalog": rows,
             "effective_coverage": (changed / total if total else 0.0),
+            "n_groups": total,
             "n_groups_shuffled": total,
+            "permutation": permutation,
             "seed": seed}
 
 
 def interpreter_weights(catalog: List[dict]) -> Dict[int, float]:
-    """FROZEN conventional evidence rule (interp-v1) for B1/B2.
+    """FROZEN conventional evidence rule (interp-v2) for B1/B2.
 
-    w_i = FLOOR + minmax(|ln hilo_i|) within family. Direction-agnostic
+    w_i = FLOOR + minmax(|obs_log_contrast_i|) within family — the
+    identical 2-decimal signed log-contrast shown to the model in the
+    lc column, so the evidence channel is bit-identical across the
+    model and algorithm conditions (HZN-IR-04 R1). Direction-agnostic
     by design; unavailable observations get the floor weight only.
     """
     fams: Dict[str, List[dict]] = {}
@@ -315,8 +395,9 @@ def interpreter_weights(catalog: List[dict]) -> Dict[int, float]:
         fams.setdefault(e["family"], []).append(e)
     weights: Dict[int, float] = {}
     for members in fams.values():
-        s = [abs(math.log(m["obs_hilo"])) if m.get("obs_available")
-             and m["obs_hilo"] > 0 else 0.0 for m in members]
+        s = [abs(m["obs_log_contrast"]) if m.get("obs_available")
+             and m.get("obs_log_contrast") is not None
+             else 0.0 for m in members]
         lo, hi = min(s), max(s)
         for m, v in zip(members, s):
             norm = (v - lo) / (hi - lo) if hi > lo else 0.0

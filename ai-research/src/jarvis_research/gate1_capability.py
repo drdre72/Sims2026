@@ -157,20 +157,22 @@ def _first_number(text: str) -> Optional[str]:
 
 # --- Sandboxed code grading -------------------------------------------------
 
-# CONTAINMENT BOUNDARY (HZN-IR-02 §6): the AST restrictions, restricted
-# builtins and subprocess timeout below are GRADING SAFEGUARDS — they keep
-# a buggy or degenerate completion from corrupting or hanging the
-# evaluator, and they are sufficient for that purpose because the graded
-# text comes from our own pinned 4B checkpoint under a bounded proposal
-# format, not an adversarial source. They are NOT a security sandbox:
-# they do not provide OS-level isolation, resource limits beyond the wall
-# clock timeout, or syscall mediation. Any future promotion of this path
-# to untrusted generated code requires real process isolation (e.g. a
-# Windows job object with memory/CPU limits and a low-privilege token)
-# BEFORE use, not retroactively justified by the presence of these checks.
-# The completion is reconstructed into a full function definition and
-# executed in a restricted builtins namespace INSIDE a short-lived
-# isolated-mode subprocess.
+# CONTAINMENT BOUNDARY (HZN-IR-04 R4): generated code executes inside a
+# short-lived isolated-mode subprocess confined to a kill-on-close
+# Windows Job Object (512 MiB commit ceiling) that is assigned BEFORE
+# any generated code runs — the driver blocks on a single stdin gate
+# byte that the parent only sends after assignment succeeds. If the job
+# cannot be created or the process cannot be assigned, the gate byte is
+# never sent, the child is killed, and grading is REFUSED: containment
+# is fail-closed, never reported-and-continued. Output is bounded
+# (256 KiB stdout / 64 KiB stderr drain caps) so a spamming completion
+# cannot deadlock the pipe or exhaust evaluator memory.
+# The AST restrictions, restricted builtins and wall-clock timeout are
+# GRADING SAFEGUARDS layered on that containment. This is still not a
+# complete security sandbox: there is no separate low-privilege OS
+# token, no syscall mediation and no filesystem policy — those are
+# required before this path ever grades adversarial code, not
+# retroactively justified by the checks above.
 _SAFE_BUILTINS = (
     "abs all any bool dict divmod enumerate filter float format frozenset "
     "int isinstance len list map max min ord pow print range repr reversed "
@@ -179,6 +181,12 @@ _SAFE_BUILTINS = (
 
 _CODE_DRIVER = r'''
 import ast, builtins, json, sys
+
+# Containment gate (HZN-IR-04 R4): block until the parent confirms the
+# Job Object assignment by sending one byte. Only interpreter startup
+# and these stdlib imports happen before the gate — NO generated code
+# is parsed or executed until containment is established.
+sys.stdin.buffer.read(1)
 
 source = json.loads(sys.argv[1])
 tests = json.loads(sys.argv[2])
@@ -268,42 +276,104 @@ def _assign_windows_job(proc, memory_limit=_JOB_MEMORY_LIMIT):
         return None
 
 
+_STDOUT_CAP = 256 * 1024
+_STDERR_CAP = 64 * 1024
+
+
+def _drain(stream, buf: bytearray, cap: int) -> None:
+    """Fully drain a pipe into `buf` capped at `cap` bytes.
+
+    Keeps reading past the cap so the child can never deadlock on a
+    full pipe; only the retained prefix is bounded.
+    """
+    while True:
+        chunk = stream.read(65536)
+        if not chunk:
+            return
+        room = cap - len(buf)
+        if room > 0:
+            buf += chunk[:room]
+
+
 def _run_code_sandboxed(source: str, tests: list,
                         timeout_s: float = 15.0) -> dict:
-    """Execute candidate code in a subprocess; returns {"ok", "results"|"error"}.
+    """Execute candidate code in a confined subprocess; fail-closed.
 
-    Spawns in isolated mode and immediately confines the process to a
-    kill-on-close Job Object when possible: 512 MiB job memory cap,
-    single-process limit. If job assignment fails the run still proceeds
-    and the graded result carries `confined: false` so a containment
-    downgrade is visible, never silent.
+    The child blocks on a one-byte stdin gate until a kill-on-close Job
+    Object (512 MiB ceiling) has been assigned, so generated code never
+    executes uncontained. A containment failure REFUSES grading and
+    returns {"ok": False, "containment": "refused"} — there is no
+    confined=false execution path. Output drains are capped.
     """
     import subprocess
     import sys
+    import threading
     job = None
     proc = subprocess.Popen(
         [sys.executable, "-I", "-c", _CODE_DRIVER,
          json.dumps(source), json.dumps(tests)],
-        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        stdin=subprocess.PIPE,
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     try:
-        if proc.poll() is None:
-            job = _assign_windows_job(proc)
-        out, err = proc.communicate(timeout=timeout_s)
-        line = out.strip().splitlines()[-1] if out.strip() else ""
-        if not line:
+        if proc.poll() is not None:
             return {"ok": False,
-                    "error": f"no output (stderr={err[-200:]!r})",
-                    "confined": job is not None}
-        result = json.loads(line)
-        result["confined"] = job is not None
+                    "error": "grader subprocess exited before containment",
+                    "confined": False}
+        job = _assign_windows_job(proc)
+        if job is None:
+            proc.kill()
+            proc.wait()
+            return {"ok": False,
+                    "error": ("containment unavailable: job assignment "
+                              "failed; grading refused (fail-closed)"),
+                    "confined": False,
+                    "containment": "refused"}
+        # Containment established -> release the gated driver.
+        proc.stdin.write(b"1")
+        proc.stdin.flush()
+        proc.stdin.close()
+        out_buf, err_buf = bytearray(), bytearray()
+        threads = [
+            threading.Thread(target=_drain,
+                             args=(proc.stdout, out_buf, _STDOUT_CAP),
+                             daemon=True),
+            threading.Thread(target=_drain,
+                             args=(proc.stderr, err_buf, _STDERR_CAP),
+                             daemon=True)]
+        for t in threads:
+            t.start()
+        try:
+            proc.wait(timeout=timeout_s)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+            proc.wait()
+            return {"ok": False,
+                    "error": f"timeout after {timeout_s}s",
+                    "confined": True}
+        for t in threads:
+            t.join(timeout=5)
+        out = out_buf.decode("utf-8", errors="replace")
+        err = err_buf.decode("utf-8", errors="replace")
+        line = out.strip().splitlines()[-1] if out.strip() else ""
+        result = {"confined": True}
+        if len(out_buf) >= _STDOUT_CAP or len(err_buf) >= _STDERR_CAP:
+            result["output_truncated"] = True
+        if not line:
+            result.update(ok=False,
+                          error=f"no output (stderr={err[-200:]!r})")
+            return result
+        result.update(json.loads(line))
         return result
-    except subprocess.TimeoutExpired:
-        proc.kill()
-        return {"ok": False, "error": f"timeout after {timeout_s}s",
-                "confined": job is not None}
     except Exception as exc:
-        return {"ok": False, "error": repr(exc)[:200]}
+        return {"ok": False, "error": repr(exc)[:200],
+                "confined": job is not None}
     finally:
+        for stream in (proc.stdin, proc.stdout, proc.stderr):
+            try:
+                if stream and not stream.closed:
+                    stream.close()
+            except Exception:
+                pass
         if job is not None:
             import ctypes
             ctypes.windll.kernel32.CloseHandle(job)
