@@ -151,33 +151,43 @@ Script: `proposer_unconstrained.py` (`--max-new`, `--out` for protocol
 variants). Artifacts: `results/gate0.5_selfedit_reconstruction{,_2048}.json`
 (gitignored, full raw traces).
 
-## Seed-303 independent validation (2026-11-24)
+## Seed-303 independent validation (2026-11-24, v2 corrected)
 
 Reviewer finding: Phase B's "improvement" (7.46 → 6.98) was measured on the
 same fixed probe used as the proposer's feedback signal. This test checks
 whether the edit generalizes to held-out text.
 
-**Result: the seed-303 edit does NOT generalize.** It improved the
-training probe by 6.4% but worsened mean held-out perplexity by 2.1%.
-Seven of eight held-out domains degraded. This is probe-specific
-overfitting, not a capability gain.
+**Result: the seed-303 edit does NOT generalize.** With corrected methodology
+(24 sealed holdout passages, token-weighted aggregate perplexity, `torch.equal()`
+restore verification, matched 9-tensor controls), the edit improved the
+training probe by 6.4% but worsened token-weighted sealed perplexity by 1.1%.
 
-| Condition | Phase B probe | Mean held-out |
+| Condition | Phase B probe | Sealed agg (24 passages) |
 |---|---|---|
-| Baseline (unmodified) | 7.460 | 4.359 |
-| Seed-303 (exact replay) | **6.983** | 4.450 (+2.1%) |
-| Control A: random L0 ×0.85 (5 seeds) | 7.485 | 4.448 |
-| Control B: non-L0 layer ×0.85 (5 seeds) | 7.480 | 4.394 |
-| Control C: all 32 layers ×0.85 | 9.404 | 6.354 |
+| Baseline (unmodified) | 7.460 | 4.780 |
+| Seed-303 (exact replay) | **6.983** | 4.834 (+1.1%) |
+| Control A: random L0 (5 seeds) | ~7.30 avg | ~4.862 avg (+1.7%) |
+| Control B: non-L0 layer (5 seeds) | ~7.49 avg | ~4.825 avg (+0.9%) |
+| Control C: all 32 layers | 9.495 | 6.937 (+45%) |
 
-Random L0 attenuation (Control A) did NOT reproduce the probe improvement —
-the specific tensor selection matters, but not in a generalizable direction.
-Full report: `research/seed303_validation_report.md`.
-Script: `seed303_validate.py`. Artifact: `results/seed303_validation.json`.
+Key findings: (1) random L0 attenuation does NOT reproduce the probe
+improvement — specific projection-type selection matters for the probe;
+(2) ALL L0 attenuation worsens held-out text; (3) non-L0 attenuation is
+slightly less harmful (confirming L0 fragility from Phase A); (4) all
+tensors verified bit-exact by `torch.equal()`.
 
-**Implication for Gate 1:** the evaluation protocol MUST use held-out text,
-not the feedback probe, to score edits. Matched random controls are
-essential.
+**V2 corrections applied:** expanded to 3 passages/domain (24 sealed);
+token-weighted aggregate perplexity (not arithmetic mean); `torch.equal()`
+restore (not perplexity-within-0.01); matched 9-tensor controls (8 proj
+×0.85 + 1 norm ×0.95); fixed Control A degeneracy (L0 projection pool = 8
+= seed-303 target set).
+
+Full report: `research/seed303_validation_report.md` (v1 + v2 sections).
+Script: `seed303_validate.py`. Artifacts: `results/seed303_validation{,_v2}.json`.
+
+**Implication for Gate 1:** evaluation MUST use held-out text (not the
+feedback probe); matched random controls are essential; original 8
+diagnostic passages are now "examined" and must not be reused as sealed.
 
 ## Attenuation directional sweep (2026-11-24)
 

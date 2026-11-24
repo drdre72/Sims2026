@@ -111,3 +111,85 @@ Implications:
 - It does not test whether a search over many attenuation candidates might
   find one that generalizes — that is the Gate 1 question.
 - It does not address the proposal-interface bottleneck (reviewer finding 5).
+
+---
+
+# V2 — Corrected methodology (2026-11-24, reviewer v2 feedback)
+
+The v1 report had four methodological issues identified by the reviewer:
+
+1. **8 domains, 1 passage each** — too small for a generalization claim.
+   **Fixed:** expanded to 3 passages/domain (24 sealed holdout). Original 8
+   marked `DIAGNOSTIC` (previously examined, not sealed).
+2. **Arithmetic mean of passage perplexities** — not a proper aggregate.
+   **Fixed:** token-weighted aggregate (sum NLL / sum tokens, then exp).
+3. **Restore verified by perplexity within 0.01** — indirect.
+   **Fixed:** `torch.equal()` on every restored tensor.
+4. **Controls not matched** — seed-303 has 9 tensors (8 proj + 1 norm);
+   v1 controls selected 8, missing the norm and unmatched by family/count.
+   **Fixed:** controls now match 8 proj ×0.85 + 1 norm ×0.95.
+   **Additional fix:** Control A's L0 projection pool had exactly 8 tensors
+   (= seed-303's target set), making it degenerate. Fixed to draw from all
+   12 L0 non-norm params (including dt_bias, A_log, conv1d).
+
+## V2 results — token-weighted aggregate perplexity
+
+| Condition | Phase B probe | Sealed agg (24 passages) | Diagnostic agg (8) |
+|---|---|---|---|
+| **Baseline (unmodified)** | 7.460 | **4.780** | 3.536 |
+| **Seed-303 (exact replay)** | **6.983** | **4.834** (+1.1%) | 3.601 (+1.8%) |
+| Control A: random L0 (5 seeds) | ~7.30 avg | ~4.862 avg (+1.7%) | — |
+| Control B: non-L0 layer (5 seeds) | ~7.49 avg | ~4.825 avg (+0.9%) | — |
+| Control C: all 32 layers | 9.495 | 6.937 (+45%) | — |
+
+All 9 seed-303 tensors verified bit-exact by `torch.equal()`.
+
+## V2 findings (refined from v1)
+
+1. **Negative result confirmed with rigorous methodology.** Seed-303
+   worsens token-weighted sealed perplexity by +1.1% (24 passages, 3 per
+   domain). The v1 result (+2.1% arithmetic mean) was directionally
+   correct; the corrected metric shows slightly less degradation but the
+   same conclusion: the edit does not generalize.
+
+2. **Per-passage: 17/24 sealed passages worsened, 7 improved slightly.**
+   The improvements were small (largest: -0.584 on sealed_narrative_2).
+   The degradations were larger (worst: +0.409 on sealed_conversation_3).
+   No domain uniformly improved.
+
+3. **Random L0 attenuation does NOT reproduce the probe improvement.**
+   Control A (random 8 from 12 L0 non-norm params + 1 L0 norm, 5 seeds):
+   probe mean ~7.30 vs seed-303's 6.983. The specific PROJECTION-TYPE
+   selection matters for the probe — attenuating dt_bias/A_log/conv1d
+   instead of projections does not produce the probe benefit.
+
+4. **ALL L0 attenuation worsens held-out text.** Control A sealed mean
+   4.862 (+1.7%), seed-303 sealed 4.834 (+1.1%). L0 attenuation is
+   generally harmful to general text regardless of which L0 tensors
+   are selected.
+
+5. **Non-L0 attenuation is slightly LESS harmful.** Control B sealed
+   mean 4.825 (+0.9%). This confirms Phase A's finding that L0 is the
+   most fragile region — attenuating it hurts general text more than
+   attenuating mid/late layers.
+
+6. **Global attenuation is catastrophic.** Control C: probe 9.495,
+   sealed 6.937 (+45%). Attenuating all layers destroys the model.
+
+## V2 scientific conclusion
+
+The seed-303 edit is a **probe-specific optimization that does not
+generalize**. The specific projection-type selection is meaningful for
+the probe (not reproduced by random L0 attenuation), but L0 attenuation
+in general is harmful to held-out text. The negative result is now
+established with:
+- 24 sealed holdout passages (3 per domain, not previously examined)
+- Token-weighted aggregate perplexity (not arithmetic mean)
+- `torch.equal()` bit-exact restore verification
+- Matched controls (9 tensors, 8 proj ×0.85 + 1 norm ×0.95)
+- Non-degenerate random L0 pool (12 params, not 8)
+
+**The original 8 diagnostic passages are now marked DIAGNOSTIC and should
+NOT be reused as a sealed holdout for future experiments.** The 24 sealed
+passages in this script are also now "examined" — future confirmation runs
+must use new passages.
