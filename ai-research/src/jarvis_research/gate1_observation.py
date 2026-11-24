@@ -304,12 +304,15 @@ def annotate_catalog(catalog: List[dict], obs: dict,
 def _visible_signature(row: dict) -> tuple:
     """The exact evidence features rendered to the proposer (ar, lc).
 
-    Effective placebo coverage is measured on THIS tuple, not on the
-    raw statistics: an association that moved but left the visible
-    features identical is not a real change for the A1-vs-A2
-    comparison (HZN-IR-04 R2).
+    Effective placebo coverage is measured on THIS tuple at the
+    precision the prompt actually renders — ar is serialized at two
+    decimals ("ar={:.2f}") and lc is stored at two decimals. Comparing
+    at catalog precision would count differences the proposer cannot
+    see (HZN-IR-05 §3).
     """
-    return (row.get("obs_act_rank"), row.get("obs_log_contrast"))
+    ar = row.get("obs_act_rank")
+    return (round(ar, 2) if ar is not None else None,
+            row.get("obs_log_contrast"))
 
 
 def shuffle_observations(annotated: List[dict], seed: int,

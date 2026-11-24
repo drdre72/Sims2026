@@ -13,11 +13,15 @@ import torch  # noqa: E402
 from jarvis_research.gate1_observation import (  # noqa: E402
     resolve_hook_targets, stratified_split, annotate_catalog,
     shuffle_observations, interpreter_weights, collect_observations,
-    INTERPRETER_FLOOR, LOG_CONTRAST_DECIMALS)
+    _visible_signature, INTERPRETER_FLOOR, LOG_CONTRAST_DECIMALS)
 from jarvis_research.gate1_proposer import (  # noqa: E402
     parse_proposal, _catalog_line, PROMPT, PROMPT_OBS)
+from jarvis_research.gate1_pilot import (  # noqa: E402
+    _adaptive_commit, _budget_exceeded)
 import jarvis_research.gate1_capability as _cap  # noqa: E402
-from jarvis_research.gate1_capability import _run_code_sandboxed  # noqa: E402
+from jarvis_research.gate1_capability import (  # noqa: E402
+    _run_code_sandboxed, transition_ledger, capability_regression,
+    CapabilityReport, TaskResult)
 
 
 def _catalog(entries):
@@ -213,6 +217,18 @@ class TestShuffle(unittest.TestCase):
         self.assertEqual(out["effective_coverage"], 0.0)
         self.assertEqual(out["catalog"][0]["obs_hilo"], 1.0)
 
+    def test_signature_at_rendered_precision(self):
+        # HZN-IR-05 §3: coverage is measured at the 2-decimal precision
+        # the prompt actually emits — ranks differing only in the third
+        # decimal are invisible to the proposer.
+        a = {"obs_act_rank": 0.751, "obs_log_contrast": 0.44}
+        b = {"obs_act_rank": 0.749, "obs_log_contrast": 0.44}
+        self.assertEqual(_visible_signature(a), _visible_signature(b))
+        c = {"obs_act_rank": 0.76, "obs_log_contrast": 0.44}
+        self.assertNotEqual(_visible_signature(a), _visible_signature(c))
+        d = {"obs_act_rank": 0.751, "obs_log_contrast": -0.44}
+        self.assertNotEqual(_visible_signature(a), _visible_signature(d))
+
 
 class TestTieAwareRanks(unittest.TestCase):
     def test_identical_measurements_identical_ranks(self):
@@ -315,6 +331,76 @@ class TestAbstentionAndGrader(unittest.TestCase):
         self.assertEqual(res.get("containment"), "refused")
         self.assertFalse(res["confined"])
         self.assertNotIn("results", res)
+
+
+class TestHZNIR05Corrections(unittest.TestCase):
+    def test_adaptive_commit_boundary(self):
+        # Keep-checkpoint: no trial strictly better than current CE
+        # means the control must not be forced into a harmful edit.
+        self.assertFalse(_adaptive_commit({"edits": 1}, 1.5, 1.5))
+        self.assertFalse(_adaptive_commit({"edits": 1}, 1.6, 1.5))
+        self.assertFalse(_adaptive_commit(None, float("inf"), 1.5))
+        self.assertTrue(_adaptive_commit({"edits": 1}, 1.4, 1.5))
+
+    def test_budget_exceeded_before_any_outcome(self):
+        totals = {"proposal": 3.0, "validation": 1.0}
+        self.assertTrue(_budget_exceeded(totals, 4.0))
+        self.assertFalse(_budget_exceeded(totals, 4.1))
+        self.assertFalse(_budget_exceeded(totals, None))
+
+    def _cap_pair(self, infra_b=False, infra_c=False):
+        base = CapabilityReport(results=[
+            TaskResult("t1", "code", 1.0, infrastructure_error=infra_b),
+            TaskResult("t2", "code", 0.0)])
+        cand = CapabilityReport(results=[
+            TaskResult("t1", "code", 0.0, infrastructure_error=infra_c),
+            TaskResult("t2", "code", 1.0)])
+        return base, cand
+
+    def test_ledger_infra_failure_not_regression(self):
+        base, cand = self._cap_pair(infra_c=True)
+        led = transition_ledger(base, cand)
+        self.assertEqual(led["overall"]["infrastructure_failure"], 1)
+        self.assertEqual(led["overall"]["regression"], 0)
+        self.assertEqual(led["overall"]["acquisition"], 1)  # t2 0->1
+
+    def test_capability_regression_unscorable_family(self):
+        base = CapabilityReport(per_family={
+            "code": {"score": None, "metric": "accuracy", "n": 0,
+                     "n_infrastructure_errors": 4,
+                     "unscorable_infrastructure": True},
+            "reasoning": {"score": 0.8, "metric": "accuracy", "n": 5}})
+        cand = CapabilityReport(per_family={
+            "code": {"score": 0.5, "metric": "accuracy", "n": 4},
+            "reasoning": {"score": 0.8, "metric": "accuracy", "n": 5}})
+        chk = capability_regression(base, cand)
+        self.assertFalse(chk["passed"])
+        self.assertTrue(
+            chk["per_family"]["code"]["unscorable_infrastructure"])
+        self.assertEqual(chk["n_infrastructure_errors"], 4)
+
+
+class TestPartitionsV4(unittest.TestCase):
+    DATA = Path(__file__).resolve().parents[1] / "data"
+
+    def _texts(self, ver):
+        out = set()
+        for f in ("practice", "selection", "regression"):
+            d = json.loads((self.DATA / ver / f"{f}.json").read_text(
+                encoding="utf-8"))
+            out |= set(d["passages"].values())
+        return out
+
+    def test_v4_schema_and_disjoint_from_v3(self):
+        for ver in ("gate1_eval_v3", "gate1_eval_v4"):
+            d = self.DATA / ver
+            for f, n in (("practice", 16), ("selection", 24),
+                         ("regression", 24)):
+                obj = json.loads((d / f"{f}.json").read_text(
+                    encoding="utf-8"))
+                self.assertEqual(len(obj["passages"]), n, f"{ver}/{f}")
+        self.assertEqual(self._texts("gate1_eval_v3")
+                         & self._texts("gate1_eval_v4"), set())
 
 
 if __name__ == "__main__":

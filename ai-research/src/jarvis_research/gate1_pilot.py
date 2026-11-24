@@ -60,6 +60,12 @@ RESULTS.mkdir(parents=True, exist_ok=True)
 MODEL_ID = "Qwen/Qwen3.5-4B"
 DTYPE = torch.bfloat16
 
+# Representative late-trajectory feedback for prompt-length preflight.
+_SAMPLE_HISTORY = [
+    {"step": i, "practice_delta_ce": -0.0013 + 0.0004 * i,
+     "predicted_delta_ce": -0.002}
+    for i in range(4)]
+
 
 def _git_sha():
     import subprocess
@@ -222,14 +228,20 @@ def local_provenance(model_id, revision=None):
 
 def adaptive_choice(model, tok, ev, patch_manager, seed, step, catalog,
                     pool: int = 2,
-                    weights: Optional[Dict[int, float]] = None):
+                    weights: Optional[Dict[int, float]] = None,
+                    current_ce: float = float("inf")):
     """Compare trial edits on practice; restore after each trial.
 
     Evaluates `pool` candidates per iteration. The caller sets the iteration
     count so total practice evaluations match the autonomous trajectory's
-    budget. `weights` (Gate 1.2 interp-v1) biases candidate parameter
-    selection toward high |ln hilo| rows without changing magnitude
+    budget. `weights` (Gate 1.2 interp-v2) biases candidate parameter
+    selection toward high |log-contrast| rows without changing magnitude
     sampling or the practice-evaluation budget.
+
+    `current_ce` is the practice CE of the checkpoint BEFORE this
+    iteration; the best trial is committed only when it strictly
+    improves on it (HZN-IR-05 §3 — the unchanged checkpoint is a
+    legitimate choice, matching the model's abstain affordance).
     """
     from jarvis_research.gate1_patch_manager import PatchManager
     arm_config = patch_manager.arm
@@ -261,7 +273,25 @@ def adaptive_choice(model, tok, ev, patch_manager, seed, step, catalog,
             trial_seconds += rollback_s
             if not ok:
                 raise RuntimeError(f"adaptive trial rollback failed: {bad}")
+    if not _adaptive_commit(best, best_ce, current_ce):
+        return None, trial_seconds, len(choices)
     return best, trial_seconds, len(choices)
+
+
+def _adaptive_commit(best, best_ce: float, current_ce: float) -> bool:
+    """Commit only when a trial STRICTLY improves current practice CE.
+
+    Kept as a named predicate so the keep-checkpoint boundary is
+    directly unit-testable (HZN-IR-05 §3).
+    """
+    return best is not None and best_ce < current_ce
+
+
+def _budget_exceeded(stage_totals: dict, compute_budget) -> bool:
+    """Measured-compute stopping rule, checked before EVERY step so all
+    outcome classes consume the same allocation (HZN-IR-05 §3)."""
+    return (compute_budget is not None
+            and sum(stage_totals.values()) >= compute_budget)
 
 
 # ---------------------------------------------------------------------------
@@ -301,6 +331,10 @@ def main() -> int:
     ap.add_argument("--max-steps", type=int, default=64,
                     help="safety cap on proposals per condition in "
                          "seconds mode")
+    ap.add_argument("--data-dir", default="gate1_eval_v4",
+                    help="development partition directory under data/ "
+                         "(Gate 1.2 uses fresh v4 partitions; v3 stays "
+                         "as the examined Gate 1.1 comparison set)")
     ap.add_argument("--out", default="gate1_pilot_v2.json")
     ap.add_argument("--resume", action="store_true",
                     help="skip candidates already present in --out")
@@ -340,7 +374,7 @@ def main() -> int:
             or args.compute_budget_seconds <= 0):
         ap.error("--budget-mode seconds requires "
                  "--compute-budget-seconds > 0")
-    data_dir = AI_RESEARCH / "data" / "gate1_eval_v3"
+    data_dir = AI_RESEARCH / "data" / args.data_dir
     ev = Evaluator.load(
         data_dir / "practice.json",
         data_dir / "selection.json",
@@ -411,6 +445,7 @@ def main() -> int:
             f.name: _file_sha256(f)
             for f in sorted(
                 (Path(__file__).resolve().parent).glob("gate1_*.py"))},
+        "data_dir": args.data_dir,
         "partition_sha256": {
             k: _file_sha256(data_dir / f"{k}.json")
             for k in ("practice", "selection", "regression")},
@@ -509,10 +544,20 @@ def main() -> int:
                     "max_params_per_group": (max(per_group.values())
                                              if per_group else 0),
                     # FULL serialized prompt (system + user + template),
-                    # not catalog text alone.
+                    # not catalog text alone; the _with_feedback variant
+                    # includes 4 accumulated history entries as produced
+                    # late in a trajectory (HZN-IR-05 §6).
                     "serialized_prompt_tokens": {
                         "A0": pr_blind.serialized_prompt_tokens(),
                         "A1": pr.serialized_prompt_tokens(),
+                        "A0_with_feedback":
+                            pr_blind.serialized_prompt_tokens(
+                                step=3, practice_ce=2.5,
+                                history=_SAMPLE_HISTORY),
+                        "A1_with_feedback":
+                            pr.serialized_prompt_tokens(
+                                step=3, practice_ce=2.5,
+                                history=_SAMPLE_HISTORY),
                     },
                     "shuffle_effective_coverage_seed0":
                         sh["effective_coverage"],
@@ -681,6 +726,11 @@ def main() -> int:
                 step_limit = (args.max_steps if compute_budget is not None
                               else n_steps)
                 for step in range(step_limit):
+                    # HZN-IR-05 §3: enforce the budget BEFORE each step
+                    # so every outcome class — applied, rejected,
+                    # abstained — counts against the same allocation.
+                    if _budget_exceeded(stage_totals, compute_budget):
+                        break
                     step_times = {stage: 0.0 for stage in stage_totals}
                     if condition in ("A0", "A1", "A2"):
                         raw, proposal, step_times["proposal"] = proposer.propose(
@@ -689,10 +739,19 @@ def main() -> int:
                         start = time.perf_counter()
                         proposal, trial_s, attempts = adaptive_choice(
                             model, tok, ev, pm, seed, step, cond_catalog,
-                            pool=args.adaptive_pool, weights=interp_weights)
+                            pool=args.adaptive_pool, weights=interp_weights,
+                            current_ce=practice_ce)
                         step_times["proposal"] = time.perf_counter() - start
                         control_attempts += attempts
-                        raw = json.dumps(proposal) if proposal else "null"
+                        if proposal is None:
+                            # No trial beat the unchanged checkpoint —
+                            # the control abstains rather than commit to
+                            # a harmful intervention (HZN-IR-05 §3).
+                            proposal = {"edits": [], "abstain": True,
+                                        "rationale": ("adaptive control: "
+                                                      "no trial improved "
+                                                      "practice CE")}
+                        raw = json.dumps(proposal)
                     else:
                         start = time.perf_counter()
                         proposals = (random_control_proposals(catalog, arm_config, 1,
@@ -777,9 +836,6 @@ def main() -> int:
                         stage_totals[stage] += value
                     if failed:
                         break
-                    if (compute_budget is not None
-                            and sum(stage_totals.values()) >= compute_budget):
-                        break
 
                 n_steps_run = step + 1 if step_limit else 0
                 pm.finalize()
@@ -835,6 +891,13 @@ def main() -> int:
                         "compute_budget_seconds": compute_budget,
                         "compute_seconds_used": round(
                             sum(stage_totals.values()), 2),
+                        # A step always completes once started, so a
+                        # modest overshoot above the budget is expected
+                        # and recorded, never hidden (HZN-IR-05 §3).
+                        "overshoot_seconds": (
+                            round(max(0.0, sum(stage_totals.values())
+                                      - compute_budget), 2)
+                            if compute_budget is not None else None),
                         "pool": (args.adaptive_pool
                                  if condition in ("B0", "B1", "B2") else 1),
                         "stopping_rule": (

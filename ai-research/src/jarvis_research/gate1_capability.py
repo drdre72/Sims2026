@@ -125,6 +125,10 @@ class TaskResult:
     score: float          # 1.0 pass / 0.0 fail, or ppl for longctx
     detail: str = ""
     gpu_seconds: float = 0.0
+    # True when the task could not be fairly graded because evaluator
+    # infrastructure failed (e.g. containment refusal) — never a model
+    # capability data point (HZN-IR-05 §3).
+    infrastructure_error: bool = False
 
 
 @dataclass
@@ -132,12 +136,14 @@ class CapabilityReport:
     per_family: Dict[str, dict] = field(default_factory=dict)
     results: List[TaskResult] = field(default_factory=list)
     gpu_seconds: float = 0.0
+    has_infrastructure_failures: bool = False
 
     def to_dict(self) -> dict:
         return {
             "per_family": self.per_family,
             "n_tasks": len(self.results),
             "gpu_seconds": round(self.gpu_seconds, 4),
+            "has_infrastructure_failures": self.has_infrastructure_failures,
         }
 
 
@@ -479,6 +485,10 @@ def evaluate_capability(model, tok) -> CapabilityReport:
         sep = "" if gen[:1].isspace() else " "
         source = "def " + head + sep + gen
         res = _run_code_sandboxed(source, task["tests"])
+        # A containment refusal is an evaluator infrastructure failure,
+        # not evidence the model produced bad code (HZN-IR-05 §3): tag
+        # the result and exclude it from scored aggregates.
+        infra = res.get("containment") == "refused"
         ok = res.get("ok") and all(res.get("results") or [])
         detail = (f"results={res.get('results')}"
                   if res.get("ok") else f"error={res.get('error')}")
@@ -486,8 +496,10 @@ def evaluate_capability(model, tok) -> CapabilityReport:
             task_id=task["id"], family="code",
             score=1.0 if ok else 0.0,
             detail=f"{detail} raw={gen[:60]!r}",
-            gpu_seconds=time.perf_counter() - s0))
-        fam_scores.setdefault("code", []).append(1.0 if ok else 0.0)
+            gpu_seconds=time.perf_counter() - s0,
+            infrastructure_error=infra))
+        if not infra:
+            fam_scores.setdefault("code", []).append(1.0 if ok else 0.0)
     torch.cuda.empty_cache()
 
     # --- structured: valid JSON with required keys ---
@@ -537,19 +549,24 @@ def evaluate_capability(model, tok) -> CapabilityReport:
         fam_scores.setdefault("retrieval", []).append(1.0 if ok else 0.0)
     torch.cuda.empty_cache()
 
+    n_infra_by_fam: Dict[str, int] = {}
+    for t in rep.results:
+        if t.infrastructure_error:
+            n_infra_by_fam[t.family] = n_infra_by_fam.get(t.family, 0) + 1
+            fam_scores.setdefault(t.family, [])
     for fam, scores in fam_scores.items():
-        if fam == "longctx":
-            rep.per_family[fam] = {
-                "score": round(sum(scores) / len(scores), 4),
-                "metric": "ppl_lower_is_better",
-                "n": len(scores),
-            }
-        else:
-            rep.per_family[fam] = {
-                "score": round(sum(scores) / len(scores), 4),
-                "metric": "accuracy",
-                "n": len(scores),
-            }
+        entry = {
+            "score": (round(sum(scores) / len(scores), 4)
+                      if scores else None),
+            "metric": ("ppl_lower_is_better" if fam == "longctx"
+                       else "accuracy"),
+            "n": len(scores),
+        }
+        if n_infra_by_fam.get(fam):
+            entry["n_infrastructure_errors"] = n_infra_by_fam[fam]
+            if not scores:
+                entry["unscorable_infrastructure"] = True
+        rep.per_family[fam] = entry
 
     # Evaluator integrity (HZN-IR-03 R4): duplicate task IDs would pair
     # wrong results in the transition ledger, and a nonfinite score would
@@ -564,6 +581,8 @@ def evaluate_capability(model, tok) -> CapabilityReport:
         raise ValueError(f"nonfinite capability scores: {bad}")
 
     rep.gpu_seconds = time.perf_counter() - t0
+    rep.has_infrastructure_failures = any(
+        t.infrastructure_error for t in rep.results)
     return rep
 
 
@@ -580,23 +599,36 @@ def capability_regression(
     """
     details = {}
     passed = True
+    n_infra = 0
     for fam in set(baseline.per_family) | set(candidate.per_family):
         b = baseline.per_family.get(fam, {})
         c = candidate.per_family.get(fam, {})
+        n_infra += (b.get("n_infrastructure_errors", 0)
+                    + c.get("n_infrastructure_errors", 0))
         if fam == "longctx":
             bp, cp = b.get("score", float("inf")), c.get("score", float("inf"))
             ratio = cp / bp if bp > 0 else float("inf")
             ok = ratio <= ppl_ratio_max
             details[fam] = {"baseline_ppl": bp, "candidate_ppl": cp,
                             "ratio": round(ratio, 4), "passed": ok}
+        elif b.get("score") is None or c.get("score") is None:
+            # No scored tasks on at least one side — an infrastructure
+            # failure, NOT a model regression (HZN-IR-05 §3). Conserva-
+            # tive: an unscorable family cannot certify "no regression".
+            details[fam] = {"passed": False,
+                            "unscorable_infrastructure": True,
+                            "n_infrastructure_errors":
+                                b.get("n_infrastructure_errors", 0)
+                                + c.get("n_infrastructure_errors", 0)}
         else:
-            ba, ca = b.get("score", 0.0), c.get("score", 0.0)
+            ba, ca = b["score"], c["score"]
             ok = ca >= ba - accuracy_tolerance
             details[fam] = {"baseline_acc": ba, "candidate_acc": ca,
                             "delta": round(ca - ba, 4), "passed": ok}
         if not details[fam]["passed"]:
             passed = False
-    return {"passed": passed, "per_family": details}
+    return {"passed": passed, "per_family": details,
+            "n_infrastructure_errors": n_infra}
 
 
 def transition_ledger(
@@ -624,13 +656,24 @@ def transition_ledger(
             f"{sorted(missing)}, missing candidate {sorted(extra)}")
     fams: Dict[str, dict] = {}
     overall = {"acquisition": 0, "regression": 0, "retained": 0,
-               "unresolved": 0}
+               "unresolved": 0, "infrastructure_failure": 0}
     # Continuous (ppl-ratio) transitions are reported separately from the
     # binary acquisition/regression/retained rates — mixing a relative-
     # change metric into pass/fail counts overstates the binary screen.
     continuous = {}
     for t in candidate.results:
         b = base_by_id[t.task_id]
+        if t.infrastructure_error or b.infrastructure_error:
+            # Evaluator-side failure on either side: the pair is
+            # unevaluable, never a regression or acquisition (HZN-IR-05).
+            f = fams.setdefault(t.family, {"acquisition": 0,
+                                           "regression": 0,
+                                           "retained": 0,
+                                           "unresolved": 0,
+                                           "infrastructure_failure": 0})
+            f["infrastructure_failure"] += 1
+            overall["infrastructure_failure"] += 1
+            continue
         if t.family == "longctx":
             ratio = t.score / b.score if b.score > 0 else float("inf")
             continuous[t.task_id] = {
