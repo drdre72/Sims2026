@@ -37,6 +37,15 @@ ai-research/
 | Estimated 100 candidates | ~1.17h |
 | Estimated 500 candidates | ~5.87h |
 
+> **Caveat (post-Phase B review):** These estimates are an initial throughput
+> approximation based on short generated answers and a 16-task evaluation
+> assumption. They do **not** account for 2048-token self-edit proposals,
+> repeated perplexity evaluations, long stats-table prompts, or diagnostic
+> overhead. Actual proposer-step wall-clock in Phase B was ~50–90s/step
+> (proposal decode + eval), not the preflight's per-candidate figure. Do not
+> use these numbers to freeze a Gate 1 compute budget — instrument real
+> GPU-seconds per step first.
+
 **Fallback kernels:** flash-linear-attention and causal_conv1d are not
 installed (native Windows / Triton limitation). The model runs correctly
 with reference PyTorch implementations but slower. Gate 0 measured this
@@ -141,6 +150,57 @@ unconstrained edits applied, zero collapses.**
 Script: `proposer_unconstrained.py` (`--max-new`, `--out` for protocol
 variants). Artifacts: `results/gate0.5_selfedit_reconstruction{,_2048}.json`
 (gitignored, full raw traces).
+
+## Seed-303 independent validation (2026-11-24)
+
+Reviewer finding: Phase B's "improvement" (7.46 → 6.98) was measured on the
+same fixed probe used as the proposer's feedback signal. This test checks
+whether the edit generalizes to held-out text.
+
+**Result: the seed-303 edit does NOT generalize.** It improved the
+training probe by 6.4% but worsened mean held-out perplexity by 2.1%.
+Seven of eight held-out domains degraded. This is probe-specific
+overfitting, not a capability gain.
+
+| Condition | Phase B probe | Mean held-out |
+|---|---|---|
+| Baseline (unmodified) | 7.460 | 4.359 |
+| Seed-303 (exact replay) | **6.983** | 4.450 (+2.1%) |
+| Control A: random L0 ×0.85 (5 seeds) | 7.485 | 4.448 |
+| Control B: non-L0 layer ×0.85 (5 seeds) | 7.480 | 4.394 |
+| Control C: all 32 layers ×0.85 | 9.404 | 6.354 |
+
+Random L0 attenuation (Control A) did NOT reproduce the probe improvement —
+the specific tensor selection matters, but not in a generalizable direction.
+Full report: `research/seed303_validation_report.md`.
+Script: `seed303_validate.py`. Artifact: `results/seed303_validation.json`.
+
+**Implication for Gate 1:** the evaluation protocol MUST use held-out text,
+not the feedback probe, to score edits. Matched random controls are
+essential.
+
+## Attenuation directional sweep (2026-11-24)
+
+Reviewer finding 2: Phase A tested scale only upward (growth). Phase B
+discovered downward scaling (attenuation) survives on L0. This sweep maps
+the attenuation collapse boundary.
+
+**594 probes, 11 collapses.** Key findings:
+
+- **L0 block (8 projections) has a sweet spot at ×0.70** — probe ppl
+  drops from 7.46 to 6.66 (11% "improvement" on the probe, but see
+  seed-303 validation above — this does NOT generalize).
+- **Directional asymmetry confirmed:** coherent additive to L0 out_proj
+  collapses at +0.25×std (Phase A); attenuation collapses at ×0.10.
+  The safe surface for downward is much wider than for upward.
+- **L0 mlp projections survive complete zeroing** (×0.00 → 7.43). L0
+  DeltaNet in_proj_a/b also survive. But out_proj, in_proj_qkv, and
+  in_proj_z collapse under extreme attenuation.
+- **Multi-layer attenuation narrows the safe surface:** 1 layer survives
+  to ×0.00; 2-16 layers collapse at ×0.50; all 32 layers collapse at ×0.70.
+
+Script: `attenuation_directional.py`.
+Artifact: `results/attenuation_directional.json` (gitignored).
 
 ## Running the preflight
 

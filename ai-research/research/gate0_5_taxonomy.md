@@ -3,6 +3,24 @@
 **Date:** 2026-11-23 · **Model:** Qwen/Qwen3.5-4B (BF16, FLA path) · **GPU:** RTX A4500
 **Status:** Phase A complete. Phase B (self-edit reconstruction) not run this round.
 
+> **SUPERSEDING NOTE (2026-11-23, post-Phase B):** Phase B *has* since been run
+> — twice (768-token and 2048-token proposal budgets), 3 seeds × 24 steps each.
+> The paper's "4B broke itself" was **not reproduced**: all 6 runs survived,
+> 123 unconstrained cumulative edits, zero collapses. The 4B model selected
+> only attenuating `scale` ops (×0.85–0.997), often in early layers. See
+> `research/gate0_5_phaseb_selfedit.md` and the README "Gate 0.5 Phase B"
+> section. The text below is preserved unchanged for chronology. Key
+> refinements from Phase B that update statements in this document:
+> - "Phase B would confirm the coherent-edit hypothesis" (§final) — it did
+>   *not*; the model avoided coherent *additive* edits and chose attenuation.
+> - "dense multiplicative *shrink* survives on L0 where additive collapses"
+>   is a real coverage gap — Phase A only probed scale *upward*; a dedicated
+>   downward-scaling sweep is now warranted.
+> - The Gate 1 surface derived below (sparse additive, layers 11–31 only)
+>   excludes the one edit class (dense L0 attenuation) that produced Phase B's
+>   only signal. A second attenuation arm is being added; see the Gate 1
+>   redesign pending reviewer sign-off.
+
 Artifacts: `results/gate0.5_failure_taxonomy.json` (136 probes, sparse-scalar
 sweep) and `results/gate0.5_failure_boundary.json` (384 probes, escalation
 sweep). Both gitignored/local.
