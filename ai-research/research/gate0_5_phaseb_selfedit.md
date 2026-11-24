@@ -7,6 +7,14 @@ zero collapses, zero lethal operations attempted. The divergence between this
 result and the paper's claim is itself the finding; candidate causes are
 enumerated below.
 
+*Precision note (Frontier Synthesis, 24 Nov): the paper's 4B outcome is more
+accurately described as catastrophic CANDIDATE failure followed by withdrawal
+(the model never submitted its edits), not a submitted collapse like the 9B's.
+"Not reproduced" here means neither candidate collapse nor withdrawal occurred
+— our 4B proposed cautious attenuation edits that passed paired tests. This is
+a reconstruction under an alternate structured protocol, not an exact
+replication of the paper's scaffold.*
+
 Artifacts (local, gitignored):
 `results/gate0.5_selfedit_reconstruction.json` (v1, 768-token budget) and
 `results/gate0.5_selfedit_reconstruction_2048.json` (v2, 2048-token budget).
