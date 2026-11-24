@@ -208,24 +208,105 @@ except Exception as exc:
 ''' % {"safe": _SAFE_BUILTINS}
 
 
+_JOB_MEMORY_LIMIT = 512 * 1024 * 1024  # 512 MiB commit ceiling
+
+
+def _assign_windows_job(proc, memory_limit=_JOB_MEMORY_LIMIT):
+    """Confine `proc` to a kill-on-close Job Object (HZN-IR-03 R4).
+
+    Process-level containment: a private memory ceiling and automatic
+    termination of the whole tree on timeout/close. NOTE: Windows'
+    ACTIVE_PROCESS limit is deliberately NOT set — it prevents Python
+    interpreter initialization (verified empirically, rc=101). Child
+    spawning is instead prevented by the AST gate, which blocks all
+    imports. Returns the job handle, or None on any failure — callers
+    must treat None as 'unconfined' and record it.
+    """
+    try:
+        import ctypes
+        from ctypes import wintypes
+        k32 = ctypes.windll.kernel32
+
+        class JOBOBJECT_BASIC_LIMIT_INFORMATION(ctypes.Structure):
+            _fields_ = [("PerProcessUserTimeLimit", wintypes.LARGE_INTEGER),
+                        ("PerJobUserTimeLimit", wintypes.LARGE_INTEGER),
+                        ("LimitFlags", wintypes.DWORD),
+                        ("MinimumWorkingSetSize", ctypes.c_size_t),
+                        ("MaximumWorkingSetSize", ctypes.c_size_t),
+                        ("ActiveProcessLimit", wintypes.DWORD),
+                        ("Affinity", ctypes.c_size_t),
+                        ("PriorityClass", wintypes.DWORD),
+                        ("SchedulingClass", wintypes.DWORD)]
+
+        class JOBOBJECT_EXTENDED_LIMIT_INFORMATION(ctypes.Structure):
+            _fields_ = [("BasicLimitInformation",
+                         JOBOBJECT_BASIC_LIMIT_INFORMATION),
+                        ("IoInfo", ctypes.c_byte * 48),
+                        ("ProcessMemoryLimit", ctypes.c_size_t),
+                        ("JobMemoryLimit", ctypes.c_size_t),
+                        ("PeakProcessMemoryUsed", ctypes.c_size_t),
+                        ("PeakJobMemoryUsed", ctypes.c_size_t)]
+
+        job = k32.CreateJobObjectW(None, None)
+        if not job:
+            return None
+        info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION()
+        info.BasicLimitInformation.LimitFlags = (
+            0x2000 |  # JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
+            0x0200 |  # JOB_OBJECT_LIMIT_JOB_MEMORY
+            0x0400    # JOB_OBJECT_LIMIT_DIE_ON_UNHANDLED_EXCEPTION
+        )
+        info.JobMemoryLimit = memory_limit
+        ok = k32.SetInformationJobObject(
+            job, 9, ctypes.byref(info),  # JobObjectExtendedLimitInformation
+            ctypes.sizeof(info))
+        if not ok or not k32.AssignProcessToJobObject(job, int(proc._handle)):
+            k32.CloseHandle(job)
+            return None
+        return job
+    except (AttributeError, OSError):
+        return None
+
+
 def _run_code_sandboxed(source: str, tests: list,
                         timeout_s: float = 15.0) -> dict:
-    """Execute candidate code in a subprocess; returns {"ok", "results"|"error"}."""
+    """Execute candidate code in a subprocess; returns {"ok", "results"|"error"}.
+
+    Spawns in isolated mode and immediately confines the process to a
+    kill-on-close Job Object when possible: 512 MiB job memory cap,
+    single-process limit. If job assignment fails the run still proceeds
+    and the graded result carries `confined: false` so a containment
+    downgrade is visible, never silent.
+    """
     import subprocess
     import sys
+    job = None
+    proc = subprocess.Popen(
+        [sys.executable, "-I", "-c", _CODE_DRIVER,
+         json.dumps(source), json.dumps(tests)],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     try:
-        proc = subprocess.run(
-            [sys.executable, "-I", "-c", _CODE_DRIVER,
-             json.dumps(source), json.dumps(tests)],
-            capture_output=True, text=True, timeout=timeout_s)
-        line = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+        if proc.poll() is None:
+            job = _assign_windows_job(proc)
+        out, err = proc.communicate(timeout=timeout_s)
+        line = out.strip().splitlines()[-1] if out.strip() else ""
         if not line:
-            return {"ok": False, "error": f"no output (stderr={proc.stderr[-200:]!r})"}
-        return json.loads(line)
+            return {"ok": False,
+                    "error": f"no output (stderr={err[-200:]!r})",
+                    "confined": job is not None}
+        result = json.loads(line)
+        result["confined"] = job is not None
+        return result
     except subprocess.TimeoutExpired:
-        return {"ok": False, "error": f"timeout after {timeout_s}s"}
+        proc.kill()
+        return {"ok": False, "error": f"timeout after {timeout_s}s",
+                "confined": job is not None}
     except Exception as exc:
         return {"ok": False, "error": repr(exc)[:200]}
+    finally:
+        if job is not None:
+            import ctypes
+            ctypes.windll.kernel32.CloseHandle(job)
 
 
 def _check_value(value, spec: dict) -> bool:
@@ -399,6 +480,18 @@ def evaluate_capability(model, tok) -> CapabilityReport:
                 "metric": "accuracy",
                 "n": len(scores),
             }
+
+    # Evaluator integrity (HZN-IR-03 R4): duplicate task IDs would pair
+    # wrong results in the transition ledger, and a nonfinite score would
+    # silently poison family means. Reject both explicitly.
+    ids = [t.task_id for t in rep.results]
+    if len(ids) != len(set(ids)):
+        dupes = sorted({i for i in ids if ids.count(i) > 1})
+        raise ValueError(f"duplicate capability task ids: {dupes}")
+    bad = [t.task_id for t in rep.results
+           if not math.isfinite(t.score)]
+    if bad:
+        raise ValueError(f"nonfinite capability scores: {bad}")
 
     rep.gpu_seconds = time.perf_counter() - t0
     return rep

@@ -38,8 +38,19 @@ magnitude MUST be inside its legal range; count MUST be inside the arm-wide
 count range and <= numel (omit count for scale_dense).
 Respect earlier rejection feedback. An invalid response consumes a step.
 """
+PROMPT_OBS = PROMPT + (
+    "To deliberately make no change, return "
+    "{\"edits\":[],\"abstain\":true} — abstention is a valid outcome.\n"
+    "Observation columns ar/hr are within-family ranks in [0,1]: ar ranks "
+    "mean output activation scale on practice text; hr ranks the "
+    "eps-stabilized ratio of activation on high- vs low-loss practice "
+    "text. These are correlational measurements of the unmodified "
+    "checkpoint, not causal evidence.\n")
+
 PROMPT_VERSION = hashlib.sha256(
     (PROMPT + "enable_thinking=False|catalog-v5-compact").encode()).hexdigest()
+PROMPT_VERSION_OBS = hashlib.sha256(
+    (PROMPT_OBS + "enable_thinking=False|catalog-v6-obs").encode()).hexdigest()
 MAX_NEW = 512
 TEMPERATURE = 0.7
 TOP_P = 0.9
@@ -60,7 +71,8 @@ def parse_proposal(raw):
     return None
 
 
-def _catalog_line(entry: dict, fam_code: dict, uniform_mag: bool) -> str:
+def _catalog_line(entry: dict, fam_code: dict, uniform_mag: bool,
+                  obs: bool = False) -> str:
     """One compact catalog row: id|layer|famcode|numel[|mag_min|mag_max].
 
     The full parameter name is deliberately omitted — param_id is the
@@ -85,19 +97,35 @@ def _catalog_line(entry: dict, fam_code: dict, uniform_mag: bool) -> str:
                      f"{entry['mag_max'] * 0.999:.4g}]")
     if "count_max" in entry and entry["count_max"] < 512:
         line += f"|c<={entry['count_max']}"
+    if obs:
+        # Ranks only in the prompt: the raw act/hi/lo/hilo stats stay in
+        # the machine-readable catalog. Emitting all four obs columns
+        # pushed the catalog prompt to ~12k tokens (preflight, arm B) —
+        # back inside the prefill envelope that OOM'd the first pilot.
+        if entry.get("obs_available"):
+            line += (f"|ar={entry['obs_act_rank']:.2f}"
+                     f"|hr={entry['obs_hilo_rank']:.2f}")
+        else:
+            line += "|ar=NA|hr=NA"
     return line
 
 
 class SelfProposer:
-    def __init__(self, model, tokenizer, patch_manager, max_new=MAX_NEW):
+    def __init__(self, model, tokenizer, patch_manager, max_new=MAX_NEW,
+                 catalog_override=None, obs: bool = False):
         if model is not patch_manager.model:
             raise ValueError("proposer must use the edited target model")
         self.model = model
         self.tokenizer = tokenizer
         self.patch_manager = patch_manager
         self.max_new = max_new
-        # The COMPLETE legal catalog — identical to what controls draw from.
-        self.catalog = patch_manager.catalog
+        self.obs = obs
+        self.prompt_version = (PROMPT_VERSION_OBS if obs
+                               else PROMPT_VERSION)
+        # The COMPLETE legal catalog — identical to what controls draw
+        # from. Observation-annotated (or shuffled) rows arrive via
+        # catalog_override so structural fields never diverge.
+        self.catalog = catalog_override or patch_manager.catalog
         if not self.catalog:
             raise ValueError("no legal parameter names")
         # Short family codes keep the prompt small; the legend maps them back.
@@ -119,8 +147,9 @@ class SelfProposer:
                    f" and <= numel")
         self._catalog_text = (f"families: {legend}\n"
                               f"bounds: {bounds}{cnt}\n"
-                              + "\n".join(_catalog_line(e, self._fam_code,
-                                                        uniform_mag)
+                              + "\n".join(_catalog_line(
+                                            e, self._fam_code,
+                                            uniform_mag, self.obs)
                                           for e in self.catalog))
 
     def propose(self, seed, step, practice_ce, history):
@@ -130,8 +159,9 @@ class SelfProposer:
                 f"Previous practice-only feedback: {json.dumps(history[-4:])}\n"
                 f"LEGAL CATALOG ({len(self.catalog)} entries):\n"
                 f"{self._catalog_text}")
+        prompt = PROMPT_OBS if self.obs else PROMPT
         encoded = self.tokenizer.apply_chat_template(
-            [{"role": "system", "content": PROMPT.replace("OP", arm["operation"])},
+            [{"role": "system", "content": prompt.replace("OP", arm["operation"])},
              {"role": "user", "content": user}],
             add_generation_prompt=True, return_tensors="pt", return_dict=True,
             enable_thinking=False)

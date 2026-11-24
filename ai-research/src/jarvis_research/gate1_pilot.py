@@ -94,6 +94,7 @@ def random_control_proposals(
     arm_config: dict,
     n_steps: int,
     seed: int,
+    weights: Optional[Dict[int, float]] = None,
 ) -> List[dict]:
     """Generate n_steps random proposals from the SHARED legal catalog.
 
@@ -103,15 +104,23 @@ def random_control_proposals(
     shown to the model. This matches the SEARCH SPACE and proposal budget;
     it does not match the model's parameter-selection distribution (that is
     the quantity under test).
+
+    `weights` (param_id -> weight) implements the Gate 1.2 evidence-guided
+    conventional interpreter (interp-v1): biased parameter SELECTION with
+    identical magnitude/count sampling, so any A-vs-B difference isolates
+    the evidence channel rather than the proposal format.
     """
     import random as _random
     g = _random.Random(seed * 31 + 17)
     proposals = []
     if not catalog:
         return proposals
+    w_list = ([max(weights.get(e["param_id"], 0.0), 0.0) for e in catalog]
+              if weights else None)
 
     for step in range(n_steps):
-        entry = catalog[g.randrange(len(catalog))]
+        entry = (g.choices(catalog, weights=w_list, k=1)[0]
+                 if w_list else catalog[g.randrange(len(catalog))])
         if arm_config["name"] == "sparse_additive":
             magnitude = g.uniform(entry["mag_min"], entry["mag_max"])
             count = g.randint(entry["count_min"], entry["count_max"])
@@ -212,17 +221,20 @@ def local_provenance(model_id, revision=None):
 
 
 def adaptive_choice(model, tok, ev, patch_manager, seed, step, catalog,
-                    pool: int = 2):
+                    pool: int = 2,
+                    weights: Optional[Dict[int, float]] = None):
     """Compare trial edits on practice; restore after each trial.
 
     Evaluates `pool` candidates per iteration. The caller sets the iteration
     count so total practice evaluations match the autonomous trajectory's
-    budget.
+    budget. `weights` (Gate 1.2 interp-v1) biases candidate parameter
+    selection toward high |ln hilo| rows without changing magnitude
+    sampling or the practice-evaluation budget.
     """
     from jarvis_research.gate1_patch_manager import PatchManager
     arm_config = patch_manager.arm
     choices = random_control_proposals(catalog, arm_config, pool,
-                                       seed * 1009 + step)
+                                       seed * 1009 + step, weights=weights)
     best, best_ce = None, float("inf")
     trial_seconds = 0.0
     for idx, choice in enumerate(choices):
@@ -263,7 +275,12 @@ def main() -> int:
     ap.add_argument("--max-new", type=int, default=512)
     ap.add_argument("--arms", nargs="+", choices=("A", "B"), default=["A", "B"])
     ap.add_argument("--conditions", nargs="+",
-                    choices=("autonomous", "random", "fixed_heuristic", "adaptive"),
+                    choices=("autonomous", "random", "fixed_heuristic",
+                             "adaptive",
+                             # Gate 1.2 six-condition architecture (REV 1 §4):
+                             # A=model, B=conventional; 0=blind, 1=real obs,
+                             # 2=shuffled placebo.
+                             "A0", "A1", "A2", "B0", "B1", "B2"),
                     default=["autonomous", "random", "fixed_heuristic", "adaptive"])
     ap.add_argument("--adaptive-pool", type=int, default=2,
                     help="candidate edits evaluated per adaptive step")
@@ -273,7 +290,16 @@ def main() -> int:
     ap.add_argument("--out", default="gate1_pilot_v2.json")
     ap.add_argument("--resume", action="store_true",
                     help="skip candidates already present in --out")
+    ap.add_argument("--preflight", action="store_true",
+                    help="Gate 1.2 observation-layer preflight ONLY: collect "
+                         "observations, verify hook coverage, measure peak "
+                         "VRAM and prompt tokens, write --out, run NO "
+                         "candidates (HZN-IR-03 R4)")
     args = ap.parse_args()
+
+    # Gate 1.2 condition codes; legacy names alias to their blind variants.
+    _ALIAS = {"autonomous": "A0", "adaptive": "B0"}
+    args.conditions = [_ALIAS.get(c, c) for c in args.conditions]
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from jarvis_research.gate1_evaluator import Evaluator, check_regression
@@ -283,6 +309,11 @@ def main() -> int:
     from jarvis_research.gate1_capability import (
         evaluate_capability, capability_regression, suite_fingerprint,
         transition_ledger)
+    from jarvis_research.gate1_observation import (
+        OBSERVATION_VERSION, INTERPRETER_VERSION, resolve_hook_targets,
+        collect_observations, annotate_catalog, shuffle_observations,
+        interpreter_weights, obs_sha256)
+    from jarvis_research.gate1_proposer import PROMPT_VERSION_OBS
 
     if args.steps < 1:
         ap.error("--steps must be positive")
@@ -316,6 +347,38 @@ def main() -> int:
     # the resume refuses rather than silently mixing protocol versions.
     catalogs = {a: build_catalog(make_arm_config(a), params)
                 for a in args.arms}
+
+    # Gate 1.2 observation layer: collected ONCE on the unmodified
+    # checkpoint, before any candidate edit, and hashed into the manifest.
+    # Needed for A1/A2/B1/B2; skipped for blind-only runs.
+    obs_needed = any(c in ("A1", "A2", "B1", "B2") for c in args.conditions)
+    obs_block = None
+    obs_targets = {}
+    obs_seconds = 0.0
+    if obs_needed:
+        if torch.cuda.is_available():
+            torch.cuda.reset_peak_memory_stats()
+        t_obs = time.perf_counter()
+        for a in args.arms:
+            obs_targets[a] = resolve_hook_targets(model, catalogs[a])
+        # Union of all arm targets -> every hooked path, not just arm[0]'s.
+        all_targets = {}
+        for t in obs_targets.values():
+            for pid, path in t.items():
+                all_targets[path] = path
+        obs_block = collect_observations(
+            model, tok, ev.practice, all_targets,
+            checkpoint_revision=revision)
+        obs_seconds = time.perf_counter() - t_obs
+        n_groups = len(obs_block["groups"])
+        n_unavail = sum(1 for g in obs_block["groups"].values()
+                        if not g.get("available"))
+        print(f"[obs] {n_groups} hooked modules ({n_unavail} unexecuted), "
+              f"hi={len(obs_block['hi_passages'])} "
+              f"lo={len(obs_block['lo_passages'])} passages, "
+              f"eps={obs_block['eps']:.4g}, {obs_seconds:.1f}s",
+              flush=True)
+
     manifest = {
         "model_revision": revision,
         # Bind the exact weight bytes and implementation revision to the
@@ -338,6 +401,14 @@ def main() -> int:
         "catalog_sha256": {a: _sha256_obj(c)
                            for a, c in catalogs.items()},
         "capability_suite_sha256": suite_fingerprint(),
+        "observation": ({
+            "sha256": obs_sha256(obs_block),
+            "version": OBSERVATION_VERSION,
+            "interpreter_version": INTERPRETER_VERSION,
+        } if obs_block else None),
+        "prompt_sha256_by_condition": {
+            c: (PROMPT_VERSION_OBS if c in ("A1", "A2") else PROMPT_VERSION)
+            for c in args.conditions if c in ("A0", "A1", "A2")},
         "seeds": sorted(args.seeds),
         "steps": args.steps,
         "max_new": args.max_new,
@@ -347,6 +418,49 @@ def main() -> int:
     }
     manifest["sha256"] = hashlib.sha256(
         json.dumps(manifest, sort_keys=True).encode()).hexdigest()
+
+    if args.preflight:
+        # Observation-layer preflight (HZN-IR-03 R4): verify hook coverage
+        # (resolve_hook_targets already raises on misses), record group
+        # counts/unavailable rows, prompt token cost, placebo coverage and
+        # peak VRAM. Runs NO candidates.
+        pre = {"gate": "gate1_2_observation_preflight",
+               "manifest_sha256": manifest["sha256"],
+               "observation_seconds": round(obs_seconds, 2),
+               "peak_vram_bytes": (torch.cuda.max_memory_allocated()
+                                   if torch.cuda.is_available() else None)}
+        if obs_block:
+            pre["observation"] = {
+                "n_groups": len(obs_block["groups"]),
+                "n_unexecuted": sum(1 for g in obs_block["groups"].values()
+                                    if not g.get("available")),
+                "eps": obs_block["eps"],
+                "hi_passages": obs_block["hi_passages"],
+                "lo_passages": obs_block["lo_passages"],
+                "checkpoint": obs_block["checkpoint_sha256"],
+            }
+            pre["arms"] = {}
+            for a in args.arms:
+                ann = annotate_catalog(catalogs[a], obs_block,
+                                       obs_targets[a])
+                n_un = sum(1 for r in ann if not r.get("obs_available"))
+                sh = shuffle_observations(ann, seed=0)
+                pm = PatchManager(model, tok, make_arm_config(a), seed=0)
+                pr = SelfProposer(model, tok, pm, args.max_new,
+                                  catalog_override=ann, obs=True)
+                n_tok = len(tok(pr._catalog_text).input_ids)
+                pre["arms"][a] = {
+                    "catalog_rows": len(ann),
+                    "obs_unavailable_rows": n_un,
+                    "catalog_prompt_tokens": n_tok,
+                    "shuffle_effective_coverage_seed0":
+                        sh["effective_coverage"],
+                    "n_groups_shuffled": sh["n_groups_shuffled"],
+                }
+        out = RESULTS / args.out
+        out.write_text(json.dumps(pre, indent=2), encoding="utf-8")
+        print(f"[preflight] wrote {out}", flush=True)
+        return 0
 
     # Baseline evaluation on ALL partitions + measured quality-guard baseline
     # + baseline capability suite (all on the UNMODIFIED pinned checkpoint).
@@ -394,6 +508,14 @@ def main() -> int:
             },
         },
         "manifest": manifest,
+        "observation_seconds": round(obs_seconds, 2),
+        "compute_accounting": ("observation_seconds is the shared "
+                               "collection cost, attributed to obs-fed "
+                               "conditions via obs_amortized_seconds per "
+                               "candidate; per-candidate stage_seconds "
+                               "record proposal/validation/application/"
+                               "quality/practice/selection/regression/"
+                               "capability/rollback separately"),
         "candidates": [],
     }
     out = RESULTS / args.out
@@ -433,8 +555,33 @@ def main() -> int:
                 pm = PatchManager(model, tok, arm_config, seed=seed,
                                   quality_baseline_ppl=quality_baseline_ppl)
                 pm.candidate.parent_checkpoint_sha = revision
-                proposer = (SelfProposer(model, tok, pm, args.max_new)
-                            if condition == "autonomous" else None)
+                # Gate 1.2 information tiers. Shuffled variants are
+                # re-permuted per seed and their coverage is recorded.
+                annotated = None
+                shuffle_info = None
+                if condition in ("A1", "B1"):
+                    annotated = annotate_catalog(catalog, obs_block,
+                                                 obs_targets[arm_name])
+                elif condition in ("A2", "B2"):
+                    sh = shuffle_observations(
+                        annotate_catalog(catalog, obs_block,
+                                         obs_targets[arm_name]),
+                        seed=seed)
+                    annotated = sh["catalog"]
+                    shuffle_info = {
+                        "seed": seed,
+                        "effective_coverage": sh["effective_coverage"],
+                        "n_groups_shuffled": sh["n_groups_shuffled"],
+                        "permutation": sh.get("permutation"),
+                    }
+                cond_catalog = annotated or catalog
+                proposer = (SelfProposer(
+                    model, tok, pm, args.max_new,
+                    catalog_override=cond_catalog,
+                    obs=condition in ("A1", "A2"))
+                    if condition in ("A0", "A1", "A2") else None)
+                interp_weights = (interpreter_weights(cond_catalog)
+                                  if condition in ("B1", "B2") else None)
                 history = []
                 practice_ce = math.log(base_practice.aggregate_ppl)
                 stage_totals = {stage: 0.0 for stage in (
@@ -447,18 +594,18 @@ def main() -> int:
                 # iterations = ceil(steps/divisor) so total practice
                 # evaluations can match the autonomous trajectory's budget.
                 n_steps = args.steps
-                if condition == "adaptive":
+                if condition in ("B0", "B1", "B2"):
                     n_steps = max(1, math.ceil(args.steps / args.adaptive_step_divisor))
                 for step in range(n_steps):
                     step_times = {stage: 0.0 for stage in stage_totals}
-                    if condition == "autonomous":
+                    if condition in ("A0", "A1", "A2"):
                         raw, proposal, step_times["proposal"] = proposer.propose(
                             seed, step, practice_ce, history)
-                    elif condition == "adaptive":
+                    elif condition in ("B0", "B1", "B2"):
                         start = time.perf_counter()
                         proposal, trial_s, attempts = adaptive_choice(
-                            model, tok, ev, pm, seed, step, catalog,
-                            pool=args.adaptive_pool)
+                            model, tok, ev, pm, seed, step, cond_catalog,
+                            pool=args.adaptive_pool, weights=interp_weights)
                         step_times["proposal"] = time.perf_counter() - start
                         control_attempts += attempts
                         raw = json.dumps(proposal) if proposal else "null"
@@ -471,6 +618,20 @@ def main() -> int:
                         raw = json.dumps(proposal)
                         step_times["proposal"] = time.perf_counter() - start
                         control_attempts += 1
+                    # Operational abstention (HZN-IR-03 R4): a deliberate
+                    # no-change proposal consumes the step, leaves the
+                    # checkpoint untouched and is recorded as an outcome.
+                    if (proposal and proposal.get("abstain")
+                            and not proposal.get("edits")):
+                        pm.record_edit(_make_record(
+                            arm_name, step, raw, proposal, "abstained",
+                            seed=seed, gpu_seconds=sum(step_times.values()),
+                            timings=step_times))
+                        for stage, value in step_times.items():
+                            stage_totals[stage] += value
+                        history.append({"step": step, "abstained": True})
+                        print(f"  step {step}: ABSTAIN", flush=True)
+                        continue
                     before = practice_ce
                     start = time.perf_counter()
                     edits, err = pm.validate(proposal)
@@ -568,9 +729,8 @@ def main() -> int:
                 candidate_dict.update({
                     "label": label,
                     "condition": condition,
-                    "proposer_prompt_sha256": (PROMPT_VERSION
-                                               if condition == "autonomous"
-                                               else None),
+                    "proposer_prompt_sha256": (proposer.prompt_version
+                                               if proposer else None),
                     "selection_aggregate_ppl": sel.aggregate_ppl,
                     "selection_delta": round(sel_delta, 4),
                     "selection_delta_ce": sel.cross_entropy - base_selection.cross_entropy,
@@ -581,6 +741,19 @@ def main() -> int:
                     "capability_check": cap_check,
                     "transition_ledger": ledger,
                     "n_steps_run": n_steps,
+                    "budget": {
+                        "intervention_allocation": n_steps,
+                        "pool": (args.adaptive_pool
+                                 if condition in ("B0", "B1", "B2") else 1),
+                        "stopping_rule": ("collapse -> terminate trajectory; "
+                                          "else fixed step count"),
+                    },
+                    "obs_amortized_seconds": (
+                        round(obs_seconds / max(1, sum(
+                            1 for c in args.conditions
+                            if c in ("A1", "A2", "B1", "B2"))), 2)
+                        if condition in ("A1", "A2", "B1", "B2") else 0.0),
+                    "shuffle_info": shuffle_info,
                     "stage_seconds": stage_totals,
                     "candidate_wall_seconds": elapsed,
                     "unattributed_wall_seconds": elapsed - sum(stage_totals.values()),
