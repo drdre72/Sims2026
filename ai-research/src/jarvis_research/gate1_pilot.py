@@ -71,6 +71,19 @@ def _git_sha():
         return "unknown"
 
 
+def _file_sha256(path: Path) -> str:
+    h = hashlib.sha256()
+    with open(path, "rb") as f:
+        for block in iter(lambda: f.read(4 * 1024 * 1024), b""):
+            h.update(block)
+    return h.hexdigest()
+
+
+def _sha256_obj(obj) -> str:
+    return hashlib.sha256(
+        json.dumps(obj, sort_keys=True, default=str).encode()).hexdigest()
+
+
 # ---------------------------------------------------------------------------
 # Control generators. Each produces a sequence of proposals for a given arm,
 # matched to the arm's allowed surface and the proposer's step count.
@@ -268,7 +281,8 @@ def main() -> int:
         PatchManager, make_arm_config, build_catalog, probe_ppl)
     from jarvis_research.gate1_proposer import SelfProposer, PROMPT_VERSION
     from jarvis_research.gate1_capability import (
-        evaluate_capability, capability_regression)
+        evaluate_capability, capability_regression, suite_fingerprint,
+        transition_ledger)
 
     if args.steps < 1:
         ap.error("--steps must be positive")
@@ -295,6 +309,33 @@ def main() -> int:
     params = {n: p for n, p in model.named_parameters()}
     print(f"[load] done in {time.perf_counter()-t0:.1f}s, {len(params)} params",
           flush=True)
+
+    # Run manifest: hash every protocol element that must match for
+    # --resume to be valid. A changed prompt, partition file, arm config,
+    # catalog or capability suite produces a different manifest hash and
+    # the resume refuses rather than silently mixing protocol versions.
+    catalogs = {a: build_catalog(make_arm_config(a), params)
+                for a in args.arms}
+    manifest = {
+        "model_revision": revision,
+        "partition_sha256": {
+            k: _file_sha256(data_dir / f"{k}.json")
+            for k in ("practice", "selection", "regression")},
+        "proposer_prompt_sha256": PROMPT_VERSION,
+        "arm_config_sha256": {a: _sha256_obj(make_arm_config(a))
+                              for a in catalogs},
+        "catalog_sha256": {a: _sha256_obj([e["param"] for e in c])
+                           for a, c in catalogs.items()},
+        "capability_suite_sha256": suite_fingerprint(),
+        "seeds": sorted(args.seeds),
+        "steps": args.steps,
+        "max_new": args.max_new,
+        "adaptive_pool": args.adaptive_pool,
+        "adaptive_step_divisor": args.adaptive_step_divisor,
+        "conditions": sorted(args.conditions),
+    }
+    manifest["sha256"] = hashlib.sha256(
+        json.dumps(manifest, sort_keys=True).encode()).hexdigest()
 
     # Baseline evaluation on ALL partitions + measured quality-guard baseline
     # + baseline capability suite (all on the UNMODIFIED pinned checkpoint).
@@ -341,16 +382,24 @@ def main() -> int:
                 "gpu_seconds": base_regression.gpu_seconds,
             },
         },
+        "manifest": manifest,
         "candidates": [],
     }
     out = RESULTS / args.out
     completed = set()
     if args.resume and out.exists():
         prior = json.loads(out.read_text(encoding="utf-8"))
+        prior_sha = (prior.get("manifest") or {}).get("sha256")
+        if prior_sha != manifest["sha256"]:
+            raise SystemExit(
+                f"--resume manifest mismatch: prior={prior_sha} != "
+                f"current={manifest['sha256']}; refusing to mix protocol "
+                f"versions. Use a different --out or rerun without --resume.")
         report["baseline"] = prior.get("baseline", report["baseline"])
         report["candidates"] = prior.get("candidates", [])
         completed = {c.get("label") for c in report["candidates"]}
-        print(f"[resume] {len(completed)} candidates already complete", flush=True)
+        print(f"[resume] {len(completed)} candidates already complete",
+              flush=True)
 
     # Regression tolerance (preliminary, for pilot only — will be set
     # formally when confirmatory protocol is frozen). Using 0.05 nats
@@ -359,7 +408,7 @@ def main() -> int:
 
     for arm_name in args.arms:
         arm_config = make_arm_config(arm_name)
-        catalog = build_catalog(arm_config, params)
+        catalog = catalogs[arm_name]
         print(f"[catalog] arm {arm_name}: {len(catalog)} legal entries",
               flush=True)
         for condition in args.conditions:
@@ -484,6 +533,19 @@ def main() -> int:
                 reg_passed, reg_details = check_regression(
                     base_regression, reg, pilot_tolerance)
                 cap_check = capability_regression(base_capability, cap)
+                # GUARD-style paired-transition ledger: acquisition /
+                # regression / retained / unresolved, per capability task
+                # and per regression domain. Net deltas hide the two-rate
+                # distinction this ledger preserves.
+                ledger = transition_ledger(base_capability, cap)
+                domain_ledger = {}
+                for d, rr in reg.per_domain.items():
+                    bce = math.log(base_regression.per_domain[d].aggregate_ppl)
+                    dce = math.log(rr.aggregate_ppl) - bce
+                    domain_ledger[d] = (
+                        "acquisition" if dce < -0.005 else
+                        "regression" if dce > 0.005 else "retained")
+                ledger["regression_domains"] = domain_ledger
                 sel_delta = sel.aggregate_ppl - base_selection.aggregate_ppl
                 ok, bad, rb_s = pm.rollback_all()
                 stage_totals["rollback"] += rb_s
@@ -506,6 +568,7 @@ def main() -> int:
                     "regression_details": reg_details,
                     "capability": cap.to_dict(),
                     "capability_check": cap_check,
+                    "transition_ledger": ledger,
                     "n_steps_run": n_steps,
                     "stage_seconds": stage_totals,
                     "candidate_wall_seconds": elapsed,

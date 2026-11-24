@@ -6,9 +6,10 @@ suite adds four small, deterministic task families scored INDEPENDENTLY of
 the selection/regression perplexity endpoint:
 
   reasoning   — multi-step arithmetic word problems, exact numeric answer
-  code        — short function completion, exact-match on final expression
-  structured  — constrained JSON generation, schema-validated
-  longctx     — perplexity on a single long (>1024-token) coherent passage
+  code        — short function completion, sandboxed exec on test inputs
+  structured  — constrained JSON generation, schema + semantic value checks
+  longctx     — perplexity on a ~730-token coherent passage (fluency only)
+  retrieval   — needle question requiring information from deep in LONGCTX
 
 All prompts and references are ORIGINAL text written for Gate 1.1 — they are
 not the examined seed-303 or gate1_eval passages. Like the development
@@ -52,35 +53,69 @@ REASONING_TASKS = [
 CODE_TASKS = [
     {"id": "code_1",
      "prompt": "Complete the Python function. Return ONLY the completed function body line(s), no explanation.\n\ndef is_palindrome(s):\n    s = s.lower().replace(' ', '')\n    return",
-     "expect_contains": ["[::-1]", "=="]},
+     "tests": [("is_palindrome('Racecar')", True),
+               ("is_palindrome('A man a plan a canal Panama')", True),
+               ("is_palindrome('banana')", False)]},
     {"id": "code_2",
      "prompt": "Complete the Python function. Return ONLY the completed line(s), no explanation.\n\ndef sum_digits(n):\n    total = 0\n    while n > 0:\n        total += n % 10\n        n =",
-     "expect_contains": ["// 10", "n //= 10", "n = n // 10"]},
+     "tests": [("sum_digits(1234)", 10), ("sum_digits(999)", 27),
+               ("sum_digits(5)", 5)]},
     {"id": "code_3",
-     "prompt": "Complete the Python function. Return ONLY the completed line(s), no explanation.\n\ndef fizzbuzz(n):\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            print('FizzBuzz')\n        elif i % 3 == 0:",
-     "expect_contains": ["Fizz", "elif", "else"]},
+     "prompt": "Complete the Python function. Return ONLY the completed line(s), no explanation.\n\ndef fizzbuzz_lines(n):\n    out = []\n    for i in range(1, n + 1):\n        if i % 15 == 0:\n            out.append('FizzBuzz')\n        elif i % 3 == 0:",
+     "tests": [("fizzbuzz_lines(16)", ["1", "2", "Fizz", "4", "Buzz", "Fizz",
+                                      "7", "8", "Fizz", "Buzz", "11", "Fizz",
+                                      "13", "14", "FizzBuzz", "16"])]},
     {"id": "code_4",
      "prompt": "Complete the Python function. Return ONLY the completed line(s), no explanation.\n\ndef binary_search(arr, target):\n    lo, hi = 0, len(arr) - 1\n    while lo <= hi:\n        mid = (lo + hi) // 2\n        if arr[mid] == target:\n            return mid\n        elif arr[mid] < target:",
-     "expect_contains": ["lo = mid", "lo=mid"]},
+     "tests": [("binary_search([1,3,5,7,9], 7)", 3),
+               ("binary_search([1,3,5,7,9], 4)", -1),
+               ("binary_search([2], 2)", 0)]},
 ]
 
 STRUCTURED_TASKS = [
     {"id": "struct_1",
      "prompt": "Extract the person from the sentence as JSON with keys name, age, city. Output ONLY valid JSON.\n\nSentence: Maria Chen, who is 34 years old, lives in Portland.",
-     "required_keys": ["name", "age", "city"]},
+     "required_keys": ["name", "age", "city"],
+     "value_checks": {"name": {"contains_all": ["maria", "chen"]},
+                      "age": {"equals": 34},
+                      "city": {"contains_all": ["portland"]}}},
     {"id": "struct_2",
      "prompt": "List the items as a JSON object with key 'items' containing an array of strings. Output ONLY valid JSON.\n\nItems: apples, bread, and a 2-liter bottle of milk.",
-     "required_keys": ["items"]},
+     "required_keys": ["items"],
+     "value_checks": {"items": {"list_contains_all": ["apple", "bread", "milk"]}}},
 ]
 
 # Long-context passage: original coherent text, ~1200+ tokens when encoded.
 # Repeats a varied technical narrative to exceed the context threshold.
 _LONGCTX_PARAGRAPHS = [
     "The archive system at the northern observatory had been running continuously for eleven years when the first anomaly appeared in its calibration logs. Technicians initially dismissed the irregular readings as sensor drift, a common fault in instruments exposed to temperature swings between desert days and freezing nights. But the pattern persisted through three separate maintenance cycles, and the duty engineer who finally flagged it noted that the deviations correlated not with weather but with the station's own power-draw cycles.",
-    "Investigation revealed that the archive's indexing algorithm had been silently accumulating rounding errors each time it compressed a nightly backup. Individually negligible, the errors compounded over thousands of cycles until the index no longer pointed to the correct data blocks. The fix required rewriting the compression routine and re-indexing eleven years of observations, a process that took four months and consumed most of the station's spare computing capacity.",
+    "Investigation revealed that the archive's indexing algorithm had been silently accumulating rounding errors each time it compressed a nightly backup. Individually negligible, the errors compounded over thousands of cycles until the index no longer pointed to the correct data blocks. The duty engineer's calibration threshold, recorded in the maintenance log as exactly 47.3 microkelvin, turned out to be the decisive clue isolating the faulty routine. The fix required rewriting the compression routine and re-indexing eleven years of observations, a process that took four months and consumed most of the station's spare computing capacity.",
     "The lesson was incorporated into the observatory's design standards: every long-running archival system now undergoes a scheduled integrity audit, and all compression routines must document their numerical precision assumptions. What began as a minor calibration complaint became one of the most thorough reviews of the facility's data pipeline in its history, and the resulting procedures have since been adopted by three other research stations.",
 ]
-LONGCTX_TEXT = "\n\n".join(_LONGCTX_PARAGRAPHS * 3)  # ~730 tokens
+LONGCTX_TEXT = "\n\n".join(_LONGCTX_PARAGRAPHS * 3)  # ~750 tokens
+
+# Needle task: the fact sits mid-passage inside repeated text, so correct
+# answers require actual long-range retrieval — not perplexity.
+RETRIEVAL_TASKS = [
+    {"id": "retr_1",
+     "prompt": (LONGCTX_TEXT
+                + "\n\nQuestion: What was the duty engineer's calibration "
+                  "threshold, in microkelvin? Answer with just the number."),
+     "answer": "47.3"},
+]
+
+
+def suite_fingerprint() -> str:
+    """SHA-256 over the exact task definitions — a resume manifest can detect
+    a changed suite instead of silently mixing scoring versions."""
+    import hashlib
+    payload = {
+        "reasoning": REASONING_TASKS, "code": CODE_TASKS,
+        "structured": STRUCTURED_TASKS, "longctx": LONGCTX_TEXT,
+        "retrieval": RETRIEVAL_TASKS,
+    }
+    return hashlib.sha256(
+        json.dumps(payload, sort_keys=True).encode()).hexdigest()
 
 
 @dataclass
@@ -118,6 +153,92 @@ def _first_number(text: str) -> Optional[str]:
     import re
     m = re.search(r"-?\d+(?:\.\d+)?", text)
     return m.group(0) if m else None
+
+
+# --- Sandboxed code grading -------------------------------------------------
+
+# The model's completion is reconstructed into a full function definition and
+# executed in a restricted builtins namespace INSIDE a short-lived subprocess,
+# so a bad completion can neither import/escape nor hang the evaluator.
+_SAFE_BUILTINS = (
+    "abs all any bool dict divmod enumerate filter float format frozenset "
+    "int isinstance len list map max min ord pow print range repr reversed "
+    "round set sorted str sum tuple zip chr"
+).split()
+
+_CODE_DRIVER = r'''
+import ast, builtins, json, sys
+
+source = json.loads(sys.argv[1])
+tests = json.loads(sys.argv[2])
+tree = ast.parse(source)
+for node in ast.walk(tree):
+    if isinstance(node, (ast.Import, ast.ImportFrom)):
+        print(json.dumps({"ok": False, "error": "import not allowed"})); sys.exit(0)
+    if isinstance(node, ast.Attribute) and node.attr.startswith("__"):
+        print(json.dumps({"ok": False, "error": "dunder access not allowed"})); sys.exit(0)
+    if isinstance(node, ast.Name) and node.id in {
+            "eval","exec","compile","open","input","globals","locals","vars",
+            "__import__","breakpoint","exit","quit","getattr","setattr","delattr"}:
+        print(json.dumps({"ok": False, "error": "forbidden name " + node.id})); sys.exit(0)
+
+SAFE = set(%(safe)r)
+ns = {"__builtins__": {k: getattr(builtins, k)
+                      for k in SAFE if hasattr(builtins, k)}}
+try:
+    exec(compile(tree, "<completion>", "exec"), ns)
+    results = []
+    for call, expected in tests:
+        got = eval(call, ns)
+        results.append(got == expected)
+    print(json.dumps({"ok": True, "results": results}))
+except Exception as exc:
+    print(json.dumps({"ok": False, "error": repr(exc)[:200]}))
+''' % {"safe": _SAFE_BUILTINS}
+
+
+def _run_code_sandboxed(source: str, tests: list,
+                        timeout_s: float = 15.0) -> dict:
+    """Execute candidate code in a subprocess; returns {"ok", "results"|"error"}."""
+    import subprocess
+    import sys
+    try:
+        proc = subprocess.run(
+            [sys.executable, "-I", "-c", _CODE_DRIVER,
+             json.dumps(source), json.dumps(tests)],
+            capture_output=True, text=True, timeout=timeout_s)
+        line = proc.stdout.strip().splitlines()[-1] if proc.stdout.strip() else ""
+        if not line:
+            return {"ok": False, "error": f"no output (stderr={proc.stderr[-200:]!r})"}
+        return json.loads(line)
+    except subprocess.TimeoutExpired:
+        return {"ok": False, "error": f"timeout after {timeout_s}s"}
+    except Exception as exc:
+        return {"ok": False, "error": repr(exc)[:200]}
+
+
+def _check_value(value, spec: dict) -> bool:
+    """Semantic checks on parsed JSON values."""
+    for kind, want in spec.items():
+        if kind == "contains_all":
+            hay = str(value).lower()
+            if not all(w.lower() in hay for w in want):
+                return False
+        elif kind == "equals":
+            try:
+                if not _numbers_close(str(value), str(want)):
+                    return False
+            except Exception:
+                return False
+        elif kind == "list_contains_all":
+            if not isinstance(value, list):
+                return False
+            hay = " ".join(str(v).lower() for v in value)
+            if not all(w.lower() in hay for w in want):
+                return False
+        else:
+            return False
+    return True
 
 
 def _numbers_close(a: str, b: str, tol: float = 0.02) -> bool:
@@ -185,16 +306,24 @@ def evaluate_capability(model, tok) -> CapabilityReport:
         fam_scores.setdefault("reasoning", []).append(1.0 if ok else 0.0)
     torch.cuda.empty_cache()
 
-    # --- code: required construct present in completion ---
+    # --- code: reconstruct + sandboxed execution against test inputs ---
     for task in CODE_TASKS:
         s0 = time.perf_counter()
         gen = _generate(model, tok, task["prompt"] + "\n", max_new=48)
-        low = gen.lower()
-        ok = any(k.lower() in low for k in task["expect_contains"])
+        # Rebuild the candidate source: prompt tail (after 'def ') + the
+        # model's completion. Insert a space if the continuation doesn't
+        # start with whitespace (e.g. "return" + "s == ...").
+        head = task["prompt"].split("def ", 1)[1]
+        sep = "" if gen[:1].isspace() else " "
+        source = "def " + head + sep + gen
+        res = _run_code_sandboxed(source, task["tests"])
+        ok = res.get("ok") and all(res.get("results") or [])
+        detail = (f"results={res.get('results')}"
+                  if res.get("ok") else f"error={res.get('error')}")
         rep.results.append(TaskResult(
             task_id=task["id"], family="code",
             score=1.0 if ok else 0.0,
-            detail=f"expect_any={task['expect_contains']} raw={gen[:80]!r}",
+            detail=f"{detail} raw={gen[:60]!r}",
             gpu_seconds=time.perf_counter() - s0))
         fam_scores.setdefault("code", []).append(1.0 if ok else 0.0)
     torch.cuda.empty_cache()
@@ -212,7 +341,14 @@ def evaluate_capability(model, tok) -> CapabilityReport:
             if start >= 0 and end > start:
                 obj = json.loads(gen[start:end + 1])
                 ok = all(k in obj for k in task["required_keys"])
-                detail = f"keys={list(obj.keys())}"
+                # Semantic checks: required values must match the source,
+                # not merely exist.
+                for key, spec in (task.get("value_checks") or {}).items():
+                    if key not in obj or not _check_value(obj[key], spec):
+                        ok = False
+                        detail = f"value_check_failed key={key}"
+                if ok:
+                    detail = f"keys={list(obj.keys())}"
             else:
                 detail = "no JSON object found"
         except json.JSONDecodeError as exc:
@@ -223,6 +359,20 @@ def evaluate_capability(model, tok) -> CapabilityReport:
             detail=f"{detail} raw={gen[:80]!r}",
             gpu_seconds=time.perf_counter() - s0))
         fam_scores.setdefault("structured", []).append(1.0 if ok else 0.0)
+    torch.cuda.empty_cache()
+
+    # --- retrieval: needle fact deep inside the long passage ---
+    for task in RETRIEVAL_TASKS:
+        s0 = time.perf_counter()
+        gen = _generate(model, tok, task["prompt"] + "\nAnswer:", max_new=24)
+        got = _first_number(gen)
+        ok = got is not None and _numbers_close(got, task["answer"])
+        rep.results.append(TaskResult(
+            task_id=task["id"], family="retrieval",
+            score=1.0 if ok else 0.0,
+            detail=f"expected={task['answer']} got={got!r} raw={gen[:80]!r}",
+            gpu_seconds=time.perf_counter() - s0))
+        fam_scores.setdefault("retrieval", []).append(1.0 if ok else 0.0)
     torch.cuda.empty_cache()
 
     for fam, scores in fam_scores.items():
@@ -273,3 +423,40 @@ def capability_regression(
         if not details[fam]["passed"]:
             passed = False
     return {"passed": passed, "per_family": details}
+
+
+def transition_ledger(
+    baseline: CapabilityReport,
+    candidate: CapabilityReport,
+    longctx_ratio: float = 1.10,
+) -> Dict[str, dict]:
+    """GUARD-style paired transitions per task.
+
+    Four outcomes per (baseline, candidate) pair: retained (both pass),
+    acquisition (fail→pass), regression (pass→fail), unresolved (both
+    fail). A net accuracy delta hides the distinction between, e.g.,
+    +3/−0 and +23/−20. longctx is scored on ppl ratio rather than pass/fail.
+    """
+    base_by_id = {t.task_id: t for t in baseline.results}
+    fams: Dict[str, dict] = {}
+    overall = {"acquisition": 0, "regression": 0, "retained": 0,
+               "unresolved": 0}
+    for t in candidate.results:
+        b = base_by_id.get(t.task_id)
+        if b is None:
+            continue
+        if t.family == "longctx":
+            ratio = t.score / b.score if b.score > 0 else float("inf")
+            state = ("regression" if ratio > longctx_ratio else
+                     "acquisition" if ratio < 1.0 / longctx_ratio else
+                     "retained")
+        else:
+            bp, cp = b.score >= 0.5, t.score >= 0.5
+            state = ("retained" if bp and cp else
+                     "acquisition" if not bp and cp else
+                     "regression" if bp and not cp else "unresolved")
+        f = fams.setdefault(t.family, {"acquisition": 0, "regression": 0,
+                                       "retained": 0, "unresolved": 0})
+        f[state] += 1
+        overall[state] += 1
+    return {"per_family": fams, "overall": overall}
