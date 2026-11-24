@@ -212,6 +212,57 @@ the attenuation collapse boundary.
 Script: `attenuation_directional.py`.
 Artifact: `results/attenuation_directional.json` (gitignored).
 
+## Gate 1 — acceptance pipeline (2026-11-24, engineering pilot)
+
+**Status: engineering pilot complete. Confirmatory execution NOT authorized
+until protocol is frozen and independently approved.**
+
+Built the full Gate 1 acceptance pipeline per reviewer's specification:
+
+| Component | Implementation |
+|---|---|
+| Evaluator | 4 partitions: practice (proposer feedback), selection (hidden promotion metric), regression (per-domain), final (sealed, outside ai-research/) |
+| Arm A | Sparse additive, layers 11-31, `\|delta\|≤0.5` abs/std, ≤512 scalars, recurrence/mlp/deltanet_proj/attention |
+| Arm B | Bounded attenuation, layers 0-31, factor 0.70-0.99, mlp/deltanet_proj/attention |
+| Random control | Matched per-arm: same operation, families, layer range, magnitude bounds |
+| Guided control | Fixed algorithm: mid-layer MLP heuristic (A), midpoint 0.85 (B) |
+| Patch manager | Reversible BF16 edits, `torch.equal()` rollback, cumulative-drift limits, quality guard |
+| Audit trail | Parent checkpoint SHA, proposals, seeds, scores, GPU-seconds per candidate |
+
+**Engineering pilot results (18 candidates, exploratory):**
+
+| Arm | Condition | Selection Δ (mean) | Reg passed | GPU-s/cand |
+|---|---|---|---|---|
+| A (sparse add) | autonomous | -0.0046 | 3/3 | ~127 |
+| A | random | -0.0016 | 3/3 | ~112 |
+| A | guided | -0.0046 | 3/3 | ~131 |
+| B (attenuation) | autonomous | +0.0415 | 3/3 | ~107 |
+| B | random | +0.1100 | 1/3 | ~103 |
+| B | guided | +0.0549 | 3/3 | ~103 |
+
+**Pilot findings:**
+- Arm A (sparse additive) is neutral-to-slightly-positive — the safe surface
+  is also the low-leverage surface (Phase A prediction confirmed).
+- Arm B (attenuation) is consistently harmful on held-out text — all
+  conditions worsen selection. Random attenuation worst (+0.11).
+- Pipeline works end-to-end: validation, apply, quality check, evaluation,
+  regression check, controls, audit trail, GPU-seconds accounting.
+- Variance is low for Arm A (range -0.002 to -0.008), higher for Arm B.
+- GPU cost ~100-130s per candidate (8 steps). A 100-candidate confirmatory
+  run would take ~3 hours.
+- The pilot autonomous proposer is a placeholder heuristic. The real
+  model-based proposer (gate1_proposer.py) is the next build step.
+
+**Next steps:**
+1. Build the model-based autonomous proposer (gate1_proposer.py)
+2. Freeze the confirmatory protocol (min effect, tolerances, power calc)
+3. Generate sealed final holdout (outside ai-research/, independently controlled)
+4. Confirmatory execution — ONLY after independent approval
+
+Scripts: `gate1_evaluator.py`, `gate1_patch_manager.py`, `gate1_pilot.py`.
+Partitions: `data/gate1_eval/{practice,selection,regression}.json` (gitignored).
+Artifact: `results/gate1_pilot.json` (gitignored).
+
 ## Running the preflight
 
 ```powershell
