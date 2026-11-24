@@ -157,9 +157,20 @@ def _first_number(text: str) -> Optional[str]:
 
 # --- Sandboxed code grading -------------------------------------------------
 
-# The model's completion is reconstructed into a full function definition and
-# executed in a restricted builtins namespace INSIDE a short-lived subprocess,
-# so a bad completion can neither import/escape nor hang the evaluator.
+# CONTAINMENT BOUNDARY (HZN-IR-02 §6): the AST restrictions, restricted
+# builtins and subprocess timeout below are GRADING SAFEGUARDS — they keep
+# a buggy or degenerate completion from corrupting or hanging the
+# evaluator, and they are sufficient for that purpose because the graded
+# text comes from our own pinned 4B checkpoint under a bounded proposal
+# format, not an adversarial source. They are NOT a security sandbox:
+# they do not provide OS-level isolation, resource limits beyond the wall
+# clock timeout, or syscall mediation. Any future promotion of this path
+# to untrusted generated code requires real process isolation (e.g. a
+# Windows job object with memory/CPU limits and a low-privilege token)
+# BEFORE use, not retroactively justified by the presence of these checks.
+# The completion is reconstructed into a full function definition and
+# executed in a restricted builtins namespace INSIDE a short-lived
+# isolated-mode subprocess.
 _SAFE_BUILTINS = (
     "abs all any bool dict divmod enumerate filter float format frozenset "
     "int isinstance len list map max min ord pow print range repr reversed "
@@ -437,26 +448,42 @@ def transition_ledger(
     fail). A net accuracy delta hides the distinction between, e.g.,
     +3/−0 and +23/−20. longctx is scored on ppl ratio rather than pass/fail.
     """
+    # Exact task-ID correspondence is required (HZN-IR-02 §6): silently
+    # skipping a missing baseline result would let a changed suite compare
+    # mismatched pairs. Fail loudly instead.
     base_by_id = {t.task_id: t for t in baseline.results}
+    cand_ids = {t.task_id for t in candidate.results}
+    missing = cand_ids - set(base_by_id)
+    extra = set(base_by_id) - cand_ids
+    if missing or extra:
+        raise ValueError(
+            f"transition_ledger task-id mismatch: missing baseline "
+            f"{sorted(missing)}, missing candidate {sorted(extra)}")
     fams: Dict[str, dict] = {}
     overall = {"acquisition": 0, "regression": 0, "retained": 0,
                "unresolved": 0}
+    # Continuous (ppl-ratio) transitions are reported separately from the
+    # binary acquisition/regression/retained rates — mixing a relative-
+    # change metric into pass/fail counts overstates the binary screen.
+    continuous = {}
     for t in candidate.results:
-        b = base_by_id.get(t.task_id)
-        if b is None:
-            continue
+        b = base_by_id[t.task_id]
         if t.family == "longctx":
             ratio = t.score / b.score if b.score > 0 else float("inf")
-            state = ("regression" if ratio > longctx_ratio else
-                     "acquisition" if ratio < 1.0 / longctx_ratio else
-                     "retained")
-        else:
-            bp, cp = b.score >= 0.5, t.score >= 0.5
-            state = ("retained" if bp and cp else
-                     "acquisition" if not bp and cp else
-                     "regression" if bp and not cp else "unresolved")
+            continuous[t.task_id] = {
+                "baseline_score": b.score, "candidate_score": t.score,
+                "ratio": (None if ratio == float("inf") else round(ratio, 4)),
+                "transition": ("regression" if ratio > longctx_ratio else
+                               "acquisition" if ratio < 1.0 / longctx_ratio
+                               else "retained")}
+            continue
+        bp, cp = b.score >= 0.5, t.score >= 0.5
+        state = ("retained" if bp and cp else
+                 "acquisition" if not bp and cp else
+                 "regression" if bp and not cp else "unresolved")
         f = fams.setdefault(t.family, {"acquisition": 0, "regression": 0,
                                        "retained": 0, "unresolved": 0})
         f[state] += 1
         overall[state] += 1
-    return {"per_family": fams, "overall": overall}
+    return {"per_family": fams, "overall": overall,
+            "continuous_transitions": continuous}

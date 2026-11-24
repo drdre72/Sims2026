@@ -318,13 +318,24 @@ def main() -> int:
                 for a in args.arms}
     manifest = {
         "model_revision": revision,
+        # Bind the exact weight bytes and implementation revision to the
+        # protocol identity: same revision string on different bytes, or
+        # a source edit between resume points, must refuse (HZN-IR-02 §6).
+        "shard_sha256": provenance["shard_sha256"],
+        "git_sha": _git_sha(),
+        "source_sha256": {
+            f.name: _file_sha256(f)
+            for f in sorted(
+                (Path(__file__).resolve().parent).glob("gate1_*.py"))},
         "partition_sha256": {
             k: _file_sha256(data_dir / f"{k}.json")
             for k in ("practice", "selection", "regression")},
         "proposer_prompt_sha256": PROMPT_VERSION,
         "arm_config_sha256": {a: _sha256_obj(make_arm_config(a))
                               for a in catalogs},
-        "catalog_sha256": {a: _sha256_obj([e["param"] for e in c])
+        # Full descriptors (name, family, layer, shape, numel, std, bounds),
+        # not just names — a bound change must invalidate a resume.
+        "catalog_sha256": {a: _sha256_obj(c)
                            for a, c in catalogs.items()},
         "capability_suite_sha256": suite_fingerprint(),
         "seeds": sorted(args.seeds),

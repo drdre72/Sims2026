@@ -118,6 +118,9 @@ ARM_A = {
     "forbidden_substrings": [
         "embed_tokens", "lm_head", "layernorm", "model.norm",
         "conv1d",  # conv1d is lethal at L0; exclude from Arm A
+        "mtp",  # MTP tensors are in _keys_to_ignore_on_load_unexpected:
+        # never loaded and never on the executed path — dead parameters
+        # must not enter the edit surface (HZN-IR-02 §6).
     ],
 }
 
@@ -141,6 +144,8 @@ ARM_B = {
     "forbidden_substrings": [
         "embed_tokens", "lm_head", "layernorm", "model.norm",
         "conv1d", "dt_bias", "A_log",  # recurrence params: no clear attenuation behavior
+        "mtp",  # MTP tensors never load and never execute; exclude from
+        # the edit surface (HZN-IR-02 §6).
     ],
 }
 
