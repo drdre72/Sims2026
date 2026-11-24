@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """gate1_pilot.py — Gate 1 exploratory engineering pilot.
 
-This script runs the FULL Gate 1 acceptance pipeline on a small scale to:
+This script runs an EXPLORATORY Gate 1 engineering loop on a small scale to:
   1. Verify every component works end-to-end
   2. Estimate variance and total compute cost
   3. Identify remaining failures before freezing the confirmatory protocol
@@ -19,21 +19,20 @@ Pipeline (per reviewer's acceptance logic):
   5. EVALUATE PRACTICE: feedback signal for proposer (PRACTICE partition only)
   6. (After N steps) EVALUATE SELECTION: primary promotion metric (hidden from proposer)
   7. EVALUATE REGRESSION: per-domain capability check
-  8. COMPARE CONTROLS: matched random + guided search at equal budget
-  9. AUDIT: full trail (parent sha, proposals, seeds, scores, GPU-seconds)
+  8. COMPARE CONTROLS: random, fixed heuristic, adaptive practice search;
+     actual proposal counts and GPU-wall seconds are reported, not assumed equal
+  9. AUDIT: full trail (pinned revision/shard hashes, proposals, seeds,
+     scores, synchronized GPU-operation wall seconds)
 
 Arms:
   A: sparse additive (mid/late layers, 11-31)
   B: bounded attenuation (0.70-0.99, all layers)
 
 Controls (per arm):
-  random: matched random selection within the same arm's allowed surface,
-          same number of edit steps, same evaluation budget. Matched by
-          tensor family and parameter count where possible.
-  guided: fixed algorithm using the same candidate and compute budget.
-          For Arm A: gradient sign guided (compute loss gradient on practice
-          set, apply small step in the negative direction). For Arm B:
-          uniform attenuation at the midpoint factor (0.85).
+  random: within-arm random selection. NOT exactly matched by tensor family,
+          parameter count, perturbation norm, or computational budget.
+  fixed_heuristic: fixed algorithm (not feedback-adaptive).
+  adaptive: compare random candidates using only practice feedback.
 
 Usage:
     .venv-opt\\Scripts\\python.exe src/jarvis_research/gate1_pilot.py
@@ -43,6 +42,7 @@ Usage:
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import math
 import time
@@ -84,10 +84,8 @@ def random_control_proposals(
 ) -> List[dict]:
     """Generate n_steps random valid proposals for the given arm.
 
-    Matched by: same operation, same allowed families, same layer range,
-    same magnitude bounds. Random selection of tensor + magnitude within
-    the arm's hard bounds. This is the matched random control (reviewer
-    v2: "separately matched random-search control for each edit arm").
+    Draws from the same legal operation, families, layer range and magnitude
+    bounds. It is NOT a matched-perturbation or equal-compute control.
     """
     g = torch.Generator().manual_seed(seed * 31 + 17)
     proposals = []
@@ -149,7 +147,7 @@ def guided_control_proposals(
     arm_config: dict,
     n_steps: int,
 ) -> List[dict]:
-    """Generate n_steps guided (fixed-algorithm) proposals for the given arm.
+    """Generate n_steps FIXED-HEURISTIC proposals for the given arm.
 
     For Arm A (sparse additive): we cannot compute gradients without a
     labeled target, so the guided control uses a fixed pattern — apply
@@ -175,8 +173,8 @@ def guided_control_proposals(
             proposals.append({
                 "edits": [{"param": pname, "operation": "add_sparse",
                            "magnitude": delta, "count": count}],
-                "rationale": "guided: fixed mid-layer MLP heuristic",
-                "predicted_effect": "guided",
+                "rationale": "fixed mid-layer MLP heuristic",
+                "predicted_effect": "fixed heuristic",
             })
     elif arm_config["name"] == "bounded_attenuation":
         # Fixed: midpoint factor 0.85 on one mid-layer projection per step
@@ -188,8 +186,8 @@ def guided_control_proposals(
             proposals.append({
                 "edits": [{"param": pname, "operation": "scale_dense",
                            "magnitude": factor}],
-                "rationale": "guided: fixed midpoint attenuation on mid-layer",
-                "predicted_effect": "guided",
+                "rationale": "fixed midpoint attenuation on mid-layer",
+                "predicted_effect": "fixed heuristic",
             })
     return proposals
 
@@ -203,6 +201,60 @@ def _layer_idx(name: str) -> Optional[int]:
     return None
 
 
+def local_provenance(model_id, revision=None):
+    """Hash the complete cached safetensors shards; never download."""
+    from huggingface_hub import snapshot_download
+    path = Path(snapshot_download(repo_id=model_id, revision=revision,
+                                  local_files_only=True))
+    revision = path.name
+    if len(revision) != 40 or any(c not in "0123456789abcdef" for c in revision):
+        raise RuntimeError("cached checkpoint is not a pinned commit snapshot")
+    shards = sorted(path.glob("*.safetensors"))
+    if not shards:
+        raise RuntimeError("no local checkpoint shards to hash")
+    hashes = {}
+    for shard in shards:
+        digest = hashlib.sha256()
+        with shard.open("rb") as stream:
+            for block in iter(lambda: stream.read(4 * 1024 * 1024), b""):
+                digest.update(block)
+        hashes[shard.name] = digest.hexdigest()
+    return {"revision": revision, "shard_sha256": hashes}
+
+
+def adaptive_choice(model, tok, ev, patch_manager, seed, step, params):
+    """Compare two trial edits on practice; restore after each trial."""
+    from jarvis_research.gate1_patch_manager import PatchManager
+    arm_config = patch_manager.arm
+    choices = random_control_proposals(arm_config, params, 2,
+                                       seed * 1009 + step)
+    best, best_ce = None, float("inf")
+    trial_seconds = 0.0
+    for idx, choice in enumerate(choices):
+        if patch_manager.validate(choice)[1]:
+            continue
+        trial = PatchManager(model, tok, arm_config, seed * 1009 + step * 3 + idx)
+        edits, error = trial.validate(choice)
+        if error:
+            continue
+        try:
+            _, apply_s = trial.apply(edits)
+            collapsed, _, _, _, quality_s = trial.quality_check()
+            trial_seconds += apply_s + quality_s
+            if not collapsed:
+                practice = ev.evaluate_practice(model, tok)
+                trial_seconds += practice.gpu_seconds
+                ce = math.log(practice.aggregate_ppl)
+                if ce < best_ce:
+                    best, best_ce = choice, ce
+        finally:
+            ok, bad, rollback_s = trial.rollback_all()
+            trial_seconds += rollback_s
+            if not ok:
+                raise RuntimeError(f"adaptive trial rollback failed: {bad}")
+    return best, trial_seconds, len(choices)
+
+
 # ---------------------------------------------------------------------------
 # Main pilot runner
 # ---------------------------------------------------------------------------
@@ -210,18 +262,23 @@ def _layer_idx(name: str) -> Optional[int]:
 def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--seeds", type=int, nargs="+", default=[1, 2, 3])
-    ap.add_argument("--steps", type=int, default=8,
-                    help="edit steps per candidate (small for pilot)")
-    ap.add_argument("--smoke", action="store_true",
-                    help="1 seed, 2 steps, skip controls")
-    ap.add_argument("--out", default="gate1_pilot.json")
+    ap.add_argument("--steps", type=int, default=4)
+    ap.add_argument("--max-new", type=int, default=512)
+    ap.add_argument("--arms", nargs="+", choices=("A", "B"), default=["A", "B"])
+    ap.add_argument("--conditions", nargs="+",
+                    choices=("autonomous", "random", "fixed_heuristic", "adaptive"),
+                    default=["autonomous", "random", "fixed_heuristic", "adaptive"])
+    ap.add_argument("--out", default="gate1_pilot_v2.json")
     args = ap.parse_args()
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from jarvis_research.gate1_evaluator import Evaluator, check_regression
     from jarvis_research.gate1_patch_manager import PatchManager, make_arm_config
+    from jarvis_research.gate1_proposer import SelfProposer, PROMPT_VERSION
 
-    data_dir = AI_RESEARCH / "data" / "gate1_eval"
+    if args.steps < 1:
+        ap.error("--steps must be positive")
+    data_dir = AI_RESEARCH / "data" / "gate1_eval_v2"
     ev = Evaluator.load(
         data_dir / "practice.json",
         data_dir / "selection.json",
@@ -230,9 +287,13 @@ def main() -> int:
 
     t0 = time.perf_counter()
     print(f"[load] {MODEL_ID} ...", flush=True)
-    tok = AutoTokenizer.from_pretrained(MODEL_ID)
+    provenance = local_provenance(MODEL_ID)
+    revision = provenance["revision"]
+    tok = AutoTokenizer.from_pretrained(MODEL_ID, revision=revision,
+                                        local_files_only=True)
     model = AutoModelForCausalLM.from_pretrained(
-        MODEL_ID, dtype=DTYPE, device_map={"": "cuda"})
+        MODEL_ID, revision=revision, dtype=DTYPE, device_map={"": "cuda"},
+        local_files_only=True)
     model.eval()
     torch.cuda.synchronize()
     params = {n: p for n, p in model.named_parameters()}
@@ -251,8 +312,12 @@ def main() -> int:
         print(f"  {d:15s} {r.aggregate_ppl:.3f}", flush=True)
 
     report = {
-        "gate": "gate1_engineering_pilot",
-        "model": MODEL_ID, "git_sha": _git_sha(),
+        "gate": "gate1_exploratory_model_pilot_v2",
+        "model": MODEL_ID, "git_sha": _git_sha(), "provenance": provenance,
+        "proposer_prompt_sha256": PROMPT_VERSION,
+        "proposal_max_new": args.max_new,
+        "timing_units": "synchronized GPU-operation wall seconds, not hardware utilization",
+        "isolation": "prompt-only; no filesystem security boundary",
         "purpose": ("EXPLORATORY engineering pilot. NOT confirmatory. "
                     "Verify pipeline, estimate variance + cost, identify failures."),
         "n_seeds": len(args.seeds),
@@ -273,119 +338,143 @@ def main() -> int:
     # CE per domain as a placeholder.
     pilot_tolerance = {d: 0.05 for d in base_regression.per_domain}
 
-    arms = ["A", "B"] if not args.smoke else ["A"]
-    conditions = ["autonomous"] if args.smoke else ["autonomous", "random", "guided"]
-    seeds = [args.seeds[0]] if args.smoke else args.seeds
-    steps = 2 if args.smoke else args.steps
-
-    for arm_name in arms:
+    for arm_name in args.arms:
         arm_config = make_arm_config(arm_name)
-        for condition in conditions:
-            for seed in seeds:
+        for condition in args.conditions:
+            for seed in args.seeds:
                 label = f"arm{arm_name}_{condition}_s{seed}"
                 print(f"\n[{label}] starting ...", flush=True)
+                candidate_start = time.perf_counter()
                 pm = PatchManager(model, tok, arm_config, seed=seed)
-                step_gpu_s = 0.0
-
-                # Generate proposals for this condition
-                if condition == "random":
-                    proposals = random_control_proposals(
-                        arm_config, params, steps, seed)
-                elif condition == "guided":
-                    proposals = guided_control_proposals(arm_config, steps)
-                else:  # autonomous — use a simple heuristic proposer for the pilot
-                    # For the engineering pilot, the autonomous proposer is a
-                    # placeholder that generates valid proposals within bounds.
-                    # The real autonomous proposer (gate1_proposer.py) will be
-                    # built after the pipeline is verified.
-                    proposals = _pilot_autonomous_proposals(
-                        arm_config, params, steps, seed)
-
-                for step in range(steps):
-                    if step >= len(proposals):
-                        break
-                    proposal = proposals[step]
-
-                    # Validate
+                pm.candidate.parent_checkpoint_sha = revision
+                proposer = (SelfProposer(model, tok, pm, args.max_new)
+                            if condition == "autonomous" else None)
+                history = []
+                practice_ce = math.log(base_practice.aggregate_ppl)
+                stage_totals = {stage: 0.0 for stage in (
+                    "proposal", "validation", "application", "quality",
+                    "practice", "selection", "regression", "rollback")}
+                control_attempts = 0
+                failed = False
+                for step in range(args.steps):
+                    step_times = {stage: 0.0 for stage in stage_totals}
+                    if condition == "autonomous":
+                        raw, proposal, step_times["proposal"] = proposer.propose(
+                            seed, step, practice_ce, history)
+                    elif condition == "adaptive":
+                        start = time.perf_counter()
+                        proposal, trial_s, attempts = adaptive_choice(
+                            model, tok, ev, pm, seed, step, params)
+                        step_times["proposal"] = time.perf_counter() - start
+                        control_attempts += attempts
+                        raw = json.dumps(proposal)
+                    else:
+                        start = time.perf_counter()
+                        proposals = (random_control_proposals(arm_config, params, 1,
+                                     seed * 1009 + step) if condition == "random"
+                                     else guided_control_proposals(arm_config, args.steps)[step:step + 1])
+                        proposal = proposals[0]
+                        raw = json.dumps(proposal)
+                        step_times["proposal"] = time.perf_counter() - start
+                        control_attempts += 1
+                    before = practice_ce
+                    start = time.perf_counter()
                     edits, err = pm.validate(proposal)
+                    step_times["validation"] = time.perf_counter() - start
+                    if not err and not edits:
+                        err = "proposal has no valid edits"
                     if err:
                         pm.record_edit(_make_record(
-                            arm_name, step, json.dumps(proposal), proposal,
-                            "rejected", rejection_reason=err))
+                            arm_name, step, raw, proposal, "rejected",
+                            rejection_reason=err, seed=seed,
+                            gpu_seconds=sum(step_times.values()), timings=step_times))
+                        for stage, value in step_times.items():
+                            stage_totals[stage] += value
+                        history.append({"step": step, "error": err})
                         print(f"  step {step}: REJECT {err}", flush=True)
                         continue
 
-                    # Apply
-                    descs, apply_s = pm.apply(edits)
-                    step_gpu_s += apply_s
-
-                    # Quality check
-                    collapsed, mechs, qc_ppl, nan, qc_s = pm.quality_check()
-                    step_gpu_s += qc_s
+                    try:
+                        descs, step_times["application"] = pm.apply(edits)
+                        collapsed, mechs, qc_ppl, nan, step_times["quality"] = pm.quality_check()
+                    except Exception:
+                        ok, bad, _ = pm.rollback_all()
+                        if not ok:
+                            raise RuntimeError(f"rollback failed after exception: {bad}")
+                        raise
 
                     if collapsed:
-                        # Rollback
                         ok, bad, rb_s = pm.rollback_all()
-                        step_gpu_s += rb_s
+                        step_times["rollback"] += rb_s
+                        if not ok:
+                            raise RuntimeError(f"collapse rollback failed: {bad}")
+                        failed = True
                         pm.record_edit(_make_record(
-                            arm_name, step, json.dumps(proposal), proposal,
-                            "collapsed_rolled_back",
-                            applied_edits=descs,
-                            practice_ppl_before=None,
-                            practice_ppl_after=qc_ppl,
+                            arm_name, step, raw, proposal, "collapsed_rolled_back",
+                            applied_edits=descs, practice_ppl_before=math.exp(before),
+                            practice_ppl_after=None,
                             collapsed=True, collapse_mechanism=mechs,
-                            gpu_seconds=step_gpu_s, seed=seed))
+                            gpu_seconds=sum(step_times.values()),
+                            timings=step_times, seed=seed))
                         print(f"  step {step}: COLLAPSE {mechs} ppl={qc_ppl} "
                               f"rolled_back={ok}", flush=True)
-                        break
                     else:
-                        # Evaluate practice (feedback signal)
                         pr = ev.evaluate_practice(model, tok)
-                        step_gpu_s += pr.gpu_seconds
+                        step_times["practice"] = pr.gpu_seconds
+                        practice_ce = math.log(pr.aggregate_ppl)
+                        prediction = proposal.get("predicted_practice_delta_ce")
+                        history.append({"step": step, "practice_delta_ce": round(practice_ce - before, 6),
+                                        "predicted_delta_ce": prediction})
                         pm.record_edit(_make_record(
-                            arm_name, step, json.dumps(proposal), proposal,
-                            "applied",
-                            applied_edits=descs,
-                            practice_ppl_before=None,
+                            arm_name, step, raw, proposal, "applied", applied_edits=descs,
+                            practice_ppl_before=math.exp(before),
                             practice_ppl_after=pr.aggregate_ppl,
-                            gpu_seconds=step_gpu_s, seed=seed))
+                            gpu_seconds=sum(step_times.values()),
+                            timings=step_times, seed=seed))
                         print(f"  step {step}: applied {len(descs)} edits "
                               f"practice_ppl={pr.aggregate_ppl:.3f} "
                               f"qc_ppl={qc_ppl}", flush=True)
+                    for stage, value in step_times.items():
+                        stage_totals[stage] += value
+                    if failed:
+                        break
 
-                # Final evaluation: selection + regression (after all steps)
                 pm.finalize()
                 sel = ev.evaluate_selection(model, tok)
                 reg = ev.evaluate_regression(model, tok)
-                pm.candidate.total_gpu_seconds += sel.gpu_seconds + reg.gpu_seconds
+                stage_totals["selection"] += sel.gpu_seconds
+                stage_totals["regression"] += reg.gpu_seconds
 
-                # Regression check
                 reg_passed, reg_details = check_regression(
                     base_regression, reg, pilot_tolerance)
-
-                # Selection delta
                 sel_delta = sel.aggregate_ppl - base_selection.aggregate_ppl
-
+                ok, bad, rb_s = pm.rollback_all()
+                stage_totals["rollback"] += rb_s
+                if not ok:
+                    raise RuntimeError(f"final rollback failed: {bad}")
+                elapsed = time.perf_counter() - candidate_start
+                pm.candidate.total_gpu_seconds = sum(stage_totals.values())
                 candidate_dict = pm.candidate_dict()
                 candidate_dict.update({
                     "condition": condition,
                     "selection_aggregate_ppl": sel.aggregate_ppl,
                     "selection_delta": round(sel_delta, 4),
+                    "selection_delta_ce": sel.cross_entropy - base_selection.cross_entropy,
                     "selection_improved": sel_delta < 0,
                     "regression_passed": reg_passed,
                     "regression_details": reg_details,
-                    "selection_gpu_seconds": sel.gpu_seconds,
-                    "regression_gpu_seconds": reg.gpu_seconds,
+                    "stage_seconds": stage_totals,
+                    "candidate_wall_seconds": elapsed,
+                    "unattributed_wall_seconds": elapsed - sum(stage_totals.values()),
+                    "control_proposal_attempts": control_attempts,
+                    "rollback_verified": ok,
+                    "failed_quality_guard": failed,
                 })
                 report["candidates"].append(candidate_dict)
                 print(f"[{label}] DONE: selection={sel.aggregate_ppl:.3f} "
                       f"(delta {sel_delta:+.4f}) reg_passed={reg_passed} "
-                      f"gpu_s={pm.candidate.total_gpu_seconds:.1f}", flush=True)
-
-                # Rollback for next candidate
-                ok, bad, rb_s = pm.rollback_all()
-                if not ok:
-                    print(f"  WARNING: final rollback mismatch on {bad}", flush=True)
+                      f"measured_s={pm.candidate.total_gpu_seconds:.1f} "
+                      f"wall_s={elapsed:.1f}", flush=True)
 
     report["elapsed_seconds"] = round(time.perf_counter() - t0, 1)
     out = RESULTS / args.out
@@ -407,42 +496,6 @@ def _make_record(arm, step, raw, parsed, status, **kwargs):
     return EditRecord(
         arm=arm, step=step, proposal_raw=raw,
         proposal_parsed=parsed, status=status, **kwargs)
-
-
-def _pilot_autonomous_proposals(arm_config, params, n_steps, seed):
-    """Placeholder autonomous proposer for the engineering pilot.
-
-    This generates valid proposals within bounds using a simple heuristic:
-    for Arm A, small positive deltas on mid-layer MLP; for Arm B, midpoint
-    attenuation on mid-layer projections. The REAL autonomous proposer
-    (gate1_proposer.py, to be built) will use the model itself to generate
-    proposals from practice feedback.
-    """
-    g = torch.Generator().manual_seed(seed * 101 + 23)
-    proposals = []
-    target_layer = 16
-    for step in range(n_steps):
-        if arm_config["name"] == "sparse_additive":
-            mlp_types = ["mlp.gate_proj.weight", "mlp.up_proj.weight", "mlp.down_proj.weight"]
-            pname = f"model.layers.{target_layer}.{mlp_types[step % 3]}"
-            proposals.append({
-                "edits": [{"param": pname, "operation": "add_sparse",
-                           "magnitude": 0.001, "count": 256}],
-                "rationale": "pilot autonomous: small mid-layer MLP delta",
-                "predicted_effect": "small improvement",
-            })
-        elif arm_config["name"] == "bounded_attenuation":
-            proj_types = ["mlp.gate_proj.weight", "mlp.up_proj.weight", "mlp.down_proj.weight"]
-            pname = f"model.layers.{target_layer}.{proj_types[step % 3]}"
-            r = float(torch.rand(1, generator=g).item())
-            factor = 0.80 + r * 0.15  # uniform in [0.80, 0.95]
-            proposals.append({
-                "edits": [{"param": pname, "operation": "scale_dense",
-                           "magnitude": factor}],
-                "rationale": "pilot autonomous: mid-layer attenuation",
-                "predicted_effect": "stabilization",
-            })
-    return proposals
 
 
 if __name__ == "__main__":

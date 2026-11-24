@@ -10,20 +10,13 @@ text partitions with strictly controlled access:
                 A candidate must improve here to advance.
   REGRESSION — per-domain capability checks. A candidate must not regress
                 beyond the preregistered tolerance on ANY domain.
-  FINAL      — sealed holdout, stored OUTSIDE the proposer's accessible
-                files. Opened ONLY after selection is frozen, by an
-                independently controlled process. NOT used during the
-                pilot or exploratory phase.
+  FINAL      — not present in this process. Requires an independently
+                administered evaluator and OS-enforced access isolation.
 
 Access contract:
-  - The proposer code (proposer_unconstrained.py, gate1_proposer.py) can
-    ONLY read the PRACTICE partition. The evaluator enforces this by
-    loading partitions from separate files and never exposing selection/
-    regression/final text to the proposer module.
-  - The sealed FINAL partition lives outside ai-research/ (at the Sims2026
-    repo root under gate1_sealed/, gitignored). It is not imported by any
-    proposer module. It is loaded ONLY by the confirmatory evaluator script
-    (gate1_confirm.py, to be built when the protocol is frozen).
+  - This process keeps selection/regression out of the model prompt. It does
+    NOT provide filesystem isolation; confirmation requires a separate
+    evaluator identity and access policy.
 
 Metrics (reviewer v2 requirements):
   - Token-weighted aggregate perplexity: exp(sum_NLL / sum_tokens), NOT
@@ -54,9 +47,7 @@ _THIS = Path(__file__).resolve()
 AI_RESEARCH = _THIS.parents[2]
 SIMS_ROOT = AI_RESEARCH.parent
 
-# Sealed holdout directory — OUTSIDE ai-research/, gitignored.
-# The proposer code cannot access this path.
-SEALED_DIR = SIMS_ROOT / "gate1_sealed"
+# No final-set path is known to this development process.
 
 # Domains used for regression checks. Each domain has multiple passages.
 REGRESSION_DOMAINS = [
@@ -82,6 +73,7 @@ class DomainResult:
     n_passages: int
     n_tokens: int
     per_passage: List[PassageResult] = field(default_factory=list)
+    cross_entropy: float = 0.0
 
 
 @dataclass
@@ -93,6 +85,7 @@ class SelectionScore:
     per_passage: List[PassageResult] = field(default_factory=list)
     gpu_seconds: float = 0.0
     sha256: str = ""           # hash of the selection text set (for audit)
+    cross_entropy: float = 0.0
 
 
 @dataclass
@@ -141,6 +134,7 @@ class Evaluator:
         self.practice_meta = practice_meta or {}
         self.selection_meta = selection_meta or {}
         self.regression_meta = regression_meta or {}
+        assert_disjoint_partitions(practice_texts, selection_texts, regression_texts)
 
     @classmethod
     def load(
@@ -154,6 +148,10 @@ class Evaluator:
         selection_data = json.loads(selection_path.read_text(encoding="utf-8"))
         regression_data = json.loads(regression_path.read_text(encoding="utf-8"))
 
+        if (practice_path.resolve() == selection_path.resolve()
+                or practice_path.resolve() == regression_path.resolve()
+                or selection_path.resolve() == regression_path.resolve()):
+            raise ValueError("evaluation partition paths must differ")
         practice_texts = {k: v for k, v in practice_data["passages"].items()}
         selection_texts = {k: v for k, v in selection_data["passages"].items()}
         # Regression passages are written flat (e.g. "science_regression_1")
@@ -239,6 +237,7 @@ class Evaluator:
             per_passage=results,
             gpu_seconds=round(gpu_s, 4),
             sha256=self._hash_texts(self.selection),
+            cross_entropy=total_nll / total_tokens if total_tokens else float("inf"),
         )
 
     @torch.no_grad()
@@ -259,6 +258,7 @@ class Evaluator:
                 n_passages=len(results),
                 n_tokens=total_tokens,
                 per_passage=results,
+                cross_entropy=total_nll / total_tokens if total_tokens else float("inf"),
             )
             total_passages += len(results)
         gpu_s = time.perf_counter() - t0
@@ -306,8 +306,8 @@ def check_regression(
             passed = False
             continue
         # Cross-entropy per token = ln(ppl). Delta in CE per token.
-        base_ce = float(torch.log(torch.tensor(base_dom.aggregate_ppl)).item()) if base_dom.aggregate_ppl > 0 else float("inf")
-        cand_ce = float(torch.log(torch.tensor(cand_dom.aggregate_ppl)).item()) if cand_dom.aggregate_ppl > 0 else float("inf")
+        base_ce = base_dom.cross_entropy
+        cand_ce = cand_dom.cross_entropy
         delta_ce = cand_ce - base_ce
         ppl_ratio = cand_dom.aggregate_ppl / base_dom.aggregate_ppl if base_dom.aggregate_ppl > 0 else float("inf")
         domain_passed = delta_ce <= tol
@@ -332,6 +332,25 @@ def check_regression(
 # gate1_sealed/ outside the ai-research tree.
 # ---------------------------------------------------------------------------
 
+def _text_hash(text: str) -> str:
+    return hashlib.sha256(" ".join(text.split()).casefold().encode("utf-8")).hexdigest()
+
+
+def assert_disjoint_partitions(practice, selection, regression):
+    """Fail closed on identical normalized content across any partitions."""
+    seen = {}
+    for label, texts in (
+        ("practice", practice), ("selection", selection),
+        ("regression", {k: v for domain in regression.values()
+                        for k, v in domain.items()}),
+    ):
+        for name, text in texts.items():
+            digest = _text_hash(text)
+            if digest in seen:
+                raise ValueError(f"partition overlap: {seen[digest]} and {label}/{name}")
+            seen[digest] = f"{label}/{name}"
+
+
 def generate_partitions(
     practice_path: Path,
     selection_path: Path,
@@ -350,30 +369,46 @@ def generate_partitions(
     The FINAL sealed partition is NOT generated here. It must be generated
     by a separate process and stored in gate1_sealed/.
     """
-    # Domain passage pools. Each domain has enough passages for all three
-    # partitions + the sealed set. Written fresh for Gate 1 — these are NOT
+    # Development pools cover the three exploratory partitions ONLY. They
+    # cannot produce an independently administered confirmation set. NOT
     # the seed303_validate.py passages (those are now "examined").
     pools = _build_passage_pools()
+    paths = [practice_path, selection_path, regression_path]
+    if any(path.exists() for path in paths):
+        raise FileExistsError("refusing to overwrite an existing evaluation partition")
 
     import random
     rng = random.Random(seed)
 
+    allocations = {"practice": {}, "selection": {}, "regression": {}}
+    sizes = {"practice": n_per_domain_practice,
+             "selection": n_per_domain_selection,
+             "regression": n_per_domain_regression}
+    if any(n < 1 for n in sizes.values()):
+        raise ValueError("partition sizes must be positive")
+    for domain in REGRESSION_DOMAINS:
+        pool = pools[domain][:]
+        if sum(sizes.values()) > len(pool):
+            raise ValueError(f"not enough passages for {domain}")
+        rng.shuffle(pool)
+        offset = 0
+        for label, count in sizes.items():
+            for i, text in enumerate(pool[offset:offset + count], 1):
+                allocations[label][f"{domain}_{label}_{i}"] = text
+            offset += count
+    regression_groups = {domain: {
+        k: v for k, v in allocations["regression"].items()
+        if k.startswith(f"{domain}_")
+    } for domain in REGRESSION_DOMAINS}
+    assert_disjoint_partitions(allocations["practice"], allocations["selection"],
+                               regression_groups)
     summary = {"seed": seed, "partitions": {}}
-
     for label, path, n_per in [
         ("practice", practice_path, n_per_domain_practice),
         ("selection", selection_path, n_per_domain_selection),
         ("regression", regression_path, n_per_domain_regression),
     ]:
-        passages = {}
-        for domain in REGRESSION_DOMAINS:
-            pool = pools[domain]
-            # Shuffle and take n_per for this partition
-            shuffled = pool[:]
-            rng.shuffle(shuffled)
-            for i in range(min(n_per, len(shuffled))):
-                pname = f"{domain}_{label}_{i+1}"
-                passages[pname] = shuffled[i]
+        passages = allocations[label]
         data = {
             "meta": {
                 "partition": label,
@@ -399,8 +434,7 @@ def generate_partitions(
 def _build_passage_pools() -> Dict[str, List[str]]:
     """Build pools of original passages per domain for Gate 1.
 
-    Each domain has 12 passages (enough for 2 practice + 3 selection +
-    3 regression + 4 reserved for sealed). All text is original, written
+    Each domain has 12 development passages. All text is original, written
     for this evaluation, not derived from any prior dataset.
     """
     pools: Dict[str, List[str]] = {}
@@ -952,7 +986,7 @@ if __name__ == "__main__":
     ap.add_argument("--seed", type=int, default=42)
     args = ap.parse_args()
 
-    data_dir = AI_RESEARCH / "data" / "gate1_eval"
+    data_dir = AI_RESEARCH / "data" / "gate1_eval_v2"
     data_dir.mkdir(parents=True, exist_ok=True)
 
     summary = generate_partitions(

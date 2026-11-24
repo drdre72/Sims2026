@@ -214,20 +214,57 @@ Artifact: `results/attenuation_directional.json` (gitignored).
 
 ## Gate 1 — acceptance pipeline (2026-11-24, engineering pilot)
 
-**Status: engineering pilot complete. Confirmatory execution NOT authorized
-until protocol is frozen and independently approved.**
+**Status: the first engineering pilot is superseded. Its partitions overlapped,
+its "autonomous" arm was a fixed heuristic, and its GPU-seconds were double
+counted. None of its numerical comparisons or cost estimates support C1 or
+a power calculation. Confirmatory execution is NOT authorized.**
+
+Gate 1 v2 repairs the partition generator (shuffle once, disjoint slices,
+normalized-content hash checks at generation and load), batch drift validation
+(including duplicate sparse tensors and total scalar count), incremental
+timing, fail-closed rollback, and pinned cached model revision plus complete
+local shard hashes. `gate1_proposer.py` generates proposals from the same
+in-memory model receiving edits; invalid JSON uses a step. The revised
+exploratory pilot uses `data/gate1_eval_v2/` and writes a separate v2 result.
+The original ignored data/result files remain untouched for audit.
+
+**V2 exploratory pilot completed:** 3 seeds x 4 steps x 2 edit surfaces x
+4 conditions = 24 trajectories, 721.4 seconds wall time; Qwen's no-thinking
+template produced 24/24 parseable JSON proposals, 17 applied and 7 rejected
+by hard bounds. Sparse additive had near-zero selection CE changes; all three
+Qwen attenuation trajectories worsened selection CE. No C1 result.
+Candidate stage timing reconciles within 0.13 seconds of candidate wall time.
+Full per-seed metrics and limitations: `research/gate1_v2_open_protocol.md`.
+
+The old development partitions and all v2 partitions are accessible to this
+development account. Keeping selection text out of the Qwen prompt is
+**prompt isolation only**, NOT OS-level access control or a sealed final set.
+The v2 set is examined after the pilot; neither it nor the prior seed-303
+passages may be used for final confirmation. The final set must be supplied
+and evaluated by an independent owner under separate permissions.
+
+The v2 pilot records measured per-stage synchronized wall seconds, not GPU
+hardware utilization. Random within-arm baselines and the fixed heuristic are
+not matched by tensor family, parameter count, perturbation norm, or actual
+GPU time against Qwen; the adaptive baseline tries two practice-evaluated
+random candidates per step. Treat these as engineering diagnostics, not
+equal-resource scientific comparisons. A stronger matched-budget comparator
+remains required before confirmation. Capability tasks, long-context
+regression, a preregistered CE tolerance, and a power analysis are also open.
+
+**Historical v1 pilot (invalid for comparison; retained for chronology):**
 
 Built the full Gate 1 acceptance pipeline per reviewer's specification:
 
 | Component | Implementation |
 |---|---|
-| Evaluator | 4 partitions: practice (proposer feedback), selection (hidden promotion metric), regression (per-domain), final (sealed, outside ai-research/) |
+| Evaluator | 3 development partitions: practice (feedback), selection (not in prompt), regression (not in prompt). Final not present. |
 | Arm A | Sparse additive, layers 11-31, `\|delta\|≤0.5` abs/std, ≤512 scalars, recurrence/mlp/deltanet_proj/attention |
 | Arm B | Bounded attenuation, layers 0-31, factor 0.70-0.99, mlp/deltanet_proj/attention |
-| Random control | Matched per-arm: same operation, families, layer range, magnitude bounds |
-| Guided control | Fixed algorithm: mid-layer MLP heuristic (A), midpoint 0.85 (B) |
+| Random control | Within-arm random proposals, not precisely matched |
+| Fixed-heuristic control | Mid-layer MLP heuristic (A), midpoint 0.85 (B); not adaptive |
 | Patch manager | Reversible BF16 edits, `torch.equal()` rollback, cumulative-drift limits, quality guard |
-| Audit trail | Parent checkpoint SHA, proposals, seeds, scores, GPU-seconds per candidate |
+| Audit trail | v1 had an abbreviated fingerprint and overcounted timing; v2 hashes complete local shards |
 
 **Engineering pilot results (18 candidates, exploratory):**
 
@@ -248,20 +285,21 @@ Built the full Gate 1 acceptance pipeline per reviewer's specification:
 - Pipeline works end-to-end: validation, apply, quality check, evaluation,
   regression check, controls, audit trail, GPU-seconds accounting.
 - Variance is low for Arm A (range -0.002 to -0.008), higher for Arm B.
-- GPU cost ~100-130s per candidate (8 steps). A 100-candidate confirmatory
-  run would take ~3 hours.
+- The reported ~100-130s/candidate is inflated by a cumulative timing bug;
+  the ~3h confirmatory estimate is withdrawn. The previous 90-trajectory
+  count also omitted an entire arm (2 x 3 x 30 = 180).
 - The pilot autonomous proposer is a placeholder heuristic. The real
   model-based proposer (gate1_proposer.py) is the next build step.
 
-**Next steps:**
-1. Build the model-based autonomous proposer (gate1_proposer.py)
-2. Freeze the confirmatory protocol (min effect, tolerances, power calc)
-3. Generate sealed final holdout (outside ai-research/, independently controlled)
-4. Confirmatory execution — ONLY after independent approval
+**Next steps:** independent task/long-context evaluator, genuinely matched
+equal-budget controls, revised preregistration/power calculation based on
+independent trials and fresh passages, and an independently protected final
+holdout. Only then request approval for confirmatory execution.
 
-Scripts: `gate1_evaluator.py`, `gate1_patch_manager.py`, `gate1_pilot.py`.
-Partitions: `data/gate1_eval/{practice,selection,regression}.json` (gitignored).
-Artifact: `results/gate1_pilot.json` (gitignored).
+Scripts: `gate1_evaluator.py`, `gate1_patch_manager.py`,
+`gate1_proposer.py`, `gate1_pilot.py`. Old data/result:
+`data/gate1_eval/`, `results/gate1_pilot.json`. Revised exploratory data:
+`data/gate1_eval_v2/`; all data/results gitignored.
 
 ## Running the preflight
 

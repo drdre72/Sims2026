@@ -121,6 +121,7 @@ class EditRecord:
     collapsed: bool = False
     collapse_mechanism: Optional[List[str]] = None
     gpu_seconds: float = 0.0
+    timings: dict = field(default_factory=dict)
     seed: Optional[int] = None
 
 
@@ -178,19 +179,9 @@ class PatchManager:
         self._cpu_gen = torch.Generator().manual_seed(seed)
 
     def _checkpoint_sha(self) -> str:
-        """Hash of the model's parameter state (for audit trail).
-
-        Uses the first 8 elements of each parameter (cast to float32) as a
-        compact fingerprint. This is NOT a full state hash — it's for audit
-        provenance, not cryptographic verification.
-        """
-        import hashlib
-        h = hashlib.sha256()
-        for name in sorted(self.params.keys()):
-            p = self.params[name].detach().float().cpu()
-            h.update(name.encode())
-            h.update(p.view(-1)[:8].numpy().tobytes())
-        return h.hexdigest()[:16]
+        """Use pinned upstream revision; pilot records full local shard hashes."""
+        revision = getattr(getattr(self.model, "config", None), "_commit_hash", None)
+        return revision or "unverified-local-revision"
 
     def _classify_family(self, name: str) -> Optional[str]:
         """Check if a param name matches an allowed family. Returns family or None."""
@@ -221,6 +212,9 @@ class PatchManager:
             return None, "batch too large (>8)"
 
         validated = []
+        prospective = self.cumulative_delta.copy()
+        batch_scalars = 0
+        sparse_names = set()
         for i, e in enumerate(edits_list):
             if not isinstance(e, dict):
                 return None, f"edit {i}: not a dict"
@@ -276,11 +270,19 @@ class PatchManager:
                     return None, (f"edit {i}: count {count} > numel "
                                   f"{self.params[param_name].numel()}")
 
-                # Cumulative drift check
-                current_drift = self.cumulative_delta.get(param_name, 0.0)
+                # Duplicate tensor edits could hit overlapping sampled indices.
+                # Reject rather than silently accepting an unknown aggregate.
+                if param_name in sparse_names:
+                    return None, f"edit {i}: duplicate sparse tensor in batch"
+                sparse_names.add(param_name)
+                batch_scalars += count
+                if batch_scalars > self.arm["max_count"]:
+                    return None, f"edit {i}: aggregate sparse count exceeds 512"
+                current_drift = prospective.get(param_name, 0.0)
                 if current_drift + abs(magnitude) > self.arm["max_cumulative_abs"]:
                     return None, (f"edit {i}: cumulative |delta| would exceed "
                                   f"{self.arm['max_cumulative_abs']} for {param_name}")
+                prospective[param_name] = current_drift + abs(magnitude)
 
                 validated.append({
                     "name": param_name, "operation": op,
@@ -294,11 +296,12 @@ class PatchManager:
                                   f"[{self.arm['min_factor']}, {self.arm['max_factor']}]")
 
                 # Cumulative product check
-                current_product = self.cumulative_delta.get(param_name, 1.0)
+                current_product = prospective.get(param_name, 1.0)
                 new_product = current_product * magnitude
                 if new_product < self.arm["min_cumulative_product"]:
                     return None, (f"edit {i}: cumulative factor product {new_product:.4f} < "
                                   f"min {self.arm['min_cumulative_product']} for {param_name}")
+                prospective[param_name] = new_product
 
                 validated.append({
                     "name": param_name, "operation": op,
@@ -410,6 +413,9 @@ class PatchManager:
             if not torch.equal(self.params[name].detach(), orig):
                 gpu_s = time.perf_counter() - t0
                 return False, name, gpu_s
+        self.touched.clear()
+        self.originals.clear()
+        self.cumulative_delta.clear()
         gpu_s = time.perf_counter() - t0
         return True, None, gpu_s
 
