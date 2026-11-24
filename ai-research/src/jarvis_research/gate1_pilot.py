@@ -77,65 +77,41 @@ def _git_sha():
 # ---------------------------------------------------------------------------
 
 def random_control_proposals(
+    catalog: List[dict],
     arm_config: dict,
-    params: Dict[str, torch.Tensor],
     n_steps: int,
     seed: int,
 ) -> List[dict]:
-    """Generate n_steps random valid proposals for the given arm.
+    """Generate n_steps random proposals from the SHARED legal catalog.
 
-    Draws from the same legal operation, families, layer range and magnitude
-    bounds. It is NOT a matched-perturbation or equal-compute control.
+    Gate 1.1: draws from the identical catalog the proposer sees, so the
+    random control searches the same parameter space. Magnitude and count
+    are drawn uniformly from each entry's legal range — the same bounds
+    shown to the model. This matches the SEARCH SPACE and proposal budget;
+    it does not match the model's parameter-selection distribution (that is
+    the quantity under test).
     """
-    g = torch.Generator().manual_seed(seed * 31 + 17)
+    import random as _random
+    g = _random.Random(seed * 31 + 17)
     proposals = []
-
-    # Build the list of allowed params for this arm.
-    allowed = []
-    for name in sorted(params.keys()):
-        li = _layer_idx(name)
-        if li is None:
-            continue
-        if li < arm_config["min_layer"] or li > arm_config["max_layer"]:
-            continue
-        # Family check
-        forbidden = any(fs in name for fs in arm_config["forbidden_substrings"])
-        if forbidden:
-            continue
-        family_match = any(fam in name for fam in arm_config["allowed_families"])
-        if not family_match:
-            continue
-        allowed.append(name)
+    if not catalog:
+        return proposals
 
     for step in range(n_steps):
+        entry = catalog[g.randrange(len(catalog))]
         if arm_config["name"] == "sparse_additive":
-            # Random tensor, random delta within bounds, random count
-            pname = allowed[torch.randint(len(allowed), (1,), generator=g).item()]
-            p = params[pname]
-            std = float(p.float().std().item())
-            # Delta bounded by min(0.5 abs, 0.5*std)
-            max_abs = arm_config["max_delta_abs"]
-            max_std = arm_config["max_delta_std_rel"] * std if std > 0 else max_abs
-            max_delta = min(max_abs, max_std)
-            # uniform in [-max_delta, max_delta]: 2*rand - 1 then scale
-            r = float(torch.rand(1, generator=g).item())
-            magnitude = (2.0 * r - 1.0) * max_delta
-            max_count = min(arm_config["max_count"], p.numel())
-            count = int(torch.randint(1, max_count + 1, (1,), generator=g).item())
+            magnitude = g.uniform(entry["mag_min"], entry["mag_max"])
+            count = g.randint(entry["count_min"], entry["count_max"])
             proposals.append({
-                "edits": [{"param": pname, "operation": "add_sparse",
+                "edits": [{"param_id": entry["param_id"], "operation": "add_sparse",
                            "magnitude": magnitude, "count": count}],
                 "rationale": "random control",
                 "predicted_effect": "random",
             })
         elif arm_config["name"] == "bounded_attenuation":
-            # Random tensor, random factor within [0.70, 0.99]
-            pname = allowed[torch.randint(len(allowed), (1,), generator=g).item()]
-            lo, hi = arm_config["min_factor"], arm_config["max_factor"]
-            r = float(torch.rand(1, generator=g).item())
-            magnitude = lo + r * (hi - lo)
+            magnitude = g.uniform(entry["mag_min"], entry["mag_max"])
             proposals.append({
-                "edits": [{"param": pname, "operation": "scale_dense",
+                "edits": [{"param_id": entry["param_id"], "operation": "scale_dense",
                            "magnitude": magnitude}],
                 "rationale": "random control",
                 "predicted_effect": "random",
@@ -222,18 +198,26 @@ def local_provenance(model_id, revision=None):
     return {"revision": revision, "shard_sha256": hashes}
 
 
-def adaptive_choice(model, tok, ev, patch_manager, seed, step, params):
-    """Compare two trial edits on practice; restore after each trial."""
+def adaptive_choice(model, tok, ev, patch_manager, seed, step, catalog,
+                    pool: int = 2):
+    """Compare trial edits on practice; restore after each trial.
+
+    Evaluates `pool` candidates per iteration. The caller sets the iteration
+    count so total practice evaluations match the autonomous trajectory's
+    budget.
+    """
     from jarvis_research.gate1_patch_manager import PatchManager
     arm_config = patch_manager.arm
-    choices = random_control_proposals(arm_config, params, 2,
+    choices = random_control_proposals(catalog, arm_config, pool,
                                        seed * 1009 + step)
     best, best_ce = None, float("inf")
     trial_seconds = 0.0
     for idx, choice in enumerate(choices):
         if patch_manager.validate(choice)[1]:
             continue
-        trial = PatchManager(model, tok, arm_config, seed * 1009 + step * 3 + idx)
+        trial = PatchManager(model, tok, arm_config,
+                             seed * 1009 + step * 3 + idx,
+                             quality_baseline_ppl=patch_manager.quality_baseline_ppl)
         edits, error = trial.validate(choice)
         if error:
             continue
@@ -268,17 +252,29 @@ def main() -> int:
     ap.add_argument("--conditions", nargs="+",
                     choices=("autonomous", "random", "fixed_heuristic", "adaptive"),
                     default=["autonomous", "random", "fixed_heuristic", "adaptive"])
+    ap.add_argument("--adaptive-pool", type=int, default=2,
+                    help="candidate edits evaluated per adaptive step")
+    ap.add_argument("--adaptive-step-divisor", type=int, default=1,
+                    help="adaptive iterations = ceil(steps/divisor); use 2 for "
+                         "practice-evaluation-budget matching vs autonomous")
     ap.add_argument("--out", default="gate1_pilot_v2.json")
+    ap.add_argument("--resume", action="store_true",
+                    help="skip candidates already present in --out")
     args = ap.parse_args()
 
     from transformers import AutoModelForCausalLM, AutoTokenizer
     from jarvis_research.gate1_evaluator import Evaluator, check_regression
-    from jarvis_research.gate1_patch_manager import PatchManager, make_arm_config
+    from jarvis_research.gate1_patch_manager import (
+        PatchManager, make_arm_config, build_catalog, probe_ppl)
     from jarvis_research.gate1_proposer import SelfProposer, PROMPT_VERSION
+    from jarvis_research.gate1_capability import (
+        evaluate_capability, capability_regression)
 
     if args.steps < 1:
         ap.error("--steps must be positive")
-    data_dir = AI_RESEARCH / "data" / "gate1_eval_v2"
+    if args.adaptive_pool < 1 or args.adaptive_step_divisor < 1:
+        ap.error("adaptive knobs must be positive")
+    data_dir = AI_RESEARCH / "data" / "gate1_eval_v3"
     ev = Evaluator.load(
         data_dir / "practice.json",
         data_dir / "selection.json",
@@ -300,22 +296,35 @@ def main() -> int:
     print(f"[load] done in {time.perf_counter()-t0:.1f}s, {len(params)} params",
           flush=True)
 
-    # Baseline evaluation on ALL partitions
+    # Baseline evaluation on ALL partitions + measured quality-guard baseline
+    # + baseline capability suite (all on the UNMODIFIED pinned checkpoint).
     print("\n[baseline] evaluating all partitions ...", flush=True)
     base_practice = ev.evaluate_practice(model, tok)
     base_selection = ev.evaluate_selection(model, tok)
     base_regression = ev.evaluate_regression(model, tok)
+    quality_baseline_ppl = probe_ppl(model, tok)
     print(f"[baseline] practice={base_practice.aggregate_ppl:.3f} "
           f"selection={base_selection.aggregate_ppl:.3f} "
+          f"quality_probe_ppl={quality_baseline_ppl:.3f} "
           f"({base_regression.n_domains} domains)", flush=True)
     for d, r in base_regression.per_domain.items():
         print(f"  {d:15s} {r.aggregate_ppl:.3f}", flush=True)
+    print("[baseline] capability suite ...", flush=True)
+    base_capability = evaluate_capability(model, tok)
+    print(f"[baseline] capability: {base_capability.per_family}", flush=True)
 
     report = {
-        "gate": "gate1_exploratory_model_pilot_v2",
+        "gate": "gate1_exploratory_model_pilot_v3",
         "model": MODEL_ID, "git_sha": _git_sha(), "provenance": provenance,
         "proposer_prompt_sha256": PROMPT_VERSION,
         "proposal_max_new": args.max_new,
+        "shared_catalog": "all conditions draw from build_catalog()",
+        "adaptive_config": {
+            "pool": args.adaptive_pool,
+            "step_divisor": args.adaptive_step_divisor,
+            "note": ("adaptive iterations = ceil(steps/divisor); pool "
+                     "candidates evaluated per iteration on practice only"),
+        },
         "timing_units": "synchronized GPU-operation wall seconds, not hardware utilization",
         "isolation": "prompt-only; no filesystem security boundary",
         "purpose": ("EXPLORATORY engineering pilot. NOT confirmatory. "
@@ -325,6 +334,8 @@ def main() -> int:
         "baseline": {
             "practice": asdict(base_practice),
             "selection": asdict(base_selection),
+            "quality_probe_ppl": quality_baseline_ppl,
+            "capability": base_capability.to_dict(),
             "regression": {
                 "per_domain": {d: asdict(r) for d, r in base_regression.per_domain.items()},
                 "gpu_seconds": base_regression.gpu_seconds,
@@ -332,6 +343,14 @@ def main() -> int:
         },
         "candidates": [],
     }
+    out = RESULTS / args.out
+    completed = set()
+    if args.resume and out.exists():
+        prior = json.loads(out.read_text(encoding="utf-8"))
+        report["baseline"] = prior.get("baseline", report["baseline"])
+        report["candidates"] = prior.get("candidates", [])
+        completed = {c.get("label") for c in report["candidates"]}
+        print(f"[resume] {len(completed)} candidates already complete", flush=True)
 
     # Regression tolerance (preliminary, for pilot only — will be set
     # formally when confirmatory protocol is frozen). Using 0.05 nats
@@ -340,12 +359,19 @@ def main() -> int:
 
     for arm_name in args.arms:
         arm_config = make_arm_config(arm_name)
+        catalog = build_catalog(arm_config, params)
+        print(f"[catalog] arm {arm_name}: {len(catalog)} legal entries",
+              flush=True)
         for condition in args.conditions:
             for seed in args.seeds:
                 label = f"arm{arm_name}_{condition}_s{seed}"
+                if label in completed:
+                    print(f"\n[{label}] already complete, skipping", flush=True)
+                    continue
                 print(f"\n[{label}] starting ...", flush=True)
                 candidate_start = time.perf_counter()
-                pm = PatchManager(model, tok, arm_config, seed=seed)
+                pm = PatchManager(model, tok, arm_config, seed=seed,
+                                  quality_baseline_ppl=quality_baseline_ppl)
                 pm.candidate.parent_checkpoint_sha = revision
                 proposer = (SelfProposer(model, tok, pm, args.max_new)
                             if condition == "autonomous" else None)
@@ -353,10 +379,17 @@ def main() -> int:
                 practice_ce = math.log(base_practice.aggregate_ppl)
                 stage_totals = {stage: 0.0 for stage in (
                     "proposal", "validation", "application", "quality",
-                    "practice", "selection", "regression", "rollback")}
+                    "practice", "selection", "regression", "capability",
+                    "rollback")}
                 control_attempts = 0
                 failed = False
-                for step in range(args.steps):
+                # Adaptive budget matching: pool candidates per iteration,
+                # iterations = ceil(steps/divisor) so total practice
+                # evaluations can match the autonomous trajectory's budget.
+                n_steps = args.steps
+                if condition == "adaptive":
+                    n_steps = max(1, math.ceil(args.steps / args.adaptive_step_divisor))
+                for step in range(n_steps):
                     step_times = {stage: 0.0 for stage in stage_totals}
                     if condition == "autonomous":
                         raw, proposal, step_times["proposal"] = proposer.propose(
@@ -364,13 +397,14 @@ def main() -> int:
                     elif condition == "adaptive":
                         start = time.perf_counter()
                         proposal, trial_s, attempts = adaptive_choice(
-                            model, tok, ev, pm, seed, step, params)
+                            model, tok, ev, pm, seed, step, catalog,
+                            pool=args.adaptive_pool)
                         step_times["proposal"] = time.perf_counter() - start
                         control_attempts += attempts
-                        raw = json.dumps(proposal)
+                        raw = json.dumps(proposal) if proposal else "null"
                     else:
                         start = time.perf_counter()
-                        proposals = (random_control_proposals(arm_config, params, 1,
+                        proposals = (random_control_proposals(catalog, arm_config, 1,
                                      seed * 1009 + step) if condition == "random"
                                      else guided_control_proposals(arm_config, args.steps)[step:step + 1])
                         proposal = proposals[0]
@@ -442,11 +476,14 @@ def main() -> int:
                 pm.finalize()
                 sel = ev.evaluate_selection(model, tok)
                 reg = ev.evaluate_regression(model, tok)
+                cap = evaluate_capability(model, tok)
                 stage_totals["selection"] += sel.gpu_seconds
                 stage_totals["regression"] += reg.gpu_seconds
+                stage_totals["capability"] += cap.gpu_seconds
 
                 reg_passed, reg_details = check_regression(
                     base_regression, reg, pilot_tolerance)
+                cap_check = capability_regression(base_capability, cap)
                 sel_delta = sel.aggregate_ppl - base_selection.aggregate_ppl
                 ok, bad, rb_s = pm.rollback_all()
                 stage_totals["rollback"] += rb_s
@@ -456,13 +493,20 @@ def main() -> int:
                 pm.candidate.total_gpu_seconds = sum(stage_totals.values())
                 candidate_dict = pm.candidate_dict()
                 candidate_dict.update({
+                    "label": label,
                     "condition": condition,
+                    "proposer_prompt_sha256": (PROMPT_VERSION
+                                               if condition == "autonomous"
+                                               else None),
                     "selection_aggregate_ppl": sel.aggregate_ppl,
                     "selection_delta": round(sel_delta, 4),
                     "selection_delta_ce": sel.cross_entropy - base_selection.cross_entropy,
                     "selection_improved": sel_delta < 0,
                     "regression_passed": reg_passed,
                     "regression_details": reg_details,
+                    "capability": cap.to_dict(),
+                    "capability_check": cap_check,
+                    "n_steps_run": n_steps,
                     "stage_seconds": stage_totals,
                     "candidate_wall_seconds": elapsed,
                     "unattributed_wall_seconds": elapsed - sum(stage_totals.values()),
@@ -471,6 +515,8 @@ def main() -> int:
                     "failed_quality_guard": failed,
                 })
                 report["candidates"].append(candidate_dict)
+                report["elapsed_seconds"] = round(time.perf_counter() - t0, 1)
+                out.write_text(json.dumps(report, indent=2), encoding="utf-8")
                 print(f"[{label}] DONE: selection={sel.aggregate_ppl:.3f} "
                       f"(delta {sel_delta:+.4f}) reg_passed={reg_passed} "
                       f"measured_s={pm.candidate.total_gpu_seconds:.1f} "

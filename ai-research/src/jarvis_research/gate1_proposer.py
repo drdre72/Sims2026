@@ -3,6 +3,13 @@
 The caller owns the model: generate() operates on the same live object that
 the patch manager edits. Selection/regression content is never passed here.
 This is prompt isolation, NOT filesystem isolation from a tool-enabled agent.
+
+Gate 1.1: the proposer sees the COMPLETE legal catalog — the identical list
+of indexed parameter descriptors that every control draws from — so the
+model and the controls search the same parameter space. Proposals reference
+tensors by catalog param_id (an integer), which removes name-transcription
+errors and lets the prompt carry shape/numel/std/legal-range metadata that
+makes schema-valid proposals possible without trial and error.
 """
 
 import hashlib
@@ -14,18 +21,25 @@ import torch
 
 PROMPT = """You are proposing a modification to your own currently loaded weights.
 Return exactly one JSON object, no explanation outside JSON:
-{"edits":[{"param":"exact name","operation":"OP","magnitude":NUMBER,"count":INTEGER}],
+{"edits":[{"param_id":INTEGER,"operation":"OP","magnitude":NUMBER,"count":INTEGER}],
  "rationale":"brief reason","predicted_effect":"brief prediction",
  "predicted_practice_delta_ce":NUMBER}
 Use ONE edit per proposal. Smaller practice cross-entropy is better.
 The only measurement you receive is PRACTICE feedback. You have no access to
 selection, regression or final test results.
-Allowed operation: OP. Parameter names must be chosen exactly from the list.
-For add_sparse: count 1..512; |magnitude| <= min(0.5, 0.5*tensor_std).
-For scale_dense: magnitude in [0.70, 0.99]; omit count.
+param_id MUST be an integer copied exactly from the LEGAL CATALOG below.
+Catalog row format: id|layer|famcode|numel[|m=cap][|c<=N]
+A 'families:' legend line maps each famcode to its full family name, and a
+'bounds:' line states the arm-wide magnitude/count limits that apply to
+every row. A per-row m=cap means magnitude must satisfy -cap <= m <= +cap;
+a per-row c<=N means count must be <= N (otherwise the arm-wide count range
+and numel apply).
+magnitude MUST be inside its legal range; count MUST be inside the arm-wide
+count range and <= numel (omit count for scale_dense).
 Respect earlier rejection feedback. An invalid response consumes a step.
 """
-PROMPT_VERSION = hashlib.sha256((PROMPT + "enable_thinking=False").encode()).hexdigest()
+PROMPT_VERSION = hashlib.sha256(
+    (PROMPT + "enable_thinking=False|catalog-v5-compact").encode()).hexdigest()
 MAX_NEW = 512
 TEMPERATURE = 0.7
 TOP_P = 0.9
@@ -46,6 +60,34 @@ def parse_proposal(raw):
     return None
 
 
+def _catalog_line(entry: dict, fam_code: dict, uniform_mag: bool) -> str:
+    """One compact catalog row: id|layer|famcode|numel[|mag_min|mag_max].
+
+    The full parameter name is deliberately omitted — param_id is the
+    authoritative reference and the patch manager resolves it. Family names
+    are replaced by short codes defined in the legend line. Arm-wide
+    magnitude/count bounds are stated once in the 'bounds:' legend, so they
+    are only repeated per-row when they actually differ across tensors
+    (sparse_additive std-relative caps). Keeping rows short matters: this
+    hybrid linear-attention model's prefill memory grows steeply with
+    prompt length (~12.7k tokens previously peaked near 32 GiB).
+    """
+    line = (f"{entry['param_id']}|L{entry['layer']}|{fam_code[entry['family']]}"
+            f"|n={entry['numel']}")
+    if not uniform_mag:
+        # Advertise a cap 0.1% INSIDE the true bound: 4-sig-fig display
+        # rounding can otherwise round up past the legal limit and every
+        # boundary proposal fails validation on fp noise.
+        if abs(entry["mag_min"] + entry["mag_max"]) < 1e-12:
+            line += f"|m={entry['mag_max'] * 0.999:.4g}"
+        else:
+            line += (f"|mag[{entry['mag_min'] * 0.999:.4g},"
+                     f"{entry['mag_max'] * 0.999:.4g}]")
+    if "count_max" in entry and entry["count_max"] < 512:
+        line += f"|c<={entry['count_max']}"
+    return line
+
+
 class SelfProposer:
     def __init__(self, model, tokenizer, patch_manager, max_new=MAX_NEW):
         if model is not patch_manager.model:
@@ -54,28 +96,40 @@ class SelfProposer:
         self.tokenizer = tokenizer
         self.patch_manager = patch_manager
         self.max_new = max_new
-        arm = patch_manager.arm
-        self.names = sorted(
-            n for n in patch_manager.params
-            if patch_manager._classify_family(n) is not None
-            and (patch_manager._layer_idx(n) is not None)
-            and arm["min_layer"] <= patch_manager._layer_idx(n) <= arm["max_layer"])
-        if not self.names:
+        # The COMPLETE legal catalog — identical to what controls draw from.
+        self.catalog = patch_manager.catalog
+        if not self.catalog:
             raise ValueError("no legal parameter names")
+        # Short family codes keep the prompt small; the legend maps them back.
+        families = sorted({e["family"] for e in self.catalog})
+        self._fam_code = {f: f"f{i}" for i, f in enumerate(families)}
+        legend = ", ".join(f"{c}={f}" for f, c in self._fam_code.items())
+        arm = patch_manager.arm
+        mags = {(round(e["mag_min"], 8), round(e["mag_max"], 8))
+                for e in self.catalog}
+        uniform_mag = len(mags) == 1
+        if uniform_mag:
+            (lo, hi), = mags
+            bounds = f"mag[{lo:.4g},{hi:.4g}]"
+        else:
+            bounds = "per-row m=cap means -cap<=m<=+cap"
+        cnt = ""
+        if "count_min" in arm:
+            cnt = (f" count[{arm['min_count']},{arm['max_count']}]"
+                   f" and <= numel")
+        self._catalog_text = (f"families: {legend}\n"
+                              f"bounds: {bounds}{cnt}\n"
+                              + "\n".join(_catalog_line(e, self._fam_code,
+                                                        uniform_mag)
+                                          for e in self.catalog))
 
     def propose(self, seed, step, practice_ce, history):
         arm = self.patch_manager.arm
-        # Limit prompt size without hiding early/mid/late options.
-        layers = [0, 1, 12, 16, 22, 28, 31] if arm["min_layer"] == 0 else [12, 16, 22, 28, 31]
-        names = [n for n in self.names if self.patch_manager._layer_idx(n) in layers]
-        options = []
-        for name in names:
-            std = float(self.patch_manager.params[name].detach().float().std())
-            options.append(f"{name} std={std:.5f}")
         user = (f"Arm: {arm['name']}; OP={arm['operation']}\n"
                 f"Practice CE: {practice_ce:.6f}\n"
                 f"Previous practice-only feedback: {json.dumps(history[-4:])}\n"
-                f"Legal options:\n" + "\n".join(options))
+                f"LEGAL CATALOG ({len(self.catalog)} entries):\n"
+                f"{self._catalog_text}")
         encoded = self.tokenizer.apply_chat_template(
             [{"role": "system", "content": PROMPT.replace("OP", arm["operation"])},
              {"role": "user", "content": user}],
@@ -86,8 +140,16 @@ class SelfProposer:
         torch.manual_seed(seed * 100003 + step)
         if device.type == "cuda":
             torch.cuda.synchronize()
+            torch.cuda.empty_cache()
         start = time.perf_counter()
-        with torch.no_grad():
+        # Pin the memory-efficient SDPA backend: under allocator pressure
+        # PyTorch may otherwise select the math backend, which materializes
+        # an O(seq^2) attention matrix and makes long-prompt generation
+        # pathologically slow on this card.
+        sdpa_ctx = torch.nn.attention.sdpa_kernel(
+            [torch.nn.attention.SDPBackend.EFFICIENT_ATTENTION,
+             torch.nn.attention.SDPBackend.MATH])
+        with sdpa_ctx, torch.no_grad():
             generated = self.model.generate(
                 **encoded, do_sample=True, temperature=TEMPERATURE,
                 top_p=TOP_P, max_new_tokens=self.max_new)

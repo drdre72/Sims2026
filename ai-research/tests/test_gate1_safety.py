@@ -8,7 +8,8 @@ import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from jarvis_research.gate1_evaluator import Evaluator, generate_partitions, _text_hash
-from jarvis_research.gate1_patch_manager import ARM_A, ARM_B, PatchManager
+from jarvis_research.gate1_patch_manager import (
+    ARM_A, ARM_B, PatchManager, build_catalog)
 from jarvis_research.gate1_proposer import SelfProposer, parse_proposal
 
 
@@ -98,6 +99,37 @@ class Gate1SafetyTests(unittest.TestCase):
         b.apply(b.validate({"edits": [edit]})[0])
         self.assertIsNone(b.validate({"edits": [edit, edit]})[0])
         self.assertTrue(b.rollback_all()[0])
+
+    def test_catalog_param_id_resolves_and_validates(self):
+        model = TinyModel()
+        model.weights["model.layers.12.mlp.gate_proj.weight"] = torch.ones(8, 8)
+        a = PatchManager(model, None, ARM_A, 1)
+        catalog = a.catalog
+        self.assertTrue(catalog)
+        entry = next(e for e in catalog
+                     if e["param"] == "model.layers.12.mlp.gate_proj.weight")
+        # param_id resolves to the same tensor as the name
+        by_id = {"edits": [{"param_id": entry["param_id"],
+                            "operation": "add_sparse",
+                            "magnitude": entry["mag_max"] * 0.5,
+                            "count": min(4, entry["count_max"])}]}
+        edits, err = a.validate(by_id)
+        self.assertIsNone(err)
+        self.assertEqual(edits[0]["name"], entry["param"])
+        # conflicting param_id + param is rejected
+        bad = {"edits": [{"param_id": entry["param_id"],
+                          "param": "model.layers.11.mlp.gate_proj.weight",
+                          "operation": "add_sparse", "magnitude": 0.001,
+                          "count": 1}]}
+        self.assertIsNotNone(a.validate(bad)[1])
+        # out-of-range magnitude from catalog bounds is rejected
+        bad_mag = {"edits": [{"param_id": entry["param_id"],
+                              "operation": "add_sparse",
+                              "magnitude": entry["mag_max"] * 2,
+                              "count": 1}]}
+        self.assertIsNotNone(a.validate(bad_mag)[1])
+        # build_catalog and pm.catalog agree
+        self.assertEqual(len(catalog), len(build_catalog(ARM_A, model.weights)))
 
 
 if __name__ == "__main__":

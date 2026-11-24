@@ -54,6 +54,37 @@ PPL_RATIO_COLLAPSE = 5.0
 PPL_ABS_COLLAPSE = 200.0
 GEN_CHECK_TOKENS = 16
 GEN_CHECK_PROMPT = "The capital of France is"
+QUALITY_PROBE_TEXT = (
+    "The capital of France is Paris. Water is made of hydrogen and oxygen. "
+    "A week has seven days. The Earth orbits the Sun once per year."
+)
+
+
+@torch.no_grad()
+def probe_ppl(model, tok, text: str = QUALITY_PROBE_TEXT) -> float:
+    """Perplexity of a fixed probe on the current model state."""
+    ids = tok(text, return_tensors="pt").input_ids.to("cuda")
+    out = model(ids)
+    logits = out.logits.float()
+    sl, lab = logits[:, :-1, :], ids[:, 1:]
+    loss = torch.nn.functional.cross_entropy(
+        sl.reshape(-1, sl.size(-1)), lab.reshape(-1))
+    return float(torch.exp(loss).item()) if torch.isfinite(loss) else float("inf")
+
+
+@torch.no_grad()
+def _tensor_std(p: torch.Tensor) -> float:
+    """Std without materializing an fp32 copy of the tensor.
+
+    ``.float().std()`` allocates 2x the bf16 size; for ~1 GB Arm B tensors
+    that transient alone can exhaust VRAM. ``mean``/``pow`` accumulate in
+    fp32 internally and only allocate O(1) extra memory.
+    """
+    d = p.detach()
+    m = d.mean()
+    var = d.pow(2).mean() - m * m
+    return float(var.clamp_min(0).sqrt().item())
+
 
 # Arm A bounds (sparse additive, mid/late layers).
 ARM_A = {
@@ -150,6 +181,62 @@ class CandidateRecord:
         }
 
 
+def build_catalog(arm_config: dict, params: Dict[str, torch.Tensor]) -> List[dict]:
+    """Build the complete legal edit catalog for an arm.
+
+    Every proposer and control MUST draw from this identical list so all
+    conditions search the same parameter space. Each entry carries enough
+    information to make a schema-valid proposal without trial-and-error:
+    the exact parameter name, layer, shape, element count, tensor std, and
+    the legal magnitude/count ranges for this arm.
+    """
+    arm = arm_config
+    catalog = []
+    for name in sorted(params.keys()):
+        parts = name.split(".")
+        li = None
+        if "layers" in parts:
+            i = parts.index("layers")
+            if i + 1 < len(parts):
+                try:
+                    li = int(parts[i + 1])
+                except ValueError:
+                    li = None
+        if li is None:
+            continue
+        if li < arm["min_layer"] or li > arm["max_layer"]:
+            continue
+        forbidden = any(fs in name for fs in arm["forbidden_substrings"])
+        if forbidden:
+            continue
+        family = next((fam for fam in arm["allowed_families"] if fam in name), None)
+        if family is None:
+            continue
+        p = params[name]
+        std = _tensor_std(p)
+        entry = {
+            "param_id": len(catalog),
+            "param": name,
+            "family": family,
+            "layer": li,
+            "shape": list(p.shape),
+            "numel": int(p.numel()),
+            "std": round(std, 6),
+        }
+        if arm["name"] == "sparse_additive":
+            max_abs = arm["max_delta_abs"]
+            max_std = arm["max_delta_std_rel"] * std if std > 0 else max_abs
+            entry["mag_min"] = -min(max_abs, max_std)
+            entry["mag_max"] = min(max_abs, max_std)
+            entry["count_min"] = arm["min_count"]
+            entry["count_max"] = min(arm["max_count"], int(p.numel()))
+        elif arm["name"] == "bounded_attenuation":
+            entry["mag_min"] = arm["min_factor"]
+            entry["mag_max"] = arm["max_factor"]
+        catalog.append(entry)
+    return catalog
+
+
 class PatchManager:
     """Manages reversible weight edits for a Gate 1 candidate.
 
@@ -159,16 +246,26 @@ class PatchManager:
     final evaluation.
     """
 
-    def __init__(self, model, tok, arm_config: dict, seed: int):
+    def __init__(self, model, tok, arm_config: dict, seed: int,
+                 quality_baseline_ppl: Optional[float] = None):
         self.model = model
         self.tok = tok
         self.arm = arm_config
         self.seed = seed
         self.params = {n: p for n, p in model.named_parameters()}
-        # Originals: snapshot of every tensor BEFORE any edit, for final rollback.
+        self.catalog = build_catalog(arm_config, self.params)
+        self._catalog_by_id = {e["param_id"]: e for e in self.catalog}
+        self._catalog_by_name = {e["param"]: e for e in self.catalog}
+        # Measured perplexity of the fixed quality-check probe on the
+        # UNMODIFIED pinned checkpoint. Required: the collapse guard must be
+        # calibrated to the actual model, not a hard-coded constant.
+        self.quality_baseline_ppl = quality_baseline_ppl
+        # Originals: snapshot of every tensor BEFORE any edit, for final
+        # rollback. Kept on CPU: GPU-side clones of large Arm B tensors can
+        # exhaust VRAM within a single candidate.
         self.originals: Dict[str, torch.Tensor] = {}
-        # Touched: set of tensors that have been edited (for restore + drift tracking).
-        self.touched: Dict[str, torch.Tensor] = {}  # name -> pre-edit snapshot at first touch
+        # Touched: names of tensors that have been edited (for restore + drift tracking).
+        self.touched: set = set()
         # Cumulative drift tracking: per-tensor sum of absolute deltas (Arm A)
         # or product of factors (Arm B).
         self.cumulative_delta: Dict[str, float] = {}  # Arm A: sum |delta|; Arm B: product factors
@@ -219,7 +316,19 @@ class PatchManager:
             if not isinstance(e, dict):
                 return None, f"edit {i}: not a dict"
 
+            # Resolve the target: accept either an exact param name or a
+            # catalog param_id. Both refer to the SAME legal catalog that
+            # every proposer and control draws from.
             param_name = e.get("param")
+            param_id = e.get("param_id")
+            if param_id is not None:
+                entry = self._catalog_by_id.get(param_id)
+                if entry is None:
+                    return None, f"edit {i}: unknown param_id {param_id!r}"
+                if param_name is not None and param_name != entry["param"]:
+                    return None, (f"edit {i}: param_id {param_id} resolves to "
+                                  f"{entry['param']!r}, not {param_name!r}")
+                param_name = entry["param"]
             if not isinstance(param_name, str) or param_name not in self.params:
                 return None, f"edit {i}: unknown param {param_name!r}"
 
@@ -255,7 +364,7 @@ class PatchManager:
                 if abs(magnitude) > self.arm["max_delta_abs"]:
                     return None, (f"edit {i}: |delta|={abs(magnitude):.4f} > "
                                   f"max {self.arm['max_delta_abs']}")
-                std = float(self.params[param_name].float().std().item())
+                std = _tensor_std(self.params[param_name])
                 if std > 0 and abs(magnitude) / std > self.arm["max_delta_std_rel"]:
                     return None, (f"edit {i}: |delta|/std={abs(magnitude)/std:.4f} > "
                                   f"max {self.arm['max_delta_std_rel']}")
@@ -321,8 +430,8 @@ class PatchManager:
             name = edit["name"]
             # Snapshot at first touch
             if name not in self.touched:
-                self.touched[name] = self.params[name].detach().clone()
-                self.originals[name] = self.params[name].detach().clone()
+                self.touched.add(name)
+                self.originals[name] = self.params[name].detach().to("cpu")
                 if self.arm["name"] == "bounded_attenuation":
                     self.cumulative_delta[name] = 1.0
                 else:
@@ -330,7 +439,7 @@ class PatchManager:
 
             p = self.params[name]
             with torch.no_grad():
-                std = float(p.float().std().item())
+                std = _tensor_std(p)
                 if self.arm["name"] == "sparse_additive":
                     idx = torch.randperm(p.numel(), generator=self._cpu_gen)[:edit["count"]].to(p.device)
                     flat = p.view(-1)
@@ -364,11 +473,7 @@ class PatchManager:
         or perplexity explosion (>5x or >200 absolute).
         """
         t0 = time.perf_counter()
-        ids = self.tok(
-            "The capital of France is Paris. Water is made of hydrogen and oxygen. "
-            "A week has seven days. The Earth orbits the Sun once per year.",
-            return_tensors="pt").input_ids.to("cuda")
-
+        ids = self.tok(QUALITY_PROBE_TEXT, return_tensors="pt").input_ids.to("cuda")
         with torch.no_grad():
             out = self.model(ids)
             logits = out.logits.float()
@@ -387,8 +492,14 @@ class PatchManager:
                 toks = gen_out[0, gen_ids.shape[1]:].tolist()
                 deg = (not toks) or len(set(toks)) <= 1
 
-        # Collapse criteria
-        base_ppl = 7.46  # known baseline for this model+probe
+        # Collapse criteria: ratio against the MEASURED baseline perplexity
+        # of this pinned checkpoint on this fixed probe — never a constant
+        # carried over from a different experiment.
+        if self.quality_baseline_ppl is None or self.quality_baseline_ppl <= 0:
+            raise RuntimeError(
+                "quality_baseline_ppl not set: measure it on the unmodified "
+                "checkpoint before running candidates")
+        base_ppl = self.quality_baseline_ppl
         ratio = (ppl / base_ppl) if math.isfinite(ppl) and base_ppl > 0 else float("inf")
         collapsed = nan or deg or ratio > PPL_RATIO_COLLAPSE or ppl > PPL_ABS_COLLAPSE
         mechanisms = [m for m, c in
@@ -410,7 +521,7 @@ class PatchManager:
         torch.cuda.synchronize()
         # Verify
         for name, orig in self.originals.items():
-            if not torch.equal(self.params[name].detach(), orig):
+            if not torch.equal(self.params[name].detach().cpu(), orig):
                 gpu_s = time.perf_counter() - t0
                 return False, name, gpu_s
         self.touched.clear()
@@ -432,7 +543,7 @@ class PatchManager:
 
     def finalize(self):
         """Mark the candidate as complete. Update final applied tensors list."""
-        self.candidate.final_applied_tensors = sorted(self.touched.keys())
+        self.candidate.final_applied_tensors = sorted(self.touched)
 
     def candidate_dict(self) -> dict:
         return self.candidate.to_dict()

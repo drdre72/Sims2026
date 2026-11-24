@@ -236,6 +236,21 @@ Qwen attenuation trajectories worsened selection CE. No C1 result.
 Candidate stage timing reconciles within 0.13 seconds of candidate wall time.
 Full per-seed metrics and limitations: `research/gate1_v2_open_protocol.md`.
 
+**Gate 1.1 controlled-comparison pilot completed (exploratory):** unified
+legal catalog (indexed `param_id` descriptors shared by proposer and all
+controls), measured quality-guard baseline (no hard-coded ppl), compact
+indexed prompt (~5.5k tokens; fixes a ~32 GiB prefill OOM), fresh disjoint
+v3 partitions, 13-task capability retention screen, and crash-safe
+incremental results. 24 candidates in 985.5s; **96/96 steps applied
+(100% schema-valid, vs 17/24 before)**. Mean selection dCE: Arm A
+autonomous +0.00069 vs adaptive +0.00064 / random +0.00118 / fixed
++0.00027; Arm B autonomous +0.00205 vs adaptive +0.00313 / random
++0.00420 / fixed -0.00237. Autonomous ties the adaptive control on Arm A
+and beats stochastic controls but not the deterministic fixed heuristic
+on Arm B. No evidence yet that Qwen's selection beats matched search;
+confirmatory execution remains blocked pending statistical revision and
+independent evaluator review.
+
 The old development partitions and all v2 partitions are accessible to this
 development account. Keeping selection text out of the Qwen prompt is
 **prompt isolation only**, NOT OS-level access control or a sealed final set.

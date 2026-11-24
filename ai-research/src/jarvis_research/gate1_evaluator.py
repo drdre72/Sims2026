@@ -359,6 +359,7 @@ def generate_partitions(
     n_per_domain_selection: int = 3,
     n_per_domain_regression: int = 3,
     seed: int = 42,
+    pools: Optional[Dict[str, List[str]]] = None,
 ) -> dict:
     """Generate practice/selection/regression partitions.
 
@@ -366,13 +367,17 @@ def generate_partitions(
     allocated to the three partitions. The passages are distinct across
     partitions — no overlap.
 
+    `pools` may supply an alternate per-domain passage list (e.g. the v3
+    pool, which is disjoint from the examined v2 passages). When omitted,
+    the default development pool is used.
+
     The FINAL sealed partition is NOT generated here. It must be generated
-    by a separate process and stored in gate1_sealed/.
+    by a separate process and stored outside this account's reach.
     """
     # Development pools cover the three exploratory partitions ONLY. They
     # cannot produce an independently administered confirmation set. NOT
     # the seed303_validate.py passages (those are now "examined").
-    pools = _build_passage_pools()
+    pools = pools if pools is not None else _build_passage_pools()
     paths = [practice_path, selection_path, regression_path]
     if any(path.exists() for path in paths):
         raise FileExistsError("refusing to overwrite an existing evaluation partition")
@@ -970,6 +975,379 @@ def _build_passage_pools() -> Dict[str, List[str]]:
     # Verify each domain has 12 passages
     for domain, passages in pools.items():
         assert len(passages) == 12, f"{domain} has {len(passages)}, expected 12"
+    return pools
+
+
+def _build_passage_pools_v3() -> Dict[str, List[str]]:
+    """Gate 1.1 pool: 8 fresh passages per domain, DISJOINT from the v2 pool.
+
+    The v2 exploratory pilot examined its practice/selection/regression
+    passages, so v3 cannot reuse them. Each domain gets exactly 8 passages —
+    enough for 2 practice + 3 selection + 3 regression with no remainder.
+    All text is original.
+    """
+    pools: Dict[str, List[str]] = {}
+    pools["science"] = [
+        ("The ozone layer sits in the stratosphere roughly twenty to thirty "
+         "kilometers above the surface and absorbs most of the sun's harmful "
+         "ultraviolet radiation. Its discovery followed observations that "
+         "skin cancer rates were rising in regions with intense sunlight, "
+         "prompting scientists to investigate what was filtering the rays."),
+        ("Mitochondria are organelles often called the powerhouse of the "
+         "cell because they generate most of the cell's supply of ATP "
+         "through cellular respiration. They have their own DNA, which "
+         "supports the endosymbiotic theory that they were once free "
+         "living bacteria that entered a larger cell."),
+        ("A black hole forms when a massive star collapses under its own "
+         "gravity at the end of its life. The collapse is so complete that "
+         "not even light can escape from within the event horizon. Black "
+         "holes are detected indirectly through their effects on nearby "
+         "matter, which heats up and emits X rays as it spirals inward."),
+        ("The water cycle describes how water moves between the atmosphere, "
+         "oceans, and land. Solar energy evaporates water from surfaces, "
+         "the vapor condenses into clouds, and precipitation returns water "
+         "to the ground. Some water runs off into rivers and streams, some "
+         "soaks into the ground to recharge aquifers, and the cycle repeats."),
+        ("Sound travels as a longitudinal wave, meaning the particles of the "
+         "medium vibrate parallel to the direction the wave travels. In air "
+         "at room temperature, sound moves at about 343 meters per second. "
+         "It travels faster in denser media like water and steel because "
+         "the particles are closer together and transmit vibrations more "
+         "efficiently."),
+        ("Photosynthesis converts light energy into chemical energy stored "
+         "in glucose. Plants absorb carbon dioxide and water, and using "
+         "sunlight captured by chlorophyll, they produce glucose and "
+         "release oxygen as a byproduct. This process is the foundation of "
+         "most food chains and produces nearly all the oxygen in the "
+         "atmosphere."),
+        ("The human immune system distinguishes between the body's own cells "
+         "and foreign invaders like bacteria and viruses. White blood cells "
+         "patrol the bloodstream and tissues, and when they encounter a "
+         "pathogen they trigger an inflammatory response. Vaccines work by "
+         "presenting a harmless version of a pathogen so the immune system "
+         "learns to recognize and fight the real one."),
+        ("Plate tectonics explains that the Earth's outer shell is divided "
+         "into rigid plates that float on the semi molten mantle below. These "
+         "plates move over geological time, driven by convection currents. "
+         "Their interactions produce earthquakes, volcanic eruptions, and "
+         "mountain ranges at the boundaries where they meet."),
+    ]
+    pools["code"] = [
+        ("def quicksort(arr):\n"
+         "    if len(arr) <= 1:\n"
+         "        return arr\n"
+         "    pivot = arr[len(arr) // 2]\n"
+         "    left = [x for x in arr if x < pivot]\n"
+         "    middle = [x for x in arr if x == pivot]\n"
+         "    right = [x for x in arr if x > pivot]\n"
+         "    return quicksort(left) + middle + quicksort(right)"),
+        ("class Stack:\n"
+         "    def __init__(self):\n"
+         "        self.items = []\n"
+         "    def push(self, item):\n"
+         "        self.items.append(item)\n"
+         "    def pop(self):\n"
+         "        if self.is_empty():\n"
+         "            return None\n"
+         "        return self.items.pop()\n"
+         "    def is_empty(self):\n"
+         "        return len(self.items) == 0"),
+        ("def fibonacci(n):\n"
+         "    if n <= 1:\n"
+         "        return n\n"
+         "    a, b = 0, 1\n"
+         "    for _ in range(2, n + 1):\n"
+         "        a, b = b, a + b\n"
+         "    return b"),
+        ("def is_anagram(s1, s2):\n"
+         "    if len(s1) != len(s2):\n"
+         "        return False\n"
+         "    return sorted(s1.replace(' ', '')) == sorted(s2.replace(' ', ''))"),
+        ("def two_sum(nums, target):\n"
+         "    seen = {}\n"
+         "    for i, num in enumerate(nums):\n"
+         "        complement = target - num\n"
+         "        if complement in seen:\n"
+         "            return [seen[complement], i]\n"
+         "        seen[num] = i\n"
+         "    return []"),
+        ("def flatten(lst):\n"
+         "    result = []\n"
+         "    for item in lst:\n"
+         "        if isinstance(item, list):\n"
+         "            result.extend(flatten(item))\n"
+         "        else:\n"
+         "            result.append(item)\n"
+         "    return result"),
+        ("def count_vowels(s):\n"
+         "    vowels = 'aeiouAEIOU'\n"
+         "    return sum(1 for c in s if c in vowels)"),
+        ("def rotate_list(lst, k):\n"
+         "    if not lst:\n"
+         "        return lst\n"
+         "    k = k % len(lst)\n"
+         "    return lst[-k:] + lst[:-k]"),
+    ]
+    pools["narrative"] = [
+        ("The lighthouse keeper had tended the light on Greyrock Point for "
+         "twenty three years, through storms that shook the tower and "
+         "winters that sealed the cove in ice. When the automated beacon "
+         "was scheduled to replace him the following spring, he began "
+         "keeping a journal of every ship he had ever guided home."),
+        ("Mara found the key beneath the third floorboard of her grandmother's "
+         "attic, wrapped in a cloth that smelled of cedar and old paper. The "
+         "key was smaller than any door she knew, and the note attached to it "
+         "read only: for the door that was never built."),
+        ("On the last night of the expedition, the team gathered around a "
+         "campfire at the edge of the glacier and reviewed the season's "
+         "findings. Their instruments had recorded something unexpected in "
+         "the ice cores, a signal that did not match any known natural "
+         "pattern, and they agreed to return the following year to confirm "
+         "it."),
+        ("The old theater on Meridian Street had been dark for decades when "
+         "a group of volunteers decided to restore it. They discovered "
+         "original blueprints hidden behind a panel in the projection room, "
+         "complete with seating charts from the theater's opening night in "
+         "1931."),
+        ("Every autumn, the village of Alder Creek held a lantern festival "
+         "to honor the travelers who had passed through over the centuries. "
+         "Families wrote names on rice paper lanterns and set them adrift on "
+         "the river, and the current carried the lights downstream toward "
+         "the sea."),
+        ("The cartographer spent three years mapping the uncharted valleys "
+         "of the northern range, traveling by mule and foot through terrain "
+         "that appeared on no existing survey. When she finally published "
+         "her maps, they revealed a pass through the mountains that traders "
+         "had used for generations without ever drawing it."),
+        ("In the quiet hours before dawn, the baker would arrive at the "
+         "empty shop and begin the day's first batch of bread. The ritual "
+         "had not changed in forty years: same flour, same starter, same "
+         "pre dawn quiet, and by the time the first customers came, the "
+         "smell of fresh loaves filled the street."),
+        ("The two brothers had not spoken since the funeral, but every "
+         "harvest season they both returned to the family farm without "
+         "comment. They worked the fields in silence, ate dinner at "
+         "opposite ends of the long table, and parted at dusk, each "
+         "carrying the same unspoken understanding that some things "
+         "outlasted the argument that had divided them."),
+    ]
+    pools["math"] = [
+        ("The sum of the interior angles of any triangle is always 180 "
+         "degrees. This holds regardless of whether the triangle is "
+         "acute, right, or obtuse. For a quadrilateral, the sum is 360 "
+         "degrees, and for any polygon with n sides, the formula is "
+         "(n minus 2) times 180 degrees."),
+        ("A prime number is a natural number greater than one that has no "
+         "positive divisors other than one and itself. The first few primes "
+         "are 2, 3, 5, 7, 11, 13. There are infinitely many primes, a fact "
+         "proven by Euclid over two thousand years ago."),
+        ("The Pythagorean theorem states that in a right triangle, the square "
+         "of the hypotenuse equals the sum of the squares of the other two "
+         "sides: a squared plus b squared equals c squared. It applies only "
+         "to right triangles, and its converse is also true: if a squared "
+         "plus b squared equals c squared, the triangle is right."),
+        ("Compound interest is calculated on both the initial principal and "
+         "the accumulated interest from previous periods. The formula is A "
+         "equals P times (1 plus r) to the power of t, where P is principal, "
+         "r is the rate, and t is time. Even small rate differences produce "
+         "large outcomes over long periods."),
+        ("The quadratic formula x equals negative b plus or minus the square "
+         "root of b squared minus 4ac, all over 2a, solves any equation of "
+         "the form ax squared plus bx plus c equals zero. The expression "
+         "under the root, the discriminant, determines whether there are "
+         "two real solutions, one repeated solution, or two complex ones."),
+        ("A matrix is a rectangular array of numbers arranged in rows and "
+         "columns. Matrix multiplication combines two matrices by taking the "
+         "dot product of each row of the first with each column of the "
+         "second. The result has dimensions equal to the rows of the first "
+         "matrix and the columns of the second."),
+        ("The derivative of a function measures its instantaneous rate of "
+         "change at any point. Geometrically, it is the slope of the tangent "
+         "line to the curve at that point. The power rule states that the "
+         "derivative of x to the power n is n times x to the power n minus "
+         "one, for any real number n."),
+        ("Probability measures the likelihood of an event occurring, expressed "
+         "as a number between 0 and 1. Independent events are those where one "
+         "does not affect the probability of the other, and their joint "
+         "probability is the product of their individual probabilities. "
+         "Conditional probability deals with events given that another event "
+         "has already occurred."),
+    ]
+    pools["history"] = [
+        ("The printing press, invented by Johannes Gutenberg around 1440, "
+         "revolutionized the spread of information in Europe. Before its "
+         "invention, books were copied by hand and were rare and expensive. "
+         "The press made books affordable, accelerated literacy, and enabled "
+         "the rapid dissemination of new ideas during the Renaissance and "
+         "Reformation."),
+        ("The Silk Road was a network of trade routes connecting China to the "
+         "Mediterranean world for over a thousand years. Despite its name, it "
+         "carried far more than silk: spices, precious metals, glassware, "
+         "religious texts, and ideas traveled along its length, making it one "
+         "of history's most important channels of cultural exchange."),
+        ("The Industrial Revolution began in Britain in the late eighteenth "
+         "century and transformed manufacturing from hand production to "
+         "machine based factories. Steam power, mechanized textiles, and new "
+         "transport systems drove unprecedented economic growth, but also "
+         "created crowded cities, harsh working conditions, and new social "
+         "classes."),
+        ("The French Revolution of 1789 overthrew the monarchy and established "
+         "the First French Republic. Inspired by Enlightenment ideals of "
+         "liberty and equality, revolutionaries stormed the Bastille, abolished "
+         "feudal privileges, and declared the rights of man. The revolution "
+         "ultimately gave way to Napoleon's rise to power."),
+        ("The Roman Empire reached its greatest territorial extent under "
+         "Emperor Trajan in the early second century CE, stretching from "
+         "Britain to Mesopotamia. Roman engineering produced roads, aqueducts, "
+         "and concrete structures that lasted for millennia. The empire's "
+         "administrative systems influenced governance for centuries after "
+         "its fall."),
+        ("The Manhattan Project was the secret American effort during World "
+         "War II to develop nuclear weapons. Led by physicist J. Robert "
+         "Oppenheimer, it brought together thousands of scientists and "
+         "engineers at sites across the country. The first atomic bomb was "
+         "detonated in the New Mexico desert in July 1945."),
+        ("The Great Depression began with the stock market crash of October "
+         "1929 and lasted through most of the 1930s. Unemployment reached "
+         "twenty five percent in the United States, banks failed by the "
+         "thousands, and drought turned farmland into the Dust Bowl. "
+         "Government programs like the New Deal attempted to stabilize the "
+         "economy and provide relief."),
+        ("The invention of the telephone by Alexander Graham Bell in 1876 "
+         "transformed communication by allowing voice to be transmitted "
+         "electrically over distances. Within a generation, telephone "
+         "networks spanned continents and oceans, shrinking the time between "
+         "sending a message and receiving a response from days to seconds."),
+    ]
+    pools["technical"] = [
+        ("TCP guarantees reliable, ordered delivery of data between two "
+         "endpoints. It establishes a connection through a three way "
+         "handshake, numbers each byte, and retransmits any segments that "
+         "are lost or corrupted. Flow control prevents a fast sender from "
+         "overwhelming a slow receiver, and congestion control adjusts "
+         "transmission rates when the network is busy."),
+        ("A hash function maps input data of arbitrary size to a fixed "
+         "size output called a digest. Cryptographic hash functions are "
+         "designed so that even a tiny change in the input produces a "
+         "completely different output, and it is computationally infeasible "
+         "to find two inputs that produce the same digest. They are used "
+         "for password storage, data integrity checks, and digital "
+         "signatures."),
+        ("The HTTP protocol is stateless: each request is independent and "
+         "the server does not remember previous requests. Cookies and "
+         "sessions were invented to add state on top of HTTP, allowing "
+         "websites to remember user logins and shopping carts. HTTPS adds "
+         "TLS encryption so that data in transit cannot be read or "
+         "modified by third parties."),
+        ("A database index is a data structure that speeds up retrieval by "
+         "maintaining a sorted or hashed copy of selected columns. Without "
+         "an index, a query must scan every row in a table, which is slow "
+         "for large tables. Indexes speed up reads but slow down writes "
+         "because every insert, update, or delete must also update the "
+         "index."),
+        ("The Model View Controller pattern separates an application into "
+         "three components: the Model holds the data and business logic, "
+         "the View presents data to the user, and the Controller handles "
+         "user input and updates both Model and View. This separation makes "
+         "code easier to maintain, test, and reuse across different "
+         "interfaces."),
+        ("Cache memory sits between the CPU and main memory and stores copies "
+         "of frequently used data for fast access. When the CPU needs data, "
+         "it checks the cache first. If the data is present, it is called a "
+         "cache hit and retrieved quickly; otherwise it is a cache miss and "
+         "must be fetched from slower main memory and copied into the cache "
+         "for next time."),
+        ("A compiler translates source code into machine code through several "
+         "stages: lexical analysis breaks text into tokens, parsing builds an "
+         "abstract syntax tree, semantic analysis checks types and rules, "
+         "optimization improves efficiency, and code generation emits the "
+         "final instructions. Each stage catches different classes of "
+         "errors."),
+        ("The CAP theorem states that a distributed data store can provide "
+         "at most two of three guarantees: consistency, availability, and "
+         "partition tolerance. In a network partition, the system must choose "
+         "between remaining consistent but unavailable, or available but "
+         "potentially inconsistent. Most real systems prioritize partition "
+         "tolerance and choose between the other two per operation."),
+    ]
+    pools["conversation"] = [
+        ("Could you explain how photosynthesis works in simple terms? Plants "
+         "take in sunlight, water, and carbon dioxide, and use the energy "
+         "from sunlight to make their own food in the form of sugar, while "
+         "releasing oxygen as a waste product."),
+        ("I was wondering if you could help me figure out why my sourdough "
+         "starter keeps collapsing. It might be that the kitchen is too "
+         "warm, or the flour doesn't have enough protein, or it needs more "
+         "time to develop before shaping."),
+        ("What do you think about the new transit line that's been proposed "
+         "for the east side of the city? Some people say it will reduce "
+         "commute times significantly, while others worry about the "
+         "construction disruption and the cost to taxpayers."),
+        ("Have you ever tried making your own pasta from scratch? It's not "
+         "as hard as people think, just flour, eggs, and a bit of patience. "
+         "The key is letting the dough rest long enough for the gluten to "
+         "relax."),
+        ("I heard there's going to be a severe storm this weekend. Do you "
+         "think we should cancel our hiking trip, or is it better to wait "
+         "and see what the forecast says tomorrow?"),
+        ("What's the best way to learn a new language as an adult? I've "
+         "been trying to study Spanish for a few months but I keep losing "
+         "motivation. Some people say immersion is the only way, others "
+         "swear by flashcards."),
+        ("My neighbor just installed solar panels and says his electric bill "
+         "dropped by sixty percent. I'm curious whether the initial "
+         "investment is worth it in our climate, or if it takes too long "
+         "to pay off."),
+        ("Do you have any recommendations for books about space exploration "
+         "that aren't too technical? I'd like to read about the Apollo "
+         "missions and what it was like for the astronauts, but I'm not "
+         "looking for equations."),
+    ]
+    pools["factual"] = [
+        ("The Great Wall of China is not a single continuous wall but a "
+         "series of walls and fortifications built over many centuries by "
+         "different dynasties. The most famous sections were built during "
+         "the Ming Dynasty between the fourteenth and seventeenth centuries. "
+         "Contrary to popular belief, the wall is not visible from the Moon "
+         "with the naked eye."),
+        ("Honey never spoils. Archaeologists have found pots of honey in "
+         "ancient Egyptian tombs that are over three thousand years old and "
+         "still perfectly edible. Honey's low moisture content, acidic pH, "
+         "and natural hydrogen peroxide production make it inhospitable to "
+         "bacteria and microorganisms."),
+        ("The human body contains approximately 37 trillion cells, of which "
+         "about 30 trillion are red blood cells. Red blood cells live for "
+         "about 120 days before being recycled by the spleen and bone "
+         "marrow. The body produces roughly two million new red blood cells "
+         "every second."),
+        ("Water covers approximately 71 percent of the Earth's surface, but "
+         "only about 2.5 percent of it is fresh water. Of that fresh water, "
+         "the vast majority is locked in glaciers and ice caps. Less than "
+         "one percent of all water on Earth is accessible in rivers, lakes, "
+         "and groundwater."),
+        ("The Amazon rainforest produces roughly 20 percent of the world's "
+         "oxygen, though this figure is often overstated. More importantly, "
+         "the Amazon stores an enormous amount of carbon in its trees and "
+         "soil, making it a critical buffer against climate change. It is "
+         "home to an estimated ten percent of all known species on Earth."),
+        ("Shakespeare wrote approximately 39 plays and 154 sonnets during his "
+         "career. His works have been translated into more languages than "
+         "any other writer, and phrases he coined, such as 'break the ice' "
+         "and 'wild goose chase,' are still used in everyday English today."),
+        ("The Eiffel Tower was originally built as the entrance arch for the "
+         "1889 World's Fair in Paris. It was intended to be temporary and "
+         "demolished after twenty years, but it proved so popular that it "
+         "was allowed to stay. It stands 330 meters tall and was the "
+         "world's tallest structure until the Chrysler Building was "
+         "completed in 1930."),
+        ("Octopuses have three hearts: two pump blood to the gills and one "
+         "pumps blood to the rest of the body. Their blood is blue because "
+         "it uses copper based hemocyanin instead of iron based hemoglobin. "
+         "They also have nine brains: a central brain plus a mini brain in "
+         "each of their eight arms."),
+    ]
+    for domain, passages in pools.items():
+        assert len(passages) == 8, f"{domain} v3 pool has {len(passages)}, expected 8"
     return pools
 
 

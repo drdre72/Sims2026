@@ -108,3 +108,93 @@ baseline. The comparator is not strictly matched in perturbation or
 compute; the small, examined selection corpus cannot establish a
 population effect. An untouched final set and independent approval remain
 explicit blockers.
+
+## Gate 1.1 controlled-comparison pilot (exploratory, 2026-11-24)
+
+Reviewer-directed revision addressing three findings from commit `29a63b6`:
+mismatched search spaces, missing interface metadata, and a hard-coded
+quality-guard baseline. Still exploratory — NOT confirmatory evidence.
+
+### Harness changes
+
+- **Unified legal catalog.** `build_catalog()` now emits indexed descriptors
+  (param_id, layer, family, shape, numel, std, legal magnitude/count range)
+  that the proposer prompt AND every control (random, fixed-heuristic,
+  adaptive) draw from identically. Proposals reference tensors by integer
+  `param_id`; controls may still use exact names. Arm A catalog: 192 entries;
+  Arm B: 248 entries (includes 12 `mtp.layers.0` tensors — noted as catalog
+  contamination to review, consistent across all conditions).
+- **Interface metadata.** Catalog rows carry numel and per-tensor legal
+  bounds, eliminating the trial-and-error class of rejections (e.g.
+  count > numel). Compact row format `id|L|fam|n=..|m=cap|c<=N` keeps the
+  Arm B prompt at ~5.5k tokens; the earlier verbose format produced a
+  ~12.7k-token prompt whose prefill peaked at ~32 GiB on this hybrid
+  linear-attention checkpoint and OOMed. Rows advertise magnitude caps
+  0.1% inside the true bound so boundary proposals do not fail on
+  display-rounding.
+- **Measured quality baseline.** `probe_ppl()` on the unmodified pinned
+  checkpoint (7.460) replaces the hard-coded Phase B constant; collapse
+  detection remains separate from selection/regression endpoints.
+- **Capability suite** (`gate1_capability.py`): 13 tasks across longctx
+  (ppl), reasoning (6), code (4), structured (2), scored separately from
+  the ppl endpoint. Baseline: longctx 2.145, reasoning 0.333, code 0.75,
+  structured 0.50. Small n → coarse sensitivity; treat as a retention
+  screen, not a capability benchmark.
+- **Fresh v3 partitions** (`data/gate1_eval_v3/`): 8 new original passages
+  per domain, zero overlap with the examined v2 passages.
+- **Crash safety:** incremental JSON checkpoint after each candidate and
+  `--resume`; GPU-side rollback snapshots moved to CPU and `.float().std()`
+  materializations replaced (Arm B touches ~1 GB tensors).
+
+### Results (3 seeds x 4 steps x 2 arms x 4 conditions = 24 candidates, 985.5s)
+
+Proposal quality improved sharply: **96/96 steps produced schema-valid,
+applied edits (100%)** vs 17/24 applied previously — the interface
+metadata eliminated the rejection class entirely. All 24 trajectories
+passed regression and capability screens.
+
+Mean selection delta CE (nats/token; negative = better), n=3 seeds:
+
+| Arm | autonomous | random | fixed_heuristic | adaptive |
+|---|---|---|---|---|
+| A sparse additive | +0.00069 | +0.00118 | +0.00027 | +0.00064 |
+| B attenuation | +0.00205 | +0.00420 | -0.00237 | +0.00313 |
+
+Descriptive only. Autonomous Arm A is statistically indistinguishable
+from the practice-adaptive control; Arm B autonomous has the best mean
+among stochastic conditions but loses to the deterministic fixed
+heuristic (which produces identical trajectories across seeds — zero
+variance, so it cannot support significance claims). Capability deltas
+were ~0 for all candidates (coarse suite). Cost: autonomous ~72-87s per
+candidate vs ~41-57s for controls — proposal generation roughly doubles
+wall time; the adaptive control matches practice-evaluation budget but
+not proposal-generation compute.
+
+### Interpretation
+
+The corrected interface achieved its engineering goal (valid proposals,
+matched search space, measured baselines, capability retention screen).
+It did **not** produce evidence that Qwen's parameter selection beats
+matched search: on Arm A it ties the adaptive control; on Arm B the best
+mean belongs to a fixed heuristic that ignores feedback entirely. Sparse
+additive edits remain near-zero leverage; attenuation remains mostly
+harmful on held-out text, with the fixed heuristic's Arm B improvement
+(-0.0024 CE) being the largest single observed gain — and the least
+informative control (deterministic, unexplained).
+
+### Remaining confirmatory blockers (unchanged, still required)
+
+1. Statistical protocol revision: pilot n=3 cannot calibrate variance;
+   need trajectory + passage-level uncertainty model, prespecified
+   one-sided tests with multiplicity control across arms, and a
+   minimum-useful-effect justified by measurement noise rather than the
+   provisional -0.02 nats/token target.
+2. Perturbation-matched AND compute-matched comparison validation —
+   current controls match search space and proposal budget; proposal-
+   generation compute is not yet matched (autonomous pays ~25s/step).
+3. Independent evaluator review: sealed holdout under separate OS
+   account/NTFS restrictions, grading-code integrity, one-time opening.
+4. Capability suite is a coarse retention screen (13 tasks); confirmatory
+   needs broader coverage before any capability claim.
+5. Catalog contains 12 `mtp.layers.0` entries in Arm B — decide whether
+   MTP-draft parameters belong in the legal edit surface.
