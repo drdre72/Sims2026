@@ -42,10 +42,12 @@ So, **of a row**: observation columns ≈ 34–42%, structural identity fields �
 
 ## 4. What remains before campaign authorization
 
-- Comprehension gate operational run: ≥60 C4 probes/encoding across ≥3 independently generated campaign-realistic catalogs, zero failures, plus C1–C3 at differential thresholds (95/90/90) — harness ready, counts preregistered (`MIN_PROBES`).
-- Paired within-seed sensitivity analysis over plausible effect sizes (ε/δ set independently of Gate 1.2 observations).
-- Budget accounting split: in-loop compute vs fixed final-eval allowance vs overshoot vs wall time.
-- Provenance threading: wire `audit_record` into the live observation path so collected stats carry the full `{base, edit-chain, context, config}` binding.
+- Comprehension gate operational run: ≥60 C4 probes/encoding across ≥3 independently generated campaign-realistic catalogs, zero failures, plus C1–C3 at differential thresholds (95/90/90) — harness ready, counts preregistered (`MIN_PROBES`); requires GPU prompt runs, not yet executed.
+- ~~Paired within-seed sensitivity analysis~~ — **done** (`gate1_3_sensitivity.json`): ε=δ=0.05 provisional; within-seed σ≈0.127 (CI [0.066, 0.795]); 80% correspondence power needs n=7 at Gate-1.2-magnitude effects, n=22 at moderate; **non-inferiority at ε=0.05 needs >40 seeds — margin-vs-noise-floor decision returned to the reviewer.**
+- ~~Budget accounting split~~ — **done**: `stage_seconds` = in-loop pool the budget bounds; `final_eval_seconds` = separate fixed allowance; `unattributed_wall_seconds` = wall − both.
+- ~~Provenance threading~~ — **done**: `collect_observations` now emits the full provenance tuple `{base_checkpoint, applied_edit_chain (EMPTY_CHAIN_SHA at baseline), observation_context, observer_version, measurement_config, epoch}`; surfaced into the campaign report's observation block.
+- ε/δ finalization — margins are the reviewer's call informed by the sensitivity table.
+- Final resource allocation + primary utility definition sign-off.
 
 ## 5. Artifacts
 

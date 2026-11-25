@@ -94,9 +94,9 @@ Epoch II runs only for the **eligible** encoding (passes canonical parity + pret
 
 Arm B prioritized — it holds the demonstrated experimental separation; arm A's near-null field serves a defined control role rather than consuming half the compute. Three seeds is an exploratory-pilot figure, not an acceptance figure.
 
-## 8. Budget accounting (directive 9)
+## 8. Budget accounting (directive 9 — implemented)
 
-Compute-matched accounting decomposes per candidate: proposal/intervention compute; observation acquisition + rendering; final independent evaluation (**fixed resource allowance**, so eval-cost variance cannot distort the cognitive-efficiency comparison); budget overshoot; end-to-end wall time. All five recorded independently. The earlier claim that B-condition under-allocation "runs against those conditions" is softened: when interventions can damage, *fewer* intervention opportunities can itself be protective — the confound is named, not assumed away.
+Compute-matched accounting decomposes per candidate: proposal/intervention compute; observation acquisition + rendering; final independent evaluation (**fixed resource allowance** — implemented: `stage_seconds` holds only the in-loop stages the budget bounds, `final_eval_seconds` is recorded separately, so eval-cost variance cannot distort the cognitive-efficiency comparison); budget overshoot; end-to-end wall time (`unattributed_wall_seconds` = wall − in-loop − eval). All recorded independently. The earlier claim that B-condition under-allocation "runs against those conditions" is softened: when interventions can damage, *fewer* intervention opportunities can itself be protective — the confound is named, not assumed away.
 
 ## 9. Statistical framework (directive 4)
 
@@ -107,6 +107,17 @@ Paired within-seed differences, not unpaired pooled means:
 - Ordering of means alone is not acceptance.
 
 Sensitivity analysis inputs: within-seed variance + its estimation uncertainty; power at multiple plausible effect sizes; separate correspondence and non-inferiority hypotheses; multiple-comparison handling across outcomes and capability safeguards; **dependence between domain measurements from the same trajectory** — the 24 domain-instances are diagnostics, not 24 independent replicates.
+
+**Measured sensitivity (preflight artifact `results/gate1_3_sensitivity.json`, `results/_sensitivity_analysis.py`):** provisional margins **ε = δ = 0.05** selection-delta units (meaningfulness judgments, fixed independent of the observed gap). Gate 1.2 within-seed sd of the A1−A2 diff = **0.127** (95% CI [0.066, 0.795] on df=2 — the estimate is itself highly uncertain). Monte-Carlo paired-t power at α=0.05:
+
+| True effect | σ=0.08 | σ=0.13 | σ=0.20 |
+|---|---|---|---|
+| μ=0.20 (Gate-1.2-mean magnitude) | n=4 | **n=7** | n=13 |
+| μ=0.12 (moderate) | n=10 | n=22 | >40 |
+| μ=0.08 | >40 | >40 | >40 |
+| Non-inferiority, ε=0.05 at equality | n=18 | **>40** | >40 |
+
+**Consequence, stated honestly:** at the measured σ≈0.13, an 80%-powered correspondence acceptance at Gate-1.2-magnitude effects needs ~7 seeds; moderate effects need ~20+; and **ε=0.05 is below the noise floor for non-inferiority at any feasible seed count** (>40). Options returned to the reviewer, not chosen unilaterally: (a) widen ε/δ as meaningfulness constants; (b) reduce σ by design (paired matched-epoch diffs may be tighter than the cross-condition 0.13 estimate — the pilot exists partly to measure this); (c) accept a larger seed budget. The 3-seed exploratory pilot therefore estimates channel behavior and *refines σ* — it cannot deliver acceptance power, consistent with the staged table.
 
 ## 10. Observation audit layer — extended provenance (directive 7)
 

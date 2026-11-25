@@ -32,6 +32,8 @@ from typing import Dict, List, Optional
 
 import torch
 
+from jarvis_research.gate1_3_channel import edit_chain_sha
+
 OBSERVATION_VERSION = "obs-v2"
 # Stabilization: eps = this fraction of the MEDIAN positive group RMS.
 # Frozen; changing it is a protocol change.
@@ -125,7 +127,9 @@ class _ModuleStats:
 @torch.no_grad()
 def collect_observations(model, tok, practice_texts: Dict[str, str],
                          targets: Dict[int, str], checkpoint_revision: str,
-                         passage_losses: Optional[Dict[str, float]] = None
+                         passage_losses: Optional[Dict[str, float]] = None,
+                         applied_edit_shas=None, epoch: int = 0,
+                         measurement_config: Optional[dict] = None
                          ) -> dict:
     """Measure per-module activation on stratified hi/lo practice splits.
 
@@ -212,9 +216,40 @@ def collect_observations(model, tok, practice_texts: Dict[str, str],
             "hilo_unstable": lo_m <= eps,
         }
 
+    # Extended provenance (HZN-IR-07 d7 / HZN-IR-08 F4): the record must
+    # bind the measurement to the ACTUAL model state — base checkpoint
+    # plus the chain of edits applied since — and to the exact
+    # measurement context, so a stale observation is distinguishable
+    # from a false one. All fields populated; none optional.
+    context_sha = hashlib.sha256(json.dumps({
+        "hi": sorted(hi_set), "lo": sorted(lo_set),
+        "passage_losses": {k: round(v, 6)
+                           for k, v in passage_losses.items()},
+    }, sort_keys=True).encode()).hexdigest()
+    config_sha = hashlib.sha256(json.dumps(
+        measurement_config if measurement_config is not None else {
+            "version": OBSERVATION_VERSION,
+            "eps_fraction": EPS_FRACTION,
+            "log_contrast_decimals": LOG_CONTRAST_DECIMALS,
+            "split": "within-domain median",
+            "n_passages": len(practice_texts),
+            "n_targets": len(set(targets.values())),
+        }, sort_keys=True).encode()).hexdigest()
+    provenance = {
+        "base_checkpoint_sha256": checkpoint_revision,
+        "applied_edit_chain_sha256": edit_chain_sha(applied_edit_shas or []),
+        "observation_context_sha256": context_sha,
+        "observer_version": OBSERVATION_VERSION,
+        "measurement_config_sha256": config_sha,
+        "applied_edit_shas": (list(applied_edit_shas)
+                              if applied_edit_shas else None),
+        "epoch": epoch,
+    }
+
     return {
         "version": OBSERVATION_VERSION,
         "checkpoint_sha256": checkpoint_revision,
+        "provenance": provenance,
         "eps": eps,
         "hi_passages": sorted(hi_set),
         "lo_passages": sorted(lo_set),

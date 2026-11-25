@@ -515,6 +515,9 @@ def main() -> int:
                 "max_var_hi": max((g["var_hi"] for g in avail), default=0),
                 "max_var_lo": max((g["var_lo"] for g in avail), default=0),
                 "checkpoint": obs_block["checkpoint_sha256"],
+                # Extended provenance tuple (HZN-IR-07 d7): binds the
+                # measurement to the actual model state + context.
+                "provenance": obs_block.get("provenance"),
             }
             pre["arms"] = {}
             for a in args.arms:
@@ -633,10 +636,14 @@ def main() -> int:
                                "finalization (sum of per-record "
                                "obs_amortized_seconds == "
                                "observation_seconds); per-candidate "
-                               "stage_seconds record proposal/validation/"
-                               "application/quality/practice/selection/"
-                               "regression/capability/rollback "
-                               "separately"),
+                               "stage_seconds record the IN-LOOP stages "
+                               "(proposal/validation/application/quality/"
+                               "practice/rollback) that the compute "
+                               "budget bounds; final_eval_seconds is the "
+                               "separate fixed evaluation allowance "
+                               "(HZN-IR-08 finding 4) and "
+                               "unattributed_wall_seconds is wall time "
+                               "outside both"),
         "candidates": [],
     }
     out = RESULTS / args.out
@@ -705,10 +712,13 @@ def main() -> int:
                                   if condition in ("B1", "B2") else None)
                 history = []
                 practice_ce = math.log(base_practice.aggregate_ppl)
+                # In-loop stage pool only (HZN-IR-08 finding 4): the
+                # final independent evaluation is a fixed allowance
+                # accounted SEPARATELY, so eval-cost variance cannot
+                # distort the in-loop cognitive-efficiency comparison.
                 stage_totals = {stage: 0.0 for stage in (
                     "proposal", "validation", "application", "quality",
-                    "practice", "selection", "regression", "capability",
-                    "rollback")}
+                    "practice", "rollback")}
                 control_attempts = 0
                 failed = False
                 # Adaptive budget matching: pool candidates per iteration,
@@ -842,9 +852,13 @@ def main() -> int:
                 sel = ev.evaluate_selection(model, tok)
                 reg = ev.evaluate_regression(model, tok)
                 cap = evaluate_capability(model, tok)
-                stage_totals["selection"] += sel.gpu_seconds
-                stage_totals["regression"] += reg.gpu_seconds
-                stage_totals["capability"] += cap.gpu_seconds
+                # Final-eval allowance — outside the in-loop budget pool
+                # (HZN-IR-08 finding 4): recorded independently so the
+                # comparison reports in-loop vs eval vs overshoot vs wall.
+                final_eval_seconds = {
+                    "selection": sel.gpu_seconds,
+                    "regression": reg.gpu_seconds,
+                    "capability": cap.gpu_seconds}
 
                 reg_passed, reg_details = check_regression(
                     base_regression, reg, pilot_tolerance)
@@ -889,8 +903,15 @@ def main() -> int:
                         "mode": args.budget_mode,
                         "intervention_allocation": n_steps,
                         "compute_budget_seconds": compute_budget,
+                        # In-loop measured compute — what the budget
+                        # actually bounds (HZN-IR-08 finding 4).
                         "compute_seconds_used": round(
                             sum(stage_totals.values()), 2),
+                        # Final independent evaluation — fixed allowance,
+                        # excluded from the in-loop total by construction.
+                        "final_eval_seconds": {
+                            k: round(v, 2)
+                            for k, v in final_eval_seconds.items()},
                         # A step always completes once started, so a
                         # modest overshoot above the budget is expected
                         # and recorded, never hidden (HZN-IR-05 §3).
@@ -914,7 +935,9 @@ def main() -> int:
                     "shuffle_info": shuffle_info,
                     "stage_seconds": stage_totals,
                     "candidate_wall_seconds": elapsed,
-                    "unattributed_wall_seconds": elapsed - sum(stage_totals.values()),
+                    "unattributed_wall_seconds": (
+                        elapsed - sum(stage_totals.values())
+                        - sum(final_eval_seconds.values())),
                     "control_proposal_attempts": control_attempts,
                     "rollback_verified": ok,
                     "failed_quality_guard": failed,
