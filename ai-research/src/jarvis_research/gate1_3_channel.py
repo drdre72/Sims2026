@@ -182,16 +182,27 @@ def encode_catalog_text(catalog, fam_code, uniform_mag, obs, level) -> str:
 
 # ---- Observation audit layer: O = (a, t, v, m, p) ----------------------
 
+# sha256 of the empty edit chain — the provenance marker for observations
+# collected on the pristine checkpoint before any candidate edit (epoch 0).
+EMPTY_CHAIN_SHA = hashlib.sha256(b"[]").hexdigest()
+
+
 def audit_record(param_name: str, obs_group: str, epoch: int,
-                 stats: dict, checkpoint_sha: str,
-                 obs_version: str) -> dict:
-    """Externally-established observation identity.
+                 stats: dict, *, base_checkpoint_sha: str,
+                 observer_version: str,
+                 applied_edit_chain_sha: str = EMPTY_CHAIN_SHA,
+                 observation_context_sha: str = "",
+                 measurement_config_sha: str = "") -> dict:
+    """Externally-established observation identity (HZN-IR-07 d7).
 
     a: component address (hooked module path + catalog param name)
     t: observation epoch (collection index; NOT asserted by proposer)
     v: measured values at stored precision
     m: method + context (what produced the numbers)
-    p: provenance — the model state the observation describes
+    p: provenance binding the observation to the ACTUAL model state —
+       base checkpoint + the applied-edit chain + measurement context,
+       so stale-vs-false is distinguishable (checkpoint hash alone
+       cannot identify an observation made after in-memory edits).
     """
     return {
         "a": {"module": obs_group, "param": param_name},
@@ -203,9 +214,21 @@ def audit_record(param_name: str, obs_group: str, epoch: int,
         "m": {"method": "forward_hook_rms_hilo",
               "n_hi": stats.get("n_hi"), "n_lo": stats.get("n_lo"),
               "eps": stats.get("eps")},
-        "p": {"checkpoint_sha256": checkpoint_sha,
-              "observation_version": obs_version},
+        "p": {"base_checkpoint_sha256": base_checkpoint_sha,
+              "applied_edit_chain_sha256": applied_edit_chain_sha,
+              "observation_context_sha256": observation_context_sha,
+              "observer_version": observer_version,
+              "measurement_config_sha256": measurement_config_sha},
     }
+
+
+def edit_chain_sha(applied_edit_shas) -> str:
+    """Bind an observation to the exact modified state: sha256 of the
+    ordered list of applied-edit hashes (EMPTY_CHAIN_SHA at baseline)."""
+    shas = list(applied_edit_shas)
+    if not shas:
+        return EMPTY_CHAIN_SHA
+    return hashlib.sha256(json.dumps(shas).encode()).hexdigest()
 
 
 def audit_sha(record: dict) -> str:

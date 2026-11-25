@@ -6,8 +6,9 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 from jarvis_research.gate1_3_channel import (
-    CHANNEL_LEVELS, audit_record, audit_sha, decode_row, encode_row,
-    encode_catalog_text, token_count, verify_field_parity)
+    CHANNEL_LEVELS, EMPTY_CHAIN_SHA, audit_record, audit_sha, decode_row,
+    edit_chain_sha, encode_row, encode_catalog_text, token_count,
+    verify_field_parity)
 from jarvis_research.gate1_3_comprehension import (
     generate_items, grade, make_synthetic_catalog, pretest_passed,
     score_items)
@@ -92,23 +93,41 @@ class TestEncodings(unittest.TestCase):
 
 
 class TestAuditLayer(unittest.TestCase):
+    KW = {"base_checkpoint_sha": "deadbeef" * 8,
+          "observer_version": "obs-v1",
+          "observation_context_sha": "ctx",
+          "measurement_config_sha": "cfg"}
+
     def test_record_shape(self):
         rec = audit_record(
             "model.layers.5.mlp.down_proj.weight",
             "model.layers.5.mlp.down_proj", 0,
             {"act": 1.2, "hi": 1.3, "lo": 1.1, "hilo": 1.18,
              "n_hi": 8, "n_lo": 8, "var_hi": 0.01, "var_lo": 0.02,
-             "eps": 0.0075},
-            "deadbeef" * 8, "obs-v1")
+             "eps": 0.0075}, **self.KW)
         self.assertEqual(rec["a"]["module"], "model.layers.5.mlp.down_proj")
         self.assertEqual(rec["t"], 0)
         self.assertEqual(rec["m"]["method"], "forward_hook_rms_hilo")
-        self.assertEqual(rec["p"]["checkpoint_sha256"], "deadbeef" * 8)
+        p = rec["p"]
+        self.assertEqual(p["base_checkpoint_sha256"], "deadbeef" * 8)
+        self.assertEqual(p["applied_edit_chain_sha256"], EMPTY_CHAIN_SHA)
+        self.assertEqual(p["observer_version"], "obs-v1")
         self.assertIn("hilo", rec["v"])
 
     def test_sha_stable(self):
-        rec = audit_record("p", "g", 1, {"n_hi": 8}, "sha", "v")
+        rec = audit_record("p", "g", 1, {"n_hi": 8}, **self.KW)
         self.assertEqual(audit_sha(rec), audit_sha(dict(rec)))
+
+    def test_edit_chain_binding(self):
+        self.assertEqual(edit_chain_sha([]), EMPTY_CHAIN_SHA)
+        a = edit_chain_sha(["e1", "e2"])
+        b = edit_chain_sha(["e1", "e2"])
+        c = edit_chain_sha(["e2", "e1"])
+        self.assertEqual(a, b)
+        self.assertNotEqual(a, c)  # order matters — the chain is a chain
+        rec = audit_record("p", "g", 3, {}, applied_edit_chain_sha=a,
+                           **self.KW)
+        self.assertEqual(rec["p"]["applied_edit_chain_sha256"], a)
 
 
 class StubTokenizer:
@@ -181,6 +200,21 @@ class TestComprehension(unittest.TestCase):
         self.assertTrue(pretest_passed(scores))
         scores = score_items(items, ["3", "wrong 99", "9"])
         self.assertAlmostEqual(scores["C1"]["acc"], 0.5)
+        self.assertFalse(pretest_passed(scores))
+
+    def test_differential_thresholds(self):
+        # C4 requires 100%; a single C4 miss fails even with C1 perfect.
+        items = [{"level": "C1", "expected": "3"},
+                 {"level": "C4", "expected": "9"},
+                 {"level": "C4", "expected": "7"}]
+        scores = score_items(items, ["3", "9", "wrong 0"])
+        self.assertFalse(pretest_passed(scores))
+        # C2 at exactly 0.90 passes; below fails.
+        items = [{"level": "C2", "expected": str(i)} for i in range(10)]
+        scores = score_items(items, [str(i) for i in range(10)][:9] + ["x 99"])
+        self.assertAlmostEqual(scores["C2"]["acc"], 0.9)
+        self.assertTrue(pretest_passed(scores))
+        scores = score_items(items, [str(i) for i in range(10)][:8] + ["x 99", "x 98"])
         self.assertFalse(pretest_passed(scores))
 
 

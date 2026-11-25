@@ -1,125 +1,131 @@
-# HZN-OC-01 — Observation Channel Compression (Gate 1.3 spec, v2)
+# HZN-OC-01 — Observation Channel Compression (Gate 1.3 spec, v3)
 
-**Status: CONDITIONAL APPROVAL for exploratory implementation (reviewer directive, HZN-IR-05 series).** v2 folds in reviewer rulings on the five open questions. Confirmatory execution remains frozen; Gate 1.2 evidence record unchanged.
+**Status: conditional exploratory approval (HZN-IR-07, independent document review complete).** Authorized: implementation, unit tests, tokenizer profiling, observation auditing, comprehension preflight. Campaign execution pending: complete preflight evidence, finalized resource allocation, preregistered statistical acceptance criteria. Confirmatory freeze preserved; Gate 1.2 evidence record unchanged.
 
-Authorized components: **symbolic encoder, tokenizer profiling, observation audit layer, comprehension harness.** Campaign execution NOT authorized until the complete protocol and preflight evidence pass review.
+v3 folds in all twelve HZN-IR-07 binding dispositions, including the reviewer's seed-level statistical caveat and its two identified confounds.
 
 ## 1. Purpose
 
-Gate 1.2 established exploratory evidence that (a) the proposer reads rendered internal-state observations, (b) genuine correspondence between observation and state is protective where blind editing damages the checkpoint, and (c) rendering that evidence bears a first-order share of proposal-stage compute.
+Gate 1.2 produced an exploratory ordering on arm B (A1 > A2 > A0 on selection delta and regression integrity). **Reviewer caveat, acknowledged in-protocol:** the genuine-vs-permuted mean advantage is *not consistent across seeds* — A1 beat A2 on only 1 of 3 seeds, with the aggregate gap driven by seed 1. The protective effect against blind editing (A1 > A0, 3/3 seeds) is currently more consistent than the correspondence effect itself. Additionally, blind conditions received ~2.5× more intervention opportunities, so protection via *better targeting* and protection via *fewer interventions* are not yet separated. Epoch I exists precisely to separate them.
 
-HZN-OC-01 asks whether a cheaper representation preserves those properties:
+HZN-OC-01's question: can a cheaper representation preserve correspondence and utility?
 
-> min C(Z) s.t. U(Z) ≥ U(X) − ε, U(Z_true) − U(Z_shuffled) > δ, with capability/safety constraints enforced independently.
+> min C(Z) s.t. E[U(S1) − U(S2)] > δ (correspondence margin), E[U(S1) − U(L1)] > −ε (non-inferiority), capability/safety constraints enforced independently.
 
-ε = maximum practically acceptable utility loss when replacing language with symbolic representation. δ = minimum practically meaningful genuine-vs-permuted advantage. Both express what Horizon considers *meaningful*, decided at preregistration — the Gate 1.2 arm-B gap is a planning input for effect-size estimates, **not** the acceptance threshold (reviewer R2). A sensitivity analysis across plausible effect sizes (§11) must precede any fixed sample size.
+ε, δ express what Horizon considers *meaningful*, fixed at preregistration from the sensitivity analysis (§9) — not from the observed exploratory gap.
 
 ## 2. Channel levels
 
-| Level | Representation | Example | Purpose |
-|---|---|---|---|
-| L | Linguistic pipe-schema (existing) | `145\|L12\|f7\|n=147456\|m=0.0046\|ar=0.82\|lc=-0.03` | Baseline channel — already a compact hybrid schema |
-| S-I | Compact semantically familiar schema | `L12.DP lc=-0.03 ar=0.82` | Remove redundant structure, keep pretrained decodability |
-| S-II | Fixed symbolic vocabulary | `O:145\|F:07\|LC:-03\|AR:82` | Deeper compression; fixed legend, testable association |
-| S-III | Compositional symbolic language | (deferred design) | Reusable primitives; program-induction direction |
-| L-I | Learned latent | — | DEFERRED (training + interchange-intervention controls, not group permutation) |
+| Level | Representation | Purpose |
+|---|---|---|
+| L | Existing pipe-schema `145\|L12\|f7\|n=147456\|m=0.0046\|ar=0.82\|lc=-0.03` | Baseline — **already a compact structural notation, not prose** (reviewer Finding 1) |
+| S-I | Compact familiar schema | Remove redundancy, keep pretrained decodability |
+| S-II | Fixed symbolic vocabulary `O:145\|F:07\|AR:82\|LC:-03` | Deeper compression, fixed legend |
 
-**Tokenizer caution (binding):** candidate encodings are selected by *measured tokenized length under the campaign tokenizer*, never character count. Every candidate encoding's serialized token count is measured on the real annotated catalogs and reported in preflight before adoption.
+The reframed problem per reviewer Finding 1 and the measured profile (`gate1_3_channel_preflight.md`): this is **structural** compression — eliminating repetition of identifiers, metadata, field names — more than linguistic compression. Observation columns are ~34–42% of row tokens; structural fields dominate. Candidate encodings are adopted by **measured tokenized length** on real catalogs — never character count — including legends, catalog references and decoding instructions in the profile.
 
-## 3. Conditions
+L-I (learned latent) and S-III (compositional language) remain deferred.
+
+## 3. Field equivalence — mechanical, zero silent omissions
+
+`Decode(Encode(O)) = O` for **all** proposer-visible fields at agreed rendered precision, verified mechanically per row (`verify_field_parity` — implemented, tested). A field that cannot be expressed in S leaves **both** channels; any preregistered precision reduction (numel→scale-suffix, mag-cap→floor-rounded 2sf) applies symmetrically and is listed in the preregistration.
+
+## 4. Conditions
 
 | Cond | Channel | Correspondence |
 |---|---|---|
-| N0 | None | — (blind baseline) |
-| L1 | Linguistic | Genuine |
-| L2 | Linguistic | Permuted |
-| S1 | Symbolic (level under test) | Genuine |
-| S2 | Symbolic (level under test) | Permuted |
+| N0 | None | blind baseline |
+| L1 | Linguistic | genuine |
+| L2 | Linguistic | permuted |
+| S1 | Symbolic | genuine |
+| S2 | Symbolic | permuted |
 
-Equivalence requirements (hard constraints):
+Permutation reuses Gate 1.2 machinery verbatim (group-level, strata, tie-aware ranks, recorded, coverage at rendered precision). Same edit grammar, bounds, evaluator, arm configs.
 
-- S and L present **identical observation fields at identical rendered precision**; if the schema can't express a field, the field leaves both.
-- Permutation reuses the Gate 1.2 machinery verbatim: group-level within (family, layer-band) strata, tie-aware midranks, permutation recorded per candidate, coverage measured at the channel under test's rendered precision.
-- Same edit grammar, bounds, evaluator, arm configs, seeds policy.
-- One symbolic level per campaign epoch; levels compared across epochs, never mixed.
-- All conditions begin from the same pristine checkpoint with independent histories, trajectories and feedback.
+### 4a. Data/partition reuse (binding)
 
-### 3a. Data/partition reuse policy (reviewer R1 — binding definitions)
+Permitted shared infrastructure: evaluator, pinned checkpoint, catalog construction, observation collector, permutation algorithm, practice partition (development), selection/regression partitions as **evaluator-only instruments**. Prohibited: prior selections/outcomes/trajectories as proposer-visible info; development-exposed passages for independent confirmation; encoders tuned against evaluation outcomes for confirmatory claims. **The sealed holdout is protected from the proposer AND from research-driven optimization decisions** (directive 10).
 
-| Reused component | Decision |
-|---|---|
-| Evaluator implementation, pinned checkpoint, catalog construction, observation collector, group-permutation algorithm | **Permitted** — shared infrastructure |
-| Practice partition (v4 `practice.json`) | Permitted for controlled development; the model never sees it as text |
-| Selection/regression partitions (v4) | **Permitted as evaluator inputs only** — they are never proposer-visible. Reusing them as measurement instruments is infrastructure, not acquired knowledge. |
-| Prior candidate selections, edit outcomes, trajectories | **Prohibited** as proposer-visible information |
-| Passages used during encoder development/tuning | Prohibited for independent confirmation if exposed to the proposer |
-| Encoder tuned against evaluation outcomes | Exploratory only — cannot feed independent confirmation |
+## 5. Comprehension pretest — C1–C4 (blocking)
 
-Shared infrastructure improves comparability; shared acquired knowledge compromises independence. The precise boundary: the proposer may never receive information produced by a previous experimental trajectory.
+Items generated mechanically from synthetic/held-out catalogs with known answers; never from trajectories.
 
-## 4. Comprehension pretest — four levels (blocking, reviewer §3)
-
-S and L conditions present identical fields; decoding them correctly does not establish operational comprehension. The pretest generates items **mechanically from synthetic or held-out catalogs with independently known answers** — never from real campaign trajectories, never exposing intervention outcomes.
-
-| Level | Test | Example |
+| Level | Test | Screening threshold (engineering target) |
 |---|---|---|
-| C1 — Decoding | Recover encoded fields | Which layer/family/signed contrast does id X carry? |
-| C2 — Comparison | Relational interpretation | Which of A, B has greater absolute contrast? |
-| C3 — Composition | Multi-constraint satisfaction | Which ids satisfy family=X AND layer≥Y AND lc>0? |
-| C4 — Grounding | Observation → candidate identifier | Given a described observation, return the param_id it refers to |
+| C1 — Decoding | recover encoded fields | **95%** |
+| C2 — Comparison | relational interpretation | **90%** |
+| C3 — Composition | multi-constraint satisfaction | **90%** |
+| C4 — Operational grounding | observation → correct param_id | **100% on the finite preflight set** |
 
-- Preregistration threshold (proposal): ≥80% per level on held-out catalogs; C4 is the operational gate (an encoding the model can decode but cannot ground into candidate selection fails the intervention-relevant test).
-- A level failing pretest reports "preserved but undecodable," not "information lost" — and is skipped, never silently retried with the same encoding.
-- The pretest measures literacy, not predictive sufficiency; passing does not assert observations predict beneficial edits.
+C4 is the operational gate: an observation the model decodes but addresses to the wrong parameter is an intervention on the wrong component. Perfect pretest ≠ guaranteed future grounding → **deterministic address validation remains mandatory during execution** (already structural: param_id bounds-checking in the patch manager). A level failing pretest reports "preserved but undecodable" and is skipped, never silently retried.
 
-## 5. Two comparisons, kept separate
+## 6. Sequential epochs — pristine state between
 
-- **Epoch I — information-matched:** identical observation content, identical intervention allocation. Does compression preserve usefulness (S1 retains L1 > L2 ordering at equal edit opportunities)?
-- **Epoch II — compute-matched:** identical measured stage-seconds (`--budget-mode seconds`), intervention counts an outcome. Does compression buy productive reasoning per second?
+| Epoch | Controlled | Outcome |
+|---|---|---|
+| I — information-matched | evidence content + intervention opportunities | representational fidelity/utility (separates targeting-vs-frequency protection) |
+| II — compute-matched | measured stage-seconds | operational efficiency/utility |
 
-Epoch II without Epoch I leaves any gain ambiguous between representational and budgetary causes. Run order: I, then II, on separate recorded runs.
+Epoch II runs only for the **eligible** encoding (passes parity + pretest + beats S-I on tokens). Every epoch restarts from the pristine checkpoint — no edited weights, history, selections or feedback carry forward. Encoding selection between epochs is documented explicitly; subsequent confirmatory claims use independent evaluation data.
 
-## 6. Failure-interpretation map (preregistered, reviewer §4)
+## 7. Campaign structure (staged)
+
+| Stage | Scope | Purpose |
+|---|---|---|
+| Preflight | all candidate encodings | tokenizer profile + parity |
+| Comprehension | L and selected S encodings | operational literacy (C1–C4) |
+| Exploratory pilot | 5 conditions × 3 seeds × **arm B** | estimate channel behavior |
+| Negative-control sentinel | arm A, reduced cadence | detect unexpected arm-A sensitivity |
+| Expanded campaign | sized by sensitivity analysis | repeatability |
+| Epoch II | eligible encoding only | realized efficiency |
+
+Arm B prioritized — it holds the demonstrated experimental separation; arm A's near-null field serves a defined control role rather than consuming half the compute. Three seeds is an exploratory-pilot figure, not an acceptance figure.
+
+## 8. Budget accounting (directive 9)
+
+Compute-matched accounting decomposes per candidate: proposal/intervention compute; observation acquisition + rendering; final independent evaluation (**fixed resource allowance**, so eval-cost variance cannot distort the cognitive-efficiency comparison); budget overshoot; end-to-end wall time. All five recorded independently. The earlier claim that B-condition under-allocation "runs against those conditions" is softened: when interventions can damage, *fewer* intervention opportunities can itself be protective — the confound is named, not assumed away.
+
+## 9. Statistical framework (directive 4)
+
+Paired within-seed differences, not unpaired pooled means:
+
+- Correspondence: D_i = U(S1_i) − U(S2_i), require E[D] > δ via confidence bound.
+- Non-inferiority: E[U(S1) − U(L1)] > −ε via confidence bound.
+- Ordering of means alone is not acceptance.
+
+Sensitivity analysis inputs: within-seed variance + its estimation uncertainty; power at multiple plausible effect sizes; separate correspondence and non-inferiority hypotheses; multiple-comparison handling across outcomes and capability safeguards; **dependence between domain measurements from the same trajectory** — the 24 domain-instances are diagnostics, not 24 independent replicates.
+
+## 10. Observation audit layer — extended provenance (directive 7)
+
+`O = (a, t, v, m, p)` with provenance extended:
+
+```
+p = { base_checkpoint_hash,
+      applied_edit_chain_hash,      # binds obs to the ACTUAL modified state
+      observation_context_hash,     # passages/config used for measurement
+      observer_version,
+      measurement_config_hash }
+```
+
+An observation correct about a previous model version can mislead about the current one — the edit-chain hash makes stale-vs-false distinguishable. Established by observer infrastructure, never asserted by the proposer.
+
+## 11. Failure-interpretation map (preregistered)
 
 | Result | Interpretation |
 |---|---|
-| S1 > S2, S1 ≈ L1 | Symbolic channel preserves useful correspondence — advance |
-| S1 > S2, S1 ≪ L1 | Correspondence survives, utility degraded |
-| S1 ≈ S2, comprehension fails | Representation/decoding problem; intervention inconclusive |
-| S1 ≈ S2, comprehension passes | No correspondence advantage; investigate grounding/power |
-| S1 > L1 AND S2 > L2 | Compression may help independent of correspondence |
-| S1 > L1, S2 does not improve | Particularly interesting: more effective use of genuine obs |
-| S1 ≈ L1 with lower compute | Efficiency success, subject to capability constraints |
-| N0 outperforms all evidence conditions | Observation overhead/misdirection/policy may outweigh benefit |
+| S1 > S2, S1 ≈ L1 | compression preserves correspondence — advance |
+| S1 > S2, S1 ≪ L1 | correspondence survives, utility degraded |
+| S1 ≈ S2, comprehension fails | decoding problem; intervention inconclusive |
+| S1 ≈ S2, comprehension passes | no correspondence advantage; grounding/power |
+| S1 > L1 AND S2 > L2 | compression helps independent of correspondence |
+| S1 > L1, S2 unchanged | more effective use of genuine obs — particularly interesting |
+| S1 ≈ L1, lower compute | efficiency success under capability constraints |
+| N0 outperforms all evidence conditions | observation overhead/misdirection outweighs benefit |
 
-Genuine-vs-permuted is indispensable but not the sole success criterion.
+## 12. Retained constraints + deferred diagnostics
 
-## 7. Addressable-store variant (retained as independent candidate)
-
-Optional sixth condition **A-store**: compact index in context + read-only `OBS.*` interface (READ / RANK / COMPARE / FRESHNESS / HISTORY). Distinct hypothesis — in-context completeness vs reliable access. Extra metrics: reads/step, retrieval bias, per-step call overhead. Interface calls are proposal-stage cost; reported separately, never pooled with S-levels. Deferred unless Epoch I scope allows without reducing the five core conditions.
-
-## 8. Observation audit layer — formal identity (implemented component)
-
-Every observation record carries `O = (a, t, v, m, p)` — component address, observation epoch, measured value, method/context, provenance + checkpoint hash. The channel under test renders a compact subset; the audit layer stores the full tuple, making *false* vs *stale* distinguishable and binding every claim to a model state. Identity is established by observer infrastructure, never asserted by the proposer.
-
-## 9. Failure-integrity requirements (carried from Gate 1.2)
-
-- Fail-closed containment on generated-code evaluation; containment refusal → `infrastructure_error`, excluded from model-failure scores.
-- Budget check before every step; rejected/abstained steps count; overshoot recorded.
-- Conventional controls may abstain (unchanged-checkpoint parity).
-- Regression + capability + transition ledger per candidate; single-task families reported with n.
-
-## 10. Explicit non-goals
-
-- No modification to Gate 1.2 frozen artifacts or the confirmatory protocol.
-- No new edit surfaces or observation mechanisms.
-- No tokenizer changes, fine-tuning, or learned channels.
-- No recursive generations; no proposer access to evaluation internals.
-- Sealed holdout untouched.
-- HZN-OC-02 (Deterministic Evidence Operator) is **recorded as a deferred diagnostic** — neural proposer vs fixed-policy symbolic operator on identical evidence/budgets, the first executable-grimoire probe. It is NOT in this campaign's scope.
-
-## 11. Open questions remaining for the reviewer
-
-1. Epoch ordering/parallelism — sequential (I then II) assumed; parallel needs independent partitions.
-2. Campaign scope — 5 conditions × 3 seeds × 2 arms mirrors Gate 1.2 (~2.5 h); the reviewer's "reduce scope in advance" option is noted but unselected.
-3. Sensitivity analysis acceptance — propose computing required-seeds table over plausible effect sizes (d = 0.2 … 1.0 pooled σ, observed arm-B σ ≈ 0.08) at preregistration; ε/δ fixed after review of that table.
+- Fail-closed containment; refusal → `infrastructure_error`, excluded from model scores.
+- Budget checked before every step; all outcome classes count; overshoot recorded.
+- Control abstention parity; regression + capability + transition ledger per candidate; single-task family n reported.
+- Non-goals unchanged: no Gate 1.2 modifications, no new edit surfaces, no tokenizer changes/training, no recursion, sealed holdout untouched, no proposer access to evaluation internals.
+- **HZN-OC-02** (Deterministic Evidence Operator, deferred): neural proposer vs fixed-policy symbolic operator on identical evidence/budgets — tests how much proposer intelligence the channel actually needs; introduces **amortized inference cost** as a metric (validated relationships as executable primitives that eliminate repeated inference — the executable-grimoire probe).

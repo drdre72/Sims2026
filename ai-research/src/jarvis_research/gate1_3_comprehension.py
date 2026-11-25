@@ -192,8 +192,13 @@ def run_pretest(model, tokenizer, catalog, fam_code, level: str,
     return score_items(items, responses), list(zip(items, responses))
 
 
-PRETEST_THRESHOLD = 0.80
+# Reviewer directive 8: differential engineering targets per level —
+# C4 grounding is the operational gate and must be perfect on the
+# finite preflight set; deterministic address validation still runs
+# during execution regardless of pretest outcome.
+PRETEST_THRESHOLDS = {"C1": 0.95, "C2": 0.90, "C3": 0.90, "C4": 1.00}
 
 
-def pretest_passed(scores, threshold: float = PRETEST_THRESHOLD) -> bool:
-    return all(v["acc"] >= threshold for v in scores.values())
+def pretest_passed(scores, thresholds: dict = PRETEST_THRESHOLDS) -> bool:
+    return all(v["acc"] >= thresholds.get(lvl, 1.0)
+               for lvl, v in scores.items())
