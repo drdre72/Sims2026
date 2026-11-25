@@ -133,8 +133,8 @@ def run_cell(model, tok, cell, cat_full, level="linguistic"):
         hashlib.sha256(f"{seed}:{size}:{cond}".encode()).digest()[:8],
         "little"))
     # Nested: deterministic subset ordering of the full catalog.
-    order = sorted(cat_full, key=lambda r: rng.Random(seed * 7919
-                                                    + r["param_id"]).random())
+    order = sorted(cat_full, key=lambda r: random.Random(
+        seed * 7919 + r["param_id"]).random())
     cat = order[:size]
     fam_code = {f: f"f{i}" for i, f in
                 enumerate(sorted({r["family"] for r in cat}))}
@@ -161,7 +161,7 @@ def run_cell(model, tok, cell, cat_full, level="linguistic"):
                                           level, arm_mag=(-0.005, 0.005),
                                           arm_count=(1, 512))
             elif cond == "R4":
-                sub = store.find(family=fam)
+                sub = store.find(family=fam)  # already canonical
             elif cond == "R5":
                 k = max(1, len(store.find(family=fam)))
                 sub = rng.sample(cat, min(k, len(cat)))
@@ -172,7 +172,9 @@ def run_cell(model, tok, cell, cat_full, level="linguistic"):
                 pool = [r for r in cat if r not in target]
                 sub = target + rng.sample(pool, max(0, k - len(target)))
                 sub.sort(key=lambda r: r["param_id"])
-            if cond != "R0R1":
+            if cond == "R4":
+                ctx = store.render_subset(sub, fam_code)
+            elif cond != "R0R1":
                 ctx = store.render_subset(
                     [canonical_record(r, True, (-0.005, 0.005))
                      for r in sub], fam_code)
@@ -213,44 +215,56 @@ def run_cell(model, tok, cell, cat_full, level="linguistic"):
                            "latency_s": round(lat, 2)})
 
     elif cond == "R3":
-        # Model names (family,layer) of the max-|lc| row; STORE resolves.
-        cands = sorted(cat, key=lambda r: -abs(r["obs_log_contrast"]))
-        truth = cands[0]
-        # only ask when the argmax is unique (clean boundary)
-        if abs(cands[0]["obs_log_contrast"]) - abs(
-                cands[1]["obs_log_contrast"]) > 1e-9:
-            for _ in range(N_DESCRIBE):
-                ctx = encode_catalog_text(cat, fam_code, True, True,
-                                          level, arm_mag=(-0.005, 0.005),
-                                          arm_count=(1, 512))
-                q = (f"Which (family tag, layer) identifies the single "
-                     f"row with the largest |lc|? Reply with ONLY the "
-                     f"pair like 'f3 L12'.")
-                resp, n_in, lat = ask(q, max_new=16)
-                m = None
-                import re as _re
-                mm = _re.search(r"(f\d+)\s+L(\d+)", resp)
-                verdict, got = "malformed", None
-                if mm:
-                    inv = {c: f for f, c in fam_code.items()}
-                    fam = inv.get(mm.group(1))
-                    res = (store.resolve(fam, int(mm.group(2)))
-                           if fam else {"status": "malformed_tag"})
-                    got = res.get("param_id")
-                    if res["status"] == "unique" and got == truth["param_id"]:
-                        verdict = "correct"
-                    elif res["status"] == "ambiguous":
-                        verdict = "ambiguous_desc"
-                    elif res["status"] == "missing":
-                        verdict = "missing_desc"
-                    else:
-                        verdict = "wrong_desc"
-                probes.append({"cond": "R3", "size": size, "kind": "describe",
-                               "expected": truth["param_id"],
-                               "response": resp, "resolved_id": got,
-                               "verdict": verdict,
-                               "input_tokens": n_in,
-                               "latency_s": round(lat, 2)})
+        # Model names (family,layer) describing a semantic target; the
+        # STORE resolves the descriptor mechanically. Winners are all
+        # rows tied at the rendered-precision optimum (the model sees
+        # rounded values). Greedy decode means repeating one question
+        # is wasted compute — vary the descriptor instead.
+        obs_rows = [r for r in cat if r["obs_available"]]
+        rnd_lc = [abs(round(r["obs_log_contrast"], 2)) for r in obs_rows]
+        rnd_ar = [round(r["obs_act_rank"], 2) for r in obs_rows]
+        specs = [("largest |lc|",
+                  {r["param_id"] for r, v in zip(obs_rows, rnd_lc)
+                   if v == max(rnd_lc)}),
+                 ("smallest ar",
+                  {r["param_id"] for r, v in zip(obs_rows, rnd_ar)
+                   if v == min(rnd_ar)}),
+                 ("largest ar",
+                  {r["param_id"] for r, v in zip(obs_rows, rnd_ar)
+                   if v == max(rnd_ar)})]
+        ctx = encode_catalog_text(cat, fam_code, True, True, level,
+                                  arm_mag=(-0.005, 0.005),
+                                  arm_count=(1, 512))
+        for i in range(N_DESCRIBE):
+            desc, winners = specs[i % len(specs)]
+            q = (f"Which (family tag, layer) identifies the single row "
+                 f"with the {desc}? Reply with ONLY the pair like "
+                 f"'f3 L12'.")
+            resp, n_in, lat = ask(ctx + "\n\n" + q, max_new=16)
+            import re as _re
+            mm = _re.search(r"(f\d+)\s+L(\d+)", resp)
+            verdict, got = "malformed", None
+            if mm:
+                inv = {c: f for f, c in fam_code.items()}
+                fam = inv.get(mm.group(1))
+                res = (store.resolve(fam, int(mm.group(2)))
+                       if fam else {"status": "malformed_tag"})
+                got = res.get("param_id")
+                if res["status"] == "unique" and got in winners:
+                    verdict = "correct"
+                elif res["status"] == "ambiguous":
+                    verdict = "ambiguous_desc"
+                elif res["status"] == "missing":
+                    verdict = "missing_desc"
+                else:
+                    verdict = "wrong_desc"
+            probes.append({"cond": "R3", "size": size, "kind": "describe",
+                           "descriptor": desc,
+                           "expected": sorted(winners),
+                           "response": resp, "resolved_id": got,
+                           "verdict": verdict,
+                           "input_tokens": n_in,
+                           "latency_s": round(lat, 2)})
     return probes
 
 

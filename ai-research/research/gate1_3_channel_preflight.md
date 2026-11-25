@@ -74,5 +74,43 @@ Ran the C1–C4 pretest against the real model, campaign-identical prompting (ch
 - `results/gate1_3_channel_profile.json` — per-level profile + parity on the real catalogs
 - `results/gate1_3_comprehension.json` — 9 cells × responses + scores (campaign prompting)
 - `results/gate1_3_comprehension_rawprompt_invalid.json` — preserved method error: raw (non-chat-template) prompts produce 0% — the model continues the catalog rather than answering; demonstrates why the pretest must match the campaign's prompt surface
-- `results/_profile_channels.py`, `results/_comprehension_run.py`, `results/_sensitivity_analysis.py` — deterministic reproductions
-- `src/jarvis_research/gate1_3_channel.py` (canonical parity, audit, s3), `gate1_3_comprehension.py` (fail-closed, strict grading, realistic catalogs), `tests/test_gate1_3_channel.py` (47 tests incl. the HZN-IR-08 regression set)
+- `results/_profile_channels.py`, `results/_comprehension_run.py`, `results/_sensitivity_analysis.py`, `results/_grounding_isolation.py` — deterministic reproductions (committed via `-f`; `results/` is gitignored)
+- `results/gate1_3_grounding.json` — 60 cells × probes + verdicts + tokens/latency/VRAM (HZN-G1.3-R)
+- `src/jarvis_research/gate1_3_channel.py` (canonical parity, audit, s3), `gate1_3_comprehension.py` (fail-closed, strict grading, realistic catalogs, IR-09 F1–F7), `gate1_3_store.py` (deterministic read-only store), `tests/test_gate1_3_channel.py` (57 tests incl. the HZN-IR-08/09 regression sets)
+
+## 7. HZN-G1.3-R grounding isolation — measured result (HZN-IR-09 §4)
+
+Corrected harness (F1–F7 applied), linguistic encoding, nested catalogs 16/32/64/128/248 (seeded subsets), 2 seeds, inference only. `results/gate1_3_grounding.json`, runner `results/_grounding_isolation.py`, store `src/jarvis_research/gate1_3_store.py`.
+
+**Unique-target descriptive lookup — the scale curve:**
+
+| rows | R0R1 full catalog | R4 store-retrieved | R6 oracle |
+|---|---|---|---|
+| 16 | 18/20 | 20/20 | 20/20 |
+| 32 | 18/20 | 20/20 | 20/20 |
+| 64 | 17/20 | 19/20 | 20/20 |
+| 128 | **9/20** | 18/20 | 20/20 |
+| 248 | **9/20** | 18/20 | 16/20 |
+
+**The grounding cliff is between 64 and 128 rows.** Deterministic family-filtered retrieval (~27–45 rows at 248) holds 90% everywhere and matches oracle within noise.
+
+**All conditions, both seeds (unique+ambiguous+missing probes):**
+
+| rows | R0R1 | R2 copy-id | R3 describe→resolve | R4 | R5 random | R6 |
+|---|---|---|---|---|---|---|
+| 16 | 23/29 | 16/16 | 5/16 | 27/29 | 28/29 | 28/29 |
+| 32 | 26/32 | 16/16 | 5/16 | 27/32 | 31/32 | 28/32 |
+| 64 | 23/36 | 16/16 | 3/16 | 27/36 | 34/36 | 28/36 |
+| 128 | 12/36 | 16/16 | 3/16 | 26/36 | 30/36 | 27/36 |
+| 248 | **9/36** | 16/16 | **0/16** | 25/36 | 24/36 | 22/36 |
+
+**Failure taxonomy at 248 (R0R1):** 9 correct, 9 wrong-but-valid ids, 8 hallucinated ids on missing targets, 8 invalid picks on ambiguous targets, 2 refusals when present. The model answers a confident id ~always — ambiguity recognition is 0/8 at *every* size; missing recognition collapses 5/8→8/8→0/8 across the sweep.
+
+**Attribution:**
+- **R2 copy-id is 16/16 at every size** — the campaign's actual select-and-copy operation is NOT the bottleneck. Descriptive lookup and copying an existing identifier are different operations, as the reviewer predicted.
+- **R3 describe→resolve fails at 248 (0/16) and is already imperfect at 16** — separating lookup from reasoning (store resolves the model's descriptor) doesn't rescue identification, because the model emits well-formed, resolvable, *wrong* descriptors. Failure is upstream of addressing: it picks the wrong semantic target. Notably `largest |lc|` is 0/30 at every size while `smallest ar` works at small scale — a likely signed-vs-absolute-value comprehension gap, not a lookup error.
+- **R4 ≈ R6 ≈ R5 (with target present)** — retrieval quality adds nothing beyond context reduction itself. The store's value is bounding the context, which it does deterministically and with guaranteed-correct coverage of the probed (family, layer) space.
+
+**Cost per probe at 248:** full catalog ≈8.5k input tokens / ~22s; store-retrieved subset ≈1.3k tokens / <1s — **6.4× fewer tokens, ~20× faster, and ~2× the unique-target accuracy.**
+
+**Verdict on the IR-09 question:** grounding failure is dominated by *context scale* — it onsets sharply between 64 and 128 rows, while identifier binding (copy) is solved and semantic selection (R3) fails independently. Reliable internal addressing without weight modification is demonstrated: a deterministic store + narrow context restores ~90% grounding on the exact probes the full catalog fails. The residual ~10–30% subset-condition misses and the universal ambiguity-refusal failure are the open item for the success criterion's "no ambiguous or invalid address accepted" clause.
