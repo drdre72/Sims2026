@@ -16,8 +16,10 @@ from jarvis_research.gate1_3_channel import (
     canonical_record, decode_row, edit_chain_sha, encode_row,
     encode_catalog_text, token_count, verify_field_parity)
 from jarvis_research.gate1_3_comprehension import (
-    MIN_PROBES, PRETEST_ORDER, gen_items, grade, grade_integer,
-    grade_list, pretest_passed, score_items, synthetic_catalog)
+    MIN_PROBES, PRETEST_ORDER, c4_coverage, gen_items, grade,
+    grade_c1_approx, grade_integer, grade_list, pretest_passed,
+    score_items, synthetic_catalog)
+from jarvis_research.gate1_3_store import ObservationStore, catalog_sha256
 
 
 def _row(pid, family="mlp.down_proj", layer=5, ar=0.82, lc=-0.03,
@@ -320,6 +322,115 @@ class TestComprehension(unittest.TestCase):
         # Missing level entirely -> zero items answered.
         scores = score_items(items, {})
         self.assertEqual(scores["C4"]["correct"], 0)
+
+
+class TestIR09Fixes(unittest.TestCase):
+    def test_f1_c2_uses_absolute_lc_tie(self):
+        # lc=-0.05 vs +0.05 have equal |lc| — must never become a C2 item.
+        cat = [_row(0, lc=-0.05), _row(1, lc=0.05)]
+        items = gen_items(cat, {"mlp.down_proj": "f0"}, True, "linguistic",
+                          n_per=4, seed=0, counts={"C1": 0, "C2": 4,
+                                                   "C3": 0, "C4": 0})
+        self.assertEqual(items["C2"], [])
+
+    def test_f2_c3_no_boundary_ties(self):
+        cat = synthetic_catalog(128, seed=7)
+        fams = {f: f"f{i}" for i, f in
+                enumerate(sorted({r["family"] for r in cat}))}
+        items = gen_items(cat, fams, True, "linguistic", seed=7,
+                          counts={"C1": 0, "C2": 0, "C3": 20, "C4": 0})
+        self.assertEqual(len(items["C3"]), 20)
+        by_id = {r["param_id"]: r for r in cat}
+        for prompt, exp in items["C3"]:
+            # Recover the 12-row pool from the rendered rows (leading
+            # field of each linguistic row is the param_id).
+            pool_ids = [int(l.split("|")[0]) for l in prompt.splitlines()]
+            self.assertEqual(len(pool_ids), 12)
+            vals = sorted((abs(by_id[i]["obs_log_contrast"])
+                           for i in pool_ids), reverse=True)
+            self.assertNotAlmostEqual(vals[2], vals[3], places=9)
+
+    def test_f3_s3_rows_carry_header(self):
+        cat = synthetic_catalog(64, seed=1)
+        fams = {f: f"f{i}" for i, f in
+                enumerate(sorted({r["family"] for r in cat}))}
+        items = gen_items(cat, fams, True, "s3", seed=1)
+        for lvl in ("C1", "C2", "C3"):
+            for prompt, _ in items[lvl]:
+                self.assertTrue(prompt.startswith("cols:"), lvl)
+
+    def test_f6_c1_exact_decoding(self):
+        exp = {"ar": 0.48, "lc": 0.05}
+        self.assertTrue(grade("C1", exp, '{"ar": 0.48, "lc": 0.05}'))
+        self.assertFalse(grade("C1", exp, '{"ar": 0.47, "lc": 0.05}'))
+        self.assertTrue(grade_c1_approx(exp, '{"ar": 0.47, "lc": 0.05}'))
+
+    def test_f7_permuted_ids_and_order(self):
+        cat = synthetic_catalog(64, seed=3)
+        ids = [r["param_id"] for r in cat]
+        self.assertEqual(sorted(ids), list(range(64)))
+        self.assertNotEqual(ids, sorted(ids))
+
+    def test_f5_coverage_requires_distinct_catalogs(self):
+        a = {"catalog_sha256": "x", "seed": 1}
+        b = {"catalog_sha256": "y", "seed": 2}
+        c = {"catalog_sha256": "z", "seed": 3}
+        self.assertTrue(c4_coverage([a, b, c]))
+        self.assertFalse(c4_coverage([a, a, c]))
+        self.assertFalse(c4_coverage([a, b]))
+
+
+class TestStore(unittest.TestCase):
+    def setUp(self):
+        self.recs = [
+            {"param_id": 0, "layer": 5, "family": "mlp.down_proj",
+             "numel": 147456, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.8, "lc": -0.05},
+            {"param_id": 1, "layer": 5, "family": "mlp.down_proj",
+             "numel": 147456, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.5, "lc": 0.31},
+            {"param_id": 2, "layer": 5, "family": "attn.q_proj",
+             "numel": 81920, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.2, "lc": 0.80},
+            {"param_id": 3, "layer": 9, "family": "attn.q_proj",
+             "numel": 81920, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 256, "obs_available": False,
+             "ar": None, "lc": None},
+        ]
+        self.store = ObservationStore(self.recs)
+
+    def test_resolve_typed_verdicts(self):
+        self.assertEqual(
+            self.store.resolve("attn.q_proj", 9),
+            {"status": "unique", "param_id": 3})
+        self.assertEqual(
+            self.store.resolve("mlp.down_proj", 5)["status"], "ambiguous")
+        amb = self.store.resolve("mlp.down_proj", 5)
+        self.assertEqual(amb["param_ids"], [0, 1])
+        self.assertEqual(self.store.resolve("mlp.down_proj", 7)["status"],
+                         "missing")
+
+    def test_find_exact_filters(self):
+        self.assertEqual([r["param_id"] for r in
+                          self.store.find(family="mlp.down_proj")],
+                         [0, 1])
+        self.assertEqual([r["param_id"] for r in
+                          self.store.find(min_abs_lc=0.1)], [1, 2])
+        self.assertEqual(self.store.find(layer=9, min_abs_lc=0.1), [])
+
+    def test_top_abs_lc(self):
+        top = self.store.top_abs_lc(2)
+        self.assertEqual([r["param_id"] for r in top], [2, 1])
+
+    def test_catalog_identity(self):
+        self.assertEqual(catalog_sha256(self.recs),
+                         catalog_sha256(list(reversed(self.recs))))
+        mod = [dict(r, param_id=r["param_id"] + 10) for r in self.recs]
+        self.assertNotEqual(catalog_sha256(self.recs),
+                            catalog_sha256(mod))
 
 
 if __name__ == "__main__":

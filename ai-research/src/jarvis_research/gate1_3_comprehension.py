@@ -84,6 +84,12 @@ def synthetic_catalog(n_rows=248, n_layers=32, n_fams=7, seed=0,
     for i in range(0, min(n_ties, len(cat) - 1), 2):
         cat[i + 1]["obs_log_contrast"] = cat[i]["obs_log_contrast"]
         cat[i + 1]["obs_act_rank"] = cat[i]["obs_act_rank"]
+    # F7: randomize row order and independently permute param_ids — the
+    # reserved-unique rows must not occupy predictable positions or ids.
+    rng.shuffle(cat)
+    id_perm = rng.sample(range(n_rows), n_rows)
+    for row, pid in zip(cat, id_perm):
+        row["param_id"] = pid
     return cat
 
 
@@ -132,10 +138,18 @@ def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0,
     n3 = counts.get("C3", max(1, n_per // 2))
     n4 = counts.get("C4", n_per)
 
+    # F3: positional (s3) rows shown in isolation must carry their
+    # schema — the field order is the encoding, not just the values.
+    hdr = None
+    if level == "s3":
+        hdr = "cols: " + "|".join(
+            s3_column_order(catalog, uniform_mag, True))
+
     items = {"C1": [], "C2": [], "C3": [], "C4": []}
     idx = rng.sample(range(len(catalog)), min(n1, len(catalog)))
     for i in idx:
-        items["C1"].append((rows[i],
+        body = f"{hdr}\n{rows[i]}" if hdr else rows[i]
+        items["C1"].append((body,
                             {"ar": round(catalog[i]["obs_act_rank"], 2),
                              "lc": round(catalog[i]["obs_log_contrast"], 2)}))
     made2, tries = 0, 0
@@ -143,19 +157,35 @@ def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0,
         tries += 1
         a, b = rng.sample(range(len(catalog)), 2)
         ea, eb = catalog[a], catalog[b]
-        if abs(ea["obs_log_contrast"] - eb["obs_log_contrast"]) < 1e-9:
+        # F1: the question compares |lc| — the tie predicate must too.
+        if abs(abs(ea["obs_log_contrast"])
+               - abs(eb["obs_log_contrast"])) < 1e-9:
             continue
-        items["C2"].append((f"{rows[a]}\n{rows[b]}",
+        body = (f"{hdr}\n{rows[a]}\n{rows[b]}" if hdr
+                else f"{rows[a]}\n{rows[b]}")
+        items["C2"].append((body,
                             ea["param_id"] if abs(ea["obs_log_contrast"])
                             > abs(eb["obs_log_contrast"])
                             else eb["param_id"]))
         made2 += 1
-    for _ in range(n3):
+    made3, tries3 = 0, 0
+    while made3 < n3 and tries3 < n3 * 40:
+        tries3 += 1
         pool = rng.sample(range(len(catalog)), min(len(catalog), 12))
-        hi = sorted(pool,
-                    key=lambda i: -abs(catalog[i]["obs_log_contrast"]))[:3]
-        items["C3"].append(("\n".join(rows[i] for i in pool),
+        ranked = sorted(pool,
+                        key=lambda i: -abs(catalog[i]["obs_log_contrast"]))
+        # F2: no boundary ties — the gap between rank 3 and rank 4 must
+        # be clean or the pool is ambiguous by construction.
+        if len(ranked) > 3 and abs(
+                abs(catalog[ranked[2]]["obs_log_contrast"])
+                - abs(catalog[ranked[3]]["obs_log_contrast"])) < 1e-9:
+            continue
+        hi = ranked[:3]
+        body = (hdr + "\n" if hdr else "") + "\n".join(rows[i]
+                                                     for i in pool)
+        items["C3"].append((body,
                            sorted(catalog[i]["param_id"] for i in hi)))
+        made3 += 1
     # Unambiguous grounding: unique (family, layer) rows.
     uniq_rows = [e for e in catalog
                  if (e["family"], e["layer"]) in unique_pairs]
@@ -165,8 +195,10 @@ def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0,
         items["C4"].append((
             f"The row with family tag {fam_tag} and layer {e['layer']}",
             int(e["param_id"])))
-    # Ambiguous grounding: repeated (family, layer) — refuse.
-    for pair in list(ambig_pairs)[:max(1, n4 // 3)]:
+    # Ambiguous grounding (F4: deterministic sorted+seeded sampling).
+    amb_list = sorted(ambig_pairs)
+    rng.shuffle(amb_list)
+    for pair in amb_list[:max(1, n4 // 3)]:
         fam_tag = fam_code[pair[0]]
         items["C4"].append((
             f"The row with family tag {fam_tag} and layer {pair[1]}",
@@ -213,13 +245,17 @@ def grade_list(expected, response):
 
 def grade(item_kind, expected, response):
     if item_kind == "C1":
+        # F6: decoding is EXACT — the rendered value is 2dp and the
+        # correct response must reproduce it, not an adjacent hundredth.
+        # Approximate numerical comprehension is a separate metric
+        # (grade_c1_approx) that is reported but does not gate.
         try:
             nums = {k: round(float(v), 2) for k, v in
                     json.loads(response.strip()).items()}
         except (json.JSONDecodeError, ValueError, AttributeError):
             return False
-        return (abs(nums.get("ar", -99) - expected["ar"]) <= 0.011 and
-                abs(nums.get("lc", -99) - expected["lc"]) <= 0.011)
+        return (nums.get("ar") == round(expected["ar"], 2) and
+                nums.get("lc") == round(expected["lc"], 2))
     if item_kind == "C4" and expected == "ambiguous":
         return response.strip().lower() == "ambiguous"
     if item_kind in ("C2", "C4"):
@@ -259,10 +295,26 @@ def pretest_passed(scores, thresholds=PRETEST_THRESHOLDS,
     return True
 
 
-def c4_coverage(scores_by_catalog, catalogs):
-    """C4 probes must additionally span >=MIN_C4_CATALOGS independently
-    generated catalogs (HZN-IR-08 §3)."""
-    return len(scores_by_catalog) >= MIN_C4_CATALOGS
+def grade_c1_approx(expected, response, tol=0.011):
+    """Approximate numerical comprehension — reported separately from
+    exact decoding (F6), never gates the pretest."""
+    try:
+        nums = {k: round(float(v), 2) for k, v in
+                json.loads(response.strip()).items()}
+    except (json.JSONDecodeError, ValueError, AttributeError):
+        return False
+    return (abs(nums.get("ar", -99) - expected["ar"]) <= tol and
+            abs(nums.get("lc", -99) - expected["lc"]) <= tol)
+
+
+def c4_coverage(catalog_identities):
+    """C4 probes must span >=MIN_C4_CATALOGS INDEPENDENTLY generated
+    catalogs (HZN-IR-08 §3 + IR-09 F5): verify distinct identities
+    (content hashes and generation seeds), not just a count."""
+    ids = {(c.get("catalog_sha256"), c.get("seed"))
+           for c in catalog_identities}
+    return len(ids) >= MIN_C4_CATALOGS and all(
+        c.get("catalog_sha256") for c in catalog_identities)
 
 
 def prompt_for(item_kind, prompt):
