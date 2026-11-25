@@ -40,17 +40,39 @@ So, **of a row**: observation columns ≈ 34–42%, structural identity fields �
 - Realistic ceiling at full precision: **≈ −20% catalog ≈ −18% of the serialized prompt.** The 10–30× figure remains a documented negative result.
 - The addressable-store arm and KV-cache/static-prefix reuse (with post-edit invalidation) become the more promising structural directions — filed as the deferred candidates; the catalog's static-vs-dynamic split (identity/bounds vs ar/lc/freshness) is the formal hook.
 
-## 4. What remains before campaign authorization
+## 4. Operational comprehension gate — measured result (HZN-IR-08 d6)
 
-- Comprehension gate operational run: ≥60 C4 probes/encoding across ≥3 independently generated campaign-realistic catalogs, zero failures, plus C1–C3 at differential thresholds (95/90/90) — harness ready, counts preregistered (`MIN_PROBES`); requires GPU prompt runs, not yet executed.
-- ~~Paired within-seed sensitivity analysis~~ — **done** (`gate1_3_sensitivity.json`): ε=δ=0.05 provisional; within-seed σ≈0.127 (CI [0.066, 0.795]); 80% correspondence power needs n=7 at Gate-1.2-magnitude effects, n=22 at moderate; **non-inferiority at ε=0.05 needs >40 seeds — margin-vs-noise-floor decision returned to the reviewer.**
-- ~~Budget accounting split~~ — **done**: `stage_seconds` = in-loop pool the budget bounds; `final_eval_seconds` = separate fixed allowance; `unattributed_wall_seconds` = wall − both.
-- ~~Provenance threading~~ — **done**: `collect_observations` now emits the full provenance tuple `{base_checkpoint, applied_edit_chain (EMPTY_CHAIN_SHA at baseline), observation_context, observer_version, measurement_config, epoch}`; surfaced into the campaign report's observation block.
-- ε/δ finalization — margins are the reviewer's call informed by the sensitivity table.
+Ran the C1–C4 pretest against the real model, campaign-identical prompting (chat template, thinking disabled, greedy): 3 encodings × 3 independently generated campaign-realistic catalogs (248 rows, near-zero contrast mass, rounded ties, reserved-unique + repeated family/layer pairs). `results/gate1_3_comprehension.json`.
+
+| Encoding | C1 decode (≥95%) | C2 compare (≥90%) | C3 compose (≥90%) | C4 ground (100%, ≥60) | Verdict |
+|---|---|---|---|---|---|
+| linguistic | 48/48 (100%) | 43/48 (90%) | 15/24 (62%) | 35/84 (42%) | **FAIL** |
+| s1 | 48/48 (100%) | 43/48 (90%) | 12/24 (50%) | 38/84 (45%) | **FAIL** |
+| s3 | 48/48 (100%) | 29/48 (60%) | 0/24 (0%) | 33/84 (39%) | **FAIL** |
+
+**Reading:**
+
+1. **Decoding is never the problem** — 100% on every encoding, including positional s3.
+2. **Grounding is the bottleneck, encoding-invariant** — C4 ≈ 40–45% on ALL levels including the linguistic baseline. The failures are clean (valid integer or "ambiguous" — just wrong), with ~half of true-ambiguous probes answered with a confident id instead of refusal. Under the reviewer's own logic, an observation the model decodes but addresses to the wrong parameter is an intervention on the wrong component — and this channel shows that failure ~half the time at 248-row scale, *independent of representation*.
+3. **s3 pays a real comprehension tax** — C2 drops to 60% and C3 to 0% (most responses empty `[]`). Positional rows shown without their `cols:` header make field-identification ambiguous in isolated-row probes; whether that under-tests s3 relative to the full catalog context is a fairness question flagged for the reviewer — but the C4 result holds even where decoding is perfect.
+4. **The pretest is stricter than the campaign's actual grounding operation** — C4 probes test *find-the-row-matching-a-description*; the campaign's flow is *select-a-row-and-emit-its-param_id* (copy, not lookup). The strict form is what the spec registered; both framings are reported.
+
+**Implication:** this gate did its job — it separated decodability (solved) from operational grounding (not solved, at catalog scale, on any encoding). It suggests the binding constraint on observation-driven editing is not channel cost at all but **catalog-scale addressing** — which strengthens, again, the addressable-store direction: the model cannot reliably ground over 248 rows anyway, so retrieving fewer relevant rows loses little and may help. Alternatively a small-catalog arm (e.g., ~32 rows) would directly test whether C4 accuracy is scale-driven.
+
+## 5. What remains before campaign authorization
+
+- ~~Paired within-seed sensitivity analysis~~ — done (`gate1_3_sensitivity.json`): ε=δ=0.05 provisional; within-seed σ≈0.127 (CI [0.066, 0.795]); 80% correspondence power needs n=7 at Gate-1.2-magnitude effects; **non-inferiority at ε=0.05 is below the noise floor — margin decision returned to the reviewer.**
+- ~~Budget accounting split~~ — done: `stage_seconds` (in-loop pool) vs `final_eval_seconds` (fixed allowance) vs `unattributed_wall_seconds`.
+- ~~Provenance threading~~ — done: `collect_observations` emits the full `{base, edit-chain, context, config, epoch}` tuple; surfaced in the campaign report.
+- ~~Comprehension operational run~~ — done (§4): **all encodings fail C3/C4 at campaign scale; grounding, not channel cost, is the measured bottleneck.**
+- ε/δ finalization — reviewer's call informed by the sensitivity table.
 - Final resource allocation + primary utility definition sign-off.
+- Reviewer disposition on the C3/C4 finding before trajectories run.
 
 ## 5. Artifacts
 
 - `results/gate1_3_channel_profile.json` — per-level profile + parity on the real catalogs
-- `results/_profile_channels.py` — deterministic reproduction
+- `results/gate1_3_comprehension.json` — 9 cells × responses + scores (campaign prompting)
+- `results/gate1_3_comprehension_rawprompt_invalid.json` — preserved method error: raw (non-chat-template) prompts produce 0% — the model continues the catalog rather than answering; demonstrates why the pretest must match the campaign's prompt surface
+- `results/_profile_channels.py`, `results/_comprehension_run.py`, `results/_sensitivity_analysis.py` — deterministic reproductions
 - `src/jarvis_research/gate1_3_channel.py` (canonical parity, audit, s3), `gate1_3_comprehension.py` (fail-closed, strict grading, realistic catalogs), `tests/test_gate1_3_channel.py` (47 tests incl. the HZN-IR-08 regression set)
