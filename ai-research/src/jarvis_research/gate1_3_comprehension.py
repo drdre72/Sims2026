@@ -51,31 +51,32 @@ MIN_C4_CATALOGS = 3
 
 
 def synthetic_catalog(n_rows=248, n_layers=32, n_fams=7, seed=0,
-                      near_zero_frac=0.55, tie_frac=0.15):
+                      near_zero_frac=0.55, tie_frac=0.15, n_unique=30):
     """Synthetic catalog reproducing the real campaign's structure:
     campaign-sized (default 248 rows, matching arm B), ~55% of
     contrasts within ±0.05 of zero, ~15% rounded to a tie with a
     neighbor, and repeated (family, layer) pairs — real addressing is
-    ambiguous and C4 must discriminate it. Unique (family,layer) rows
-    are still guaranteed present for unambiguous grounding probes.
+    ambiguous and C4 must discriminate it. `n_unique` rows carry
+    reserved (family, layer) pairs no other row repeats — guaranteed
+    unambiguous grounding probes; the rest share the remaining pair
+    space so genuine ambiguity exists for the refusal probes.
     """
     rng = random.Random(seed)
     fams = (["mlp.down_proj"] +
             [f"attn.{n}_proj" for n in ("q", "k", "v", "o")] +
             [f"expert.{i}.w" for i in range(max(0, n_fams - 5))])[:n_fams]
-    cat, seen_pairs = [], set()
-    # Seed guaranteed-unique (family, layer) pairs first.
-    uniq_layer = 0
-    for i, f in enumerate(fams):
-        seen_pairs.add((f, uniq_layer))
-        cat.append(_row(rng, i, f, uniq_layer, near_zero_frac))
-        uniq_layer += 1
-    pid = len(cat)
+    # Reserved unique pairs: first n_unique of the enumeration; random
+    # rows sample the complement so the reservation can never be hit.
+    all_pairs = [(f, l) for f in fams for l in range(n_layers)]
+    reserved = set(all_pairs[:n_unique])
+    open_pairs = [p for p in all_pairs if p not in reserved]
+    cat = []
+    pid = 0
+    for f, l in sorted(reserved, key=lambda p: (p[0], p[1])):
+        cat.append(_row(rng, pid, f, l, near_zero_frac))
+        pid += 1
     while len(cat) < n_rows:
-        layer = rng.randrange(n_layers)
-        fam = rng.choice(fams)
-        # Deliberately allow repeated (family, layer) pairs — realistic
-        # addressing ambiguity the C4 probes must handle.
+        fam, layer = open_pairs[rng.randrange(len(open_pairs))]
         cat.append(_row(rng, pid, fam, layer, near_zero_frac))
         pid += 1
     # Rounded-tie clusters: give some rows an identical rounded lc.
@@ -101,15 +102,17 @@ def _row(rng, pid, fam, layer, near_zero_frac):
     }
 
 
-def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0):
+def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0,
+              counts=None):
     """Generate a four-level item set on `catalog` rendered at `level`.
 
-    Returns {"C1":[...], "C2":[...], "C3":[...], "C4":[...]} where each
-    item is (prompt, expected). C4 items come in two kinds: UNAMBIGUOUS
-    probes — a description matching exactly one row, expected = its id;
-    and AMBIGUOUS probes — a (family, layer) description matching more
-    than one row, expected = "ambiguous" (the model must refuse to pick,
-    because picking an arbitrary match is a grounding failure).
+    `counts` may override per-level probe counts {"C1":n,...}; n_per is
+    the uniform default. Returns {"C1":[...], "C2":[...], "C3":[...],
+    "C4":[...]} of (prompt, expected) pairs. C4 items come in two
+    kinds: UNAMBIGUOUS probes — a description matching exactly one row,
+    expected = its id; and AMBIGUOUS probes — a (family, layer)
+    description matching >1 row, expected = "ambiguous" (the model must
+    refuse to pick; picking an arbitrary match is a grounding failure).
     """
     rng = random.Random(seed)
     inv = {c: f for f, c in fam_code.items()}
@@ -123,14 +126,22 @@ def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0):
     unique_pairs = {p for p, ids in by_pair.items() if len(ids) == 1}
     ambig_pairs = {p for p, ids in by_pair.items() if len(ids) > 1}
 
+    counts = counts or {}
+    n1 = counts.get("C1", n_per)
+    n2 = counts.get("C2", n_per)
+    n3 = counts.get("C3", max(1, n_per // 2))
+    n4 = counts.get("C4", n_per)
+
     items = {"C1": [], "C2": [], "C3": [], "C4": []}
-    idx = rng.sample(range(len(catalog)), min(n_per, len(catalog)))
+    idx = rng.sample(range(len(catalog)), min(n1, len(catalog)))
     for i in idx:
         items["C1"].append((rows[i],
                             {"ar": round(catalog[i]["obs_act_rank"], 2),
                              "lc": round(catalog[i]["obs_log_contrast"], 2)}))
-    pairs = rng.sample(range(len(catalog)), min(2 * n_per, len(catalog)))
-    for a, b in zip(pairs[::2], pairs[1::2]):
+    made2, tries = 0, 0
+    while made2 < n2 and tries < n2 * 20:
+        tries += 1
+        a, b = rng.sample(range(len(catalog)), 2)
         ea, eb = catalog[a], catalog[b]
         if abs(ea["obs_log_contrast"] - eb["obs_log_contrast"]) < 1e-9:
             continue
@@ -138,21 +149,24 @@ def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0):
                             ea["param_id"] if abs(ea["obs_log_contrast"])
                             > abs(eb["obs_log_contrast"])
                             else eb["param_id"]))
-    pool = rng.sample(range(len(catalog)), min(len(catalog), 12))
-    hi = sorted(pool, key=lambda i: -abs(catalog[i]["obs_log_contrast"]))[:3]
-    items["C3"].append(("\n".join(rows[i] for i in pool),
-                       sorted(catalog[i]["param_id"] for i in hi)))
+        made2 += 1
+    for _ in range(n3):
+        pool = rng.sample(range(len(catalog)), min(len(catalog), 12))
+        hi = sorted(pool,
+                    key=lambda i: -abs(catalog[i]["obs_log_contrast"]))[:3]
+        items["C3"].append(("\n".join(rows[i] for i in pool),
+                           sorted(catalog[i]["param_id"] for i in hi)))
     # Unambiguous grounding: unique (family, layer) rows.
     uniq_rows = [e for e in catalog
                  if (e["family"], e["layer"]) in unique_pairs]
     rng.shuffle(uniq_rows)
-    for e in uniq_rows[:n_per]:
+    for e in uniq_rows[:n4]:
         fam_tag = fam_code[e["family"]]
         items["C4"].append((
             f"The row with family tag {fam_tag} and layer {e['layer']}",
             int(e["param_id"])))
     # Ambiguous grounding: repeated (family, layer) — refuse.
-    for pair in list(ambig_pairs)[:max(1, n_per // 3)]:
+    for pair in list(ambig_pairs)[:max(1, n4 // 3)]:
         fam_tag = fam_code[pair[0]]
         items["C4"].append((
             f"The row with family tag {fam_tag} and layer {pair[1]}",
