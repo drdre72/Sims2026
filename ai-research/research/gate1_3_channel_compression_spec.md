@@ -1,8 +1,8 @@
-# HZN-OC-01 — Observation Channel Compression (Gate 1.3 spec, v3)
+# HZN-OC-01 — Observation Channel Compression (Gate 1.3 spec, v3.1)
 
-**Status: conditional exploratory approval (HZN-IR-07, independent document review complete).** Authorized: implementation, unit tests, tokenizer profiling, observation auditing, comprehension preflight. Campaign execution pending: complete preflight evidence, finalized resource allocation, preregistered statistical acceptance criteria. Confirmatory freeze preserved; Gate 1.2 evidence record unchanged.
+**Status: conditional exploratory approval (HZN-IR-07 document review; HZN-IR-08 implementation review — 10 preflight-integrity corrections applied).** Authorized: corrective implementation, unit tests, tokenizer profiling, observation auditing, comprehension preflight. Campaign execution pending: corrected preflight evidence, resource allocation, primary utility definition, statistical margins, acceptance criteria. Confirmatory freeze preserved; Gate 1.2 evidence record unchanged.
 
-v3 folds in all twelve HZN-IR-07 binding dispositions, including the reviewer's seed-level statistical caveat and its two identified confounds.
+v3 folds in all twelve HZN-IR-07 binding dispositions; v3.1 applies the ten HZN-IR-08 corrections (fail-closed gates, strict grading, canonical field parity incl. magnitude, mandatory provenance, realistic comprehension sets, eligibility fix, ablation separation, reconciled token accounting, s3 headered candidate, preserved negative result).
 
 ## 1. Purpose
 
@@ -20,15 +20,26 @@ HZN-OC-01's question: can a cheaper representation preserve correspondence and u
 |---|---|---|
 | L | Existing pipe-schema `145\|L12\|f7\|n=147456\|m=0.0046\|ar=0.82\|lc=-0.03` | Baseline — **already a compact structural notation, not prose** (reviewer Finding 1) |
 | S-I | Compact familiar schema | Remove redundancy, keep pretrained decodability |
-| S-II | Fixed symbolic vocabulary `O:145\|F:07\|AR:82\|LC:-03` | Deeper compression, fixed legend |
+| S-II | Fixed symbolic vocabulary `O:145\|F:07\|AR:82\|LC:-03` | Deeper compression, fixed legend — **measured: loses to S-I** (BPE-fragments; negative result preserved) |
+| S-III | Headered positional schema — field names once in `cols:` header, rows positional | Removes repeated field names; **measured best: −16.1% arm A / −19.4% arm B** at full precision, complete semantics |
 
 The reframed problem per reviewer Finding 1 and the measured profile (`gate1_3_channel_preflight.md`): this is **structural** compression — eliminating repetition of identifiers, metadata, field names — more than linguistic compression. Observation columns are ~34–42% of row tokens; structural fields dominate. Candidate encodings are adopted by **measured tokenized length** on real catalogs — never character count — including legends, catalog references and decoding instructions in the profile.
 
-L-I (learned latent) and S-III (compositional language) remain deferred.
+L-I (learned latent) remains deferred. Per HZN-IR-08 §5 the next structural directions are: reusable static-prefix KV caching (with mandatory post-edit invalidation — cached activations computed on stale weights are invalid) and the **addressable observation store** (retrieve relevant rows rather than serializing the whole catalog each cycle) — both retained as independent candidates, not folded into this spec's primary comparison.
 
-## 3. Field equivalence — mechanical, zero silent omissions
+## 3. Field equivalence — canonical typed record, zero silent omissions
 
-`Decode(Encode(O)) = O` for **all** proposer-visible fields at agreed rendered precision, verified mechanically per row (`verify_field_parity` — implemented, tested). A field that cannot be expressed in S leaves **both** channels; any preregistered precision reduction (numel→scale-suffix, mag-cap→floor-rounded 2sf) applies symmetrically and is listed in the preregistration.
+`Decode(Encode(O)) = O` for **all** proposer-visible fields at agreed rendered precision — verified mechanically per row by projecting both source and decode onto the **canonical record** (`verify_field_parity`, implemented, tested):
+
+```
+CanonicalCandidate = { param_id, layer, family, numel,
+    mag_min, mag_max,            # EFFECTIVE interval — per-row field or
+                                 # uniform 'bounds:' legend, always populated
+    count_max,                   # explicit c<=N or arm-wide default
+    obs_available, ar, lc }      # absent columns and NA both decode to False
+```
+
+This closes HZN-IR-08 F3: magnitude bounds, count defaults and observation availability are part of the compared record whether or not they are rendered per-row. Precision reductions (numel→scale-suffix, mag-cap→2sf, numel removal) are **information-ablation experiments** — they change what the proposer knows and are excluded from the information-matched primary comparison (directive 8); each would need its own preregistration.
 
 ## 4. Conditions
 
@@ -59,6 +70,8 @@ Items generated mechanically from synthetic/held-out catalogs with known answers
 
 C4 is the operational gate: an observation the model decodes but addresses to the wrong parameter is an intervention on the wrong component. Perfect pretest ≠ guaranteed future grounding → **deterministic address validation remains mandatory during execution** (already structural: param_id bounds-checking in the patch manager). A level failing pretest reports "preserved but undecodable" and is skipped, never silently retried.
 
+**Gate integrity (HZN-IR-08 F1/F2/§3, implemented):** the gate fails closed — every level must be present with at least its preregistered minimum probe count (`MIN_PROBES = C1:40, C2:40, C3:20, C4:60`) and missing responses score as failures. Grading is strict whole-response: an integer answer must *be* the response (not contain it); JSON lists require valid integer ids. C4 includes **ambiguity probes** — descriptions matching ≥2 rows where the only correct answer is refusal — alongside unambiguous probes, across **≥3 independently generated catalogs** with campaign-realistic structure (192–248 rows, ~55% near-zero contrasts, rounded ties, repeated family/layer pairs). 3/3 lucky guesses would only support a ~37% one-sided lower bound on accuracy; ≥60 zero-failure probes support >95%.
+
 ## 6. Sequential epochs — pristine state between
 
 | Epoch | Controlled | Outcome |
@@ -66,7 +79,7 @@ C4 is the operational gate: an observation the model decodes but addresses to th
 | I — information-matched | evidence content + intervention opportunities | representational fidelity/utility (separates targeting-vs-frequency protection) |
 | II — compute-matched | measured stage-seconds | operational efficiency/utility |
 
-Epoch II runs only for the **eligible** encoding (passes parity + pretest + beats S-I on tokens). Every epoch restarts from the pristine checkpoint — no edited weights, history, selections or feedback carry forward. Encoding selection between epochs is documented explicitly; subsequent confirmatory claims use independent evaluation data.
+Epoch II runs only for the **eligible** encoding (passes canonical parity + pretest + beats the **L baseline** on measured tokens — HZN-IR-08 d7: alternatives compete against L; a more complex encoding must additionally justify its complexity over simpler successful ones). Every epoch restarts from the pristine checkpoint — no edited weights, history, selections or feedback carry forward. Encoding selection between epochs is documented explicitly; subsequent confirmatory claims use independent evaluation data.
 
 ## 7. Campaign structure (staged)
 
@@ -107,7 +120,7 @@ p = { base_checkpoint_hash,
       measurement_config_hash }
 ```
 
-An observation correct about a previous model version can mislead about the current one — the edit-chain hash makes stale-vs-false distinguishable. Established by observer infrastructure, never asserted by the proposer.
+An observation correct about a previous model version can mislead about the current one — the edit-chain hash makes stale-vs-false distinguishable. Established by observer infrastructure, never asserted by the proposer. Per HZN-IR-08 F4 all provenance fields are **mandatory** (construction fails on empties); per-edit hashes commit to the *applied* edit (target + operation + value), not merely the proposal text; prefixed-stat normalization is corrected and tested.
 
 ## 11. Failure-interpretation map (preregistered)
 

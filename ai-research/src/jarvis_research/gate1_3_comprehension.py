@@ -1,15 +1,30 @@
-"""HZN-OC-01 comprehension pretest (C1-C4), reviewer directive §3.
+"""HZN-OC-01 comprehension pretest (spec v3 + HZN-IR-08 hardening).
 
-Four-level decoding test for a candidate observation-channel encoding.
-Items are generated MECHANICALLY from synthetic or held-out catalogs with
-independently known answers — never from campaign trajectories and never
-exposing intervention outcomes. A level that fails reports 'preserved but
-undecodable', not 'information lost'; it is skipped, not retried.
+Four-level operational-literacy gate between tokenizer profiling and any
+in-context evaluation. C1 decoding -> C2 comparison -> C3 composition ->
+C4 grounding to catalog addresses. An encoding is eligible for
+information-matched evaluation only if the proposer can read it —
+otherwise "S1 does not beat S2" is confounded by literacy, not evidence
+correspondence.
 
-  C1 decoding    — recover encoded fields (layer, family, signed contrast)
-  C2 comparison  — relational interpretation (greater |contrast|)
-  C3 composition — multi-constraint satisfaction over rows
-  C4 grounding   — observation -> candidate param_id (operational gate)
+Items are generated mechanically from synthetic catalogs so the
+answer key is known without a judge model; the catalogs reproduce the
+real campaign's size and contrast structure (many near-zero contrasts,
+rounded ties, sign ambiguity, repeated family/layer pairs so C4 probes
+must discriminate addressing, not just description).
+
+HZN-IR-08 changes:
+  F1 — pretest_passed / score_items fail CLOSED: every expected level
+       must be present, every level must meet its preregistered minimum
+       probe count, and incomplete response sets score the missing
+       items as failures (never silently truncating the denominator).
+  F2 — strict whole-response grading: an integer answer must BE the
+       response, not appear in it; decimals parse the entire response;
+       lists must be valid JSON of valid integer ids (no coercion).
+  §3 — realistic catalogs (campaign-sized, near-zero contrast
+       distribution, rounded ties) and preregistered probe counts:
+       C4 requires >=60 zero-failure probes across >=3 independently
+       generated catalogs.
 """
 
 import json
@@ -17,188 +32,237 @@ import random
 import re
 
 from jarvis_research.gate1_3_channel import (
-    CHANNEL_LEVELS, encode_catalog_text, encode_row)
+    CHANNEL_LEVELS, encode_row, encode_catalog_text, decode_row,
+    s3_column_order)
 
 
-def make_synthetic_catalog(seed: int, n_rows: int = 36,
-                           n_families: int = 4, n_layers: int = 12):
-    """Synthetic annotated catalog with unique (family, layer) pairs so
-    C4 grounding has exactly one correct answer per description."""
+# Differential thresholds (HZN-IR-07 finding 3 — grounding errors act on
+# the wrong component; C4 demands zero observed failures on the finite
+# preregistered set).
+PRETEST_THRESHOLDS = {"C1": 0.95, "C2": 0.90, "C3": 0.90, "C4": 1.00}
+PRETEST_ORDER = ("C1", "C2", "C3", "C4")
+
+# Preregistered minimum probe counts per level (HZN-IR-08 d6). A level
+# with fewer items than this FAILS CLOSED — sparse positive evidence is
+# not a pass. C4's >=60/zero-fail target: 59 independent successes give a
+# one-sided 95% lower bound > 95% on true accuracy.
+MIN_PROBES = {"C1": 40, "C2": 40, "C3": 20, "C4": 60}
+MIN_C4_CATALOGS = 3
+
+
+def synthetic_catalog(n_rows=248, n_layers=32, n_fams=7, seed=0,
+                      near_zero_frac=0.55, tie_frac=0.15):
+    """Synthetic catalog reproducing the real campaign's structure:
+    campaign-sized (default 248 rows, matching arm B), ~55% of
+    contrasts within ±0.05 of zero, ~15% rounded to a tie with a
+    neighbor, and repeated (family, layer) pairs — real addressing is
+    ambiguous and C4 must discriminate it. Unique (family,layer) rows
+    are still guaranteed present for unambiguous grounding probes.
+    """
     rng = random.Random(seed)
-    fams = [f"syn.fam{i}" for i in range(n_families)]
-    pairs = [(f, l) for f in fams for l in range(n_layers)]
-    rng.shuffle(pairs)
-    rows = []
-    for i in range(n_rows):
-        fam, layer = pairs[i % len(pairs)]
-        rows.append({
-            "param_id": i,
-            "param": f"syn.layers.{layer}.fam{i}.w",
-            "family": fam, "layer": layer,
-            "numel": rng.choice((65536, 98304, 147456, 294912)),
-            "mag_min": -0.005, "mag_max": 0.005,
-            "count_max": 512,
-            "obs_available": rng.random() > 0.1,
-            "obs_act_rank": round(rng.random(), 2),
-            "obs_log_contrast": round(rng.uniform(-2.0, 2.0), 2),
-        })
-    return rows
+    fams = (["mlp.down_proj"] +
+            [f"attn.{n}_proj" for n in ("q", "k", "v", "o")] +
+            [f"expert.{i}.w" for i in range(max(0, n_fams - 5))])[:n_fams]
+    cat, seen_pairs = [], set()
+    # Seed guaranteed-unique (family, layer) pairs first.
+    uniq_layer = 0
+    for i, f in enumerate(fams):
+        seen_pairs.add((f, uniq_layer))
+        cat.append(_row(rng, i, f, uniq_layer, near_zero_frac))
+        uniq_layer += 1
+    pid = len(cat)
+    while len(cat) < n_rows:
+        layer = rng.randrange(n_layers)
+        fam = rng.choice(fams)
+        # Deliberately allow repeated (family, layer) pairs — realistic
+        # addressing ambiguity the C4 probes must handle.
+        cat.append(_row(rng, pid, fam, layer, near_zero_frac))
+        pid += 1
+    # Rounded-tie clusters: give some rows an identical rounded lc.
+    n_ties = int(len(cat) * tie_frac)
+    for i in range(0, min(n_ties, len(cat) - 1), 2):
+        cat[i + 1]["obs_log_contrast"] = cat[i]["obs_log_contrast"]
+        cat[i + 1]["obs_act_rank"] = cat[i]["obs_act_rank"]
+    return cat
 
 
-def _render_row(r, fam_code, level):
-    return encode_row(r, fam_code, True, True, level)
+def _row(rng, pid, fam, layer, near_zero_frac):
+    return {
+        "param_id": pid, "family": fam, "layer": layer,
+        "numel": rng.choice([147456, 589824, 262144, 9437184, 32768,
+                             131072]),
+        "mag_min": -rng.choice([0.002, 0.005, 0.010]),
+        "mag_max": rng.choice([0.002, 0.005, 0.010]),
+        "obs_available": True,
+        "obs_act_rank": round(rng.uniform(0, 1), 2),
+        "obs_log_contrast": (round(rng.uniform(-0.05, 0.05), 2)
+                             if rng.random() < near_zero_frac
+                             else round(rng.uniform(-2.0, 2.0), 2)),
+    }
 
 
-def generate_items(catalog, fam_code, level: str, seed: int):
-    """Deterministically generate one probe set for a channel level."""
+def gen_items(catalog, fam_code, uniform_mag, level, n_per=8, seed=0):
+    """Generate a four-level item set on `catalog` rendered at `level`.
+
+    Returns {"C1":[...], "C2":[...], "C3":[...], "C4":[...]} where each
+    item is (prompt, expected). C4 items come in two kinds: UNAMBIGUOUS
+    probes — a description matching exactly one row, expected = its id;
+    and AMBIGUOUS probes — a (family, layer) description matching more
+    than one row, expected = "ambiguous" (the model must refuse to pick,
+    because picking an arbitrary match is a grounding failure).
+    """
     rng = random.Random(seed)
-    avail = [r for r in catalog if r["obs_available"]]
-    items = []
+    inv = {c: f for f, c in fam_code.items()}
+    rows = [encode_row(e, fam_code, uniform_mag, True, level)
+            for e in catalog]
+    # C4 ambiguity bookkeeping on the REAL (synthetic) catalog structure.
+    from collections import defaultdict
+    by_pair = defaultdict(list)
+    for e in catalog:
+        by_pair[(e["family"], e["layer"])].append(e["param_id"])
+    unique_pairs = {p for p, ids in by_pair.items() if len(ids) == 1}
+    ambig_pairs = {p for p, ids in by_pair.items() if len(ids) > 1}
 
-    # C1 — decoding: recover a field from one rendered row.
-    for r in rng.sample(avail, min(4, len(avail))):
-        row_txt = _render_row(r, fam_code, level)
-        items.append({
-            "level": "C1",
-            "context": f"Catalog row:\n{row_txt}",
-            "query": "What is the layer of this component? "
-                     "Answer with the integer only.",
-            "expected": str(r["layer"]),
-        })
-        items.append({
-            "level": "C1",
-            "context": f"Catalog row:\n{row_txt}",
-            "query": "What is the signed contrast (lc) value of this row? "
-                     "Answer with the number only.",
-            "expected": f"{round(r['obs_log_contrast'], 2):+.2f}",
-        })
-
-    # C2 — comparison: pick two rows with distinct |lc|.
-    for _ in range(4):
-        a, b = rng.sample(avail, 2)
-        if abs(round(a["obs_log_contrast"], 2)) == abs(round(b["obs_log_contrast"], 2)):
+    items = {"C1": [], "C2": [], "C3": [], "C4": []}
+    idx = rng.sample(range(len(catalog)), min(n_per, len(catalog)))
+    for i in idx:
+        items["C1"].append((rows[i],
+                            {"ar": round(catalog[i]["obs_act_rank"], 2),
+                             "lc": round(catalog[i]["obs_log_contrast"], 2)}))
+    pairs = rng.sample(range(len(catalog)), min(2 * n_per, len(catalog)))
+    for a, b in zip(pairs[::2], pairs[1::2]):
+        ea, eb = catalog[a], catalog[b]
+        if abs(ea["obs_log_contrast"] - eb["obs_log_contrast"]) < 1e-9:
             continue
-        winner = a if abs(a["obs_log_contrast"]) > abs(b["obs_log_contrast"]) else b
-        items.append({
-            "level": "C2",
-            "context": ("Catalog rows:\n"
-                        + _render_row(a, fam_code, level) + "\n"
-                        + _render_row(b, fam_code, level)),
-            "query": "Which component has the GREATER absolute contrast "
-                     "|lc|? Answer with the component id only.",
-            "expected": str(winner["param_id"]),
-        })
-
-    # C3 — composition: conjunctive filter over the full catalog.
-    fams = sorted({r["family"] for r in catalog})
-    target_fam = rng.choice(fams)
-    layer_min = rng.choice([3, 6, 9])
-    want_pos = rng.random() < 0.5
-    fc = fam_code[target_fam]
-    hits = sorted(r["param_id"] for r in catalog
-                  if r.get("obs_available")
-                  and r["family"] == target_fam
-                  and r["layer"] >= layer_min
-                  and (r["obs_log_contrast"] > 0) == want_pos)
-    famref = fc[1:] if level == "s2" else fc
-    items.append({
-        "level": "C3",
-        "context": "Catalog:\n" + encode_catalog_text(
-            catalog, fam_code, True, True, level),
-        "query": (f"List every component id with family {famref}, "
-                  f"layer >= {layer_min}, and "
-                  f"{'positive' if want_pos else 'negative'} lc. "
-                  "Answer as a JSON list of integer ids."),
-        "expected": hits,
-    })
-
-    # C4 — grounding: observation description -> param_id.
-    for r in rng.sample(avail, min(3, len(avail))):
-        fc_r = fam_code[r["family"]]
-        famref = fc_r[1:] if level == "s2" else r["family"]
-        items.append({
-            "level": "C4",
-            "context": "Catalog:\n" + encode_catalog_text(
-                catalog, fam_code, True, True, level),
-            "query": (f"An observation is described as: family {famref}, "
-                      f"layer {r['layer']}. Which param_id "
-                      f"({'O:id' if level == 's2' else 'id'}) does it "
-                      "address? Answer with the integer id only."),
-            "expected": str(r["param_id"]),
-        })
+        items["C2"].append((f"{rows[a]}\n{rows[b]}",
+                            ea["param_id"] if abs(ea["obs_log_contrast"])
+                            > abs(eb["obs_log_contrast"])
+                            else eb["param_id"]))
+    pool = rng.sample(range(len(catalog)), min(len(catalog), 12))
+    hi = sorted(pool, key=lambda i: -abs(catalog[i]["obs_log_contrast"]))[:3]
+    items["C3"].append(("\n".join(rows[i] for i in pool),
+                       sorted(catalog[i]["param_id"] for i in hi)))
+    # Unambiguous grounding: unique (family, layer) rows.
+    uniq_rows = [e for e in catalog
+                 if (e["family"], e["layer"]) in unique_pairs]
+    rng.shuffle(uniq_rows)
+    for e in uniq_rows[:n_per]:
+        fam_tag = fam_code[e["family"]]
+        items["C4"].append((
+            f"The row with family tag {fam_tag} and layer {e['layer']}",
+            int(e["param_id"])))
+    # Ambiguous grounding: repeated (family, layer) — refuse.
+    for pair in list(ambig_pairs)[:max(1, n_per // 3)]:
+        fam_tag = fam_code[pair[0]]
+        items["C4"].append((
+            f"The row with family tag {fam_tag} and layer {pair[1]}",
+            "ambiguous"))
     return items
 
 
-def grade(item: dict, response: str) -> bool:
-    """Exact/normalized match; never repaired."""
-    exp = item["expected"]
+# ---- Strict grading (HZN-IR-08 F2) -------------------------------------
+
+_NUM_RE = re.compile(r"[+-]?\d+(?:\.\d+)?")
+
+
+def grade_integer(expected, response):
+    """Integer answer must BE the response (whole-response match).
+    '7.9', '7 or 12', 'not 7, 9' all fail — the correct id appearing
+    somewhere in the output is not grounding."""
     text = response.strip()
-    if isinstance(exp, list):
-        m = re.search(r"\[[^\]]*\]", text)
-        if not m:
-            return False
-        try:
-            got = sorted(int(x) for x in json.loads(m.group(0)))
-        except Exception:
-            return False
-        return got == exp
-    nums = re.findall(r"-?\d+\.?\d*", text)
-    if not nums:
+    if not re.fullmatch(r"[+-]?\d+", text):
         return False
-    if exp.lstrip("+-").replace(".", "", 1).isdigit() and "." in exp:
+    return int(text) == expected
+
+
+def grade_decimal(expected, response):
+    text = response.strip()
+    if not re.fullmatch(r"[+-]?\d+(\.\d+)?", text):
+        return False
+    return abs(float(text) - expected) <= 0.011
+
+
+def grade_list(expected, response):
+    """JSON list of valid integer ids; no coercion of floats/strings."""
+    text = response.strip()
+    try:
+        got = json.loads(text)
+    except json.JSONDecodeError:
+        return False
+    if not isinstance(got, list):
+        return False
+    if not all(isinstance(v, int) and not isinstance(v, bool)
+               for v in got):
+        return False
+    return sorted(got) == sorted(expected)
+
+
+def grade(item_kind, expected, response):
+    if item_kind == "C1":
         try:
-            return any(abs(float(n) - float(exp)) < 0.005 for n in nums)
-        except ValueError:
+            nums = {k: round(float(v), 2) for k, v in
+                    json.loads(response.strip()).items()}
+        except (json.JSONDecodeError, ValueError, AttributeError):
             return False
-    return any(int(float(n)) == int(exp) for n in nums)
+        return (abs(nums.get("ar", -99) - expected["ar"]) <= 0.011 and
+                abs(nums.get("lc", -99) - expected["lc"]) <= 0.011)
+    if item_kind == "C4" and expected == "ambiguous":
+        return response.strip().lower() == "ambiguous"
+    if item_kind in ("C2", "C4"):
+        return grade_integer(expected, response)
+    if item_kind == "C3":
+        return grade_list(expected, response)
+    raise ValueError(item_kind)
 
 
-def score_items(items, responses):
-    """Per-level accuracy for paired (item, response) lists."""
-    per = {}
-    for it, resp in zip(items, responses):
-        ok = grade(it, resp)
-        a = per.setdefault(it["level"], [0, 0])
-        a[0] += ok
-        a[1] += 1
-    return {lvl: {"correct": c, "n": n, "acc": c / n}
-            for lvl, (c, n) in per.items()}
+def score_items(level_items, responses):
+    """Score a response set; MISSING responses count as failures
+    (HZN-IR-08 F1 — never silently truncate the denominator). Returns
+    {lvl: {"n": total, "correct": k, "acc": k/total}}."""
+    scores = {}
+    for lvl, items in level_items.items():
+        rs = responses.get(lvl, [])
+        correct = sum(
+            grade(lvl, exp, rs[i]) if i < len(rs) and rs[i] is not None
+            else False
+            for i, (prompt, exp) in enumerate(items))
+        scores[lvl] = {"n": len(items), "correct": correct,
+                       "acc": correct / len(items) if items else 0.0}
+    return scores
 
 
-def run_pretest(model, tokenizer, catalog, fam_code, level: str,
-                seed: int = 0, max_new: int = 48, device=None):
-    """Generate items, prompt the model, grade. Returns (scores, detail).
-
-    Deterministic decode (no sampling) — the pretest measures decoding
-    literacy, not proposal behavior.
-    """
-    import torch
-    items = generate_items(catalog, fam_code, level, seed)
-    responses = []
-    dev = device or next(model.parameters()).device
-    for it in items:
-        user = (f"{it['context']}\nQuestion: {it['query']}")
-        enc = tokenizer.apply_chat_template(
-            [{"role": "user", "content": user}],
-            add_generation_prompt=True, return_tensors="pt",
-            return_dict=True, enable_thinking=False)
-        enc = {k: v.to(dev) for k, v in enc.items()}
-        with torch.no_grad():
-            gen = model.generate(**enc, do_sample=False,
-                                 max_new_tokens=max_new)
-        responses.append(tokenizer.decode(
-            gen[0, enc["input_ids"].shape[1]:],
-            skip_special_tokens=True).strip())
-    return score_items(items, responses), list(zip(items, responses))
+def pretest_passed(scores, thresholds=PRETEST_THRESHOLDS,
+                   min_probes=MIN_PROBES):
+    """Blocking gate — FAILS CLOSED (HZN-IR-08 F1): every expected level
+    must be present, at least min_probes[lvl] items scored, and acc must
+    meet its differential threshold. Empty/partial score dicts fail."""
+    for lvl in PRETEST_ORDER:
+        v = scores.get(lvl)
+        if v is None or v.get("n", 0) < min_probes.get(lvl, 0):
+            return False
+        if v["acc"] < thresholds.get(lvl, 1.0):
+            return False
+    return True
 
 
-# Reviewer directive 8: differential engineering targets per level —
-# C4 grounding is the operational gate and must be perfect on the
-# finite preflight set; deterministic address validation still runs
-# during execution regardless of pretest outcome.
-PRETEST_THRESHOLDS = {"C1": 0.95, "C2": 0.90, "C3": 0.90, "C4": 1.00}
+def c4_coverage(scores_by_catalog, catalogs):
+    """C4 probes must additionally span >=MIN_C4_CATALOGS independently
+    generated catalogs (HZN-IR-08 §3)."""
+    return len(scores_by_catalog) >= MIN_C4_CATALOGS
 
 
-def pretest_passed(scores, thresholds: dict = PRETEST_THRESHOLDS) -> bool:
-    return all(v["acc"] >= thresholds.get(lvl, 1.0)
-               for lvl, v in scores.items())
+def prompt_for(item_kind, prompt):
+    if item_kind == "C1":
+        return (f"For each encoded row, reply with ONLY a JSON object "
+                f'{{"ar": <float>, "lc": <float>}}:\n{prompt}')
+    if item_kind == "C2":
+        return (f"Which row has the larger |lc|? Reply with ONLY the "
+                f"leading id number:\n{prompt}")
+    if item_kind == "C3":
+        return (f"Reply with ONLY a JSON list of the 3 ids with the "
+                f"largest |lc|:\n{prompt}")
+    if item_kind == "C4":
+        return (f"Give the id number of {prompt}. If more than one row "
+                f"matches, reply with ONLY the word ambiguous. "
+                f"Reply with ONLY the number:")
+    raise ValueError(item_kind)

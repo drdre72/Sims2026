@@ -1,56 +1,54 @@
 # HZN-OC-01 Preflight — Measured Channel Costs
 
-**Component status (reviewer directive 2):** symbolic encoder ✅, tokenizer profiling ✅, observation audit layer ✅, comprehension harness (C1–C4) ✅ — implemented as `gate1_3_channel.py` + `gate1_3_comprehension.py`, 13/13 new tests, 41/41 suite. This document reports the first preflight measurement.
+**Component status (HZN-IR-05 d2; HZN-IR-08 corrections applied):** symbolic encoder ✅, tokenizer profiling ✅, observation audit layer ✅ (mandatory provenance, edit-chain binding), comprehension harness C1–C4 ✅ (fail-closed gate, strict grading, campaign-realistic catalogs). 47/47 tests. This document reports measured token costs over the exact rendered surfaces (families + bounds legends + rows) with canonical field-parity verified on every level.
 
-## 1. The tokenizer was right to be checked
+## 1. Measured costs, real tokenizer, real catalogs
 
-Measured on the real campaign tokenizer over the real annotated catalogs (192 rows arm A, 248 rows arm B — the exact rendered surfaces):
+192 rows arm A, 248 rows arm B. Parity = canonical record equality including effective magnitude intervals and count defaults:
 
-| Level | Arm A tokens | /row | ratio | Arm B tokens | /row | ratio |
-|---|---|---|---|---|---|---|
-| linguistic | 8,774 | 45.7 | 1.00 | 8,863 | 35.7 | 1.00 |
-| s1 (spaces, familiar keys) | 7,784 | 40.5 | **0.887** | 7,623 | 30.7 | **0.860** |
-| s2 (`O:/F:/AR:/LC:` symbolic) | 8,461 | 44.1 | 0.964 | 8,443 | 34.0 | 0.953 |
+| Level | Arm A tokens | /row | ratio | parity | Arm B tokens | /row | ratio | parity |
+|---|---|---|---|---|---|---|---|---|
+| linguistic (baseline) | 8,801 | 45.8 | 1.00 | ✅ | 8,877 | 35.8 | 1.00 | ✅ |
+| s1 (spaces, familiar keys) | 7,811 | 40.7 | 0.888 | ✅ | 7,637 | 30.8 | 0.860 | ✅ |
+| s2 (`O:/F:/AR:/LC:` symbolic) | 8,488 | 44.2 | 0.964 | ✅ | 8,457 | 34.1 | 0.953 | ✅ |
+| **s3 (headered positional)** | **7,386** | **38.5** | **0.839** | ✅ | **7,156** | **28.9** | **0.806** | ✅ |
 
-**S2 as drafted loses to S1** — the symbolic vocabulary is shorter in *characters* but BPE fragments it. Character compression did not translate into token compression, as the reviewer predicted.
+Sample rows (arm B): linguistic `0|L0|f0|n=81920|ar=1.00|lc=+0.02` → s3 `0|0|f0|81920|1.00|+0.02` under header `cols: id|layer|fam|numel|ar|lc`.
 
-## 2. Where the tokens actually are
+**Two measured findings:**
+1. **S-II loses to S-I** — symbolic vocabulary is shorter in characters but BPE-fragments; character compression ≠ token compression (reviewer prediction confirmed).
+2. **S-III (headered) beats S-I** — removing *repeated field names* (structural redundancy), not inventing vocabulary, is the best measured scheme: **−16.1% arm A, −19.4% arm B** at full field precision and complete semantics. This supports the reviewer's "eliminate unnecessary representation" direction.
 
-Per-row measurement, arm B row `1|L0|f1|n=81920|ar=0.04|lc=+0.06` (35.7 tok/row avg):
+## 2. Token accounting — consistent denominators (HZN-IR-08 d9)
 
-| Field group | Variant | Tokens |
-|---|---|---|
-| obs columns (ar+lc) | `\|ar=0.20\|lc=+0.01` | **15** |
-| obs columns, s2 integer-coded | `\|AR:20\|LC:+1` | **9** |
-| obs columns, s2 space-separated | `AR:20 LC:+1` | **7** |
-| numel, full digits | `\|n=23592960` | **11** |
-| numel, K-suffix | `\|N:23M` | **6** |
-| per-row mag cap (arm A) | `\|m=0.004588` | **10** |
-| mag cap, 2 significant figures | `\|M:0.0046` | **8** |
-| full row, current | | **44** |
-| full row, K-compact hybrid | | **37** |
+All figures below are **per-row tokens** on the arm-B row `1|L0|f1|n=81920|ar=0.04|lc=+0.06` (35.8 tok/row mean, linguistic):
 
-Structural conclusion the reviewer anticipated and the data now confirms:
+| Field group | Rendering | Tokens | % of row |
+|---|---|---|---|
+| id + layer + fam | `1\|L0\|f1` | ~6 | ~17% |
+| numel | `\|n=81920` | ~6 | ~17% |
+| obs columns (ar+lc) | `\|ar=0.04\|lc=+0.06` | ~15 | ~42% |
+| separators/syntax | | remainder | ~24% |
 
-- **The observation columns are ~34–42% of row cost, not the majority.** The structural fields (param_id, layer, family, numel, per-row bounds) are the hog — `numel` alone ≈ 11 tok/row (~25%).
-- **The current schema is already near the floor at full field precision.** Best measured hybrid ≈ −16%/row; with separators optimized ≈ −20–25% catalog-wide. The "10–30× compression" figure was wrong at this level — it priced the *information*, not the rendered surface.
-- The deeper lever is not obs-column coding — it is **field precision and the non-observation transaction** (instructions, legend, history, output schema), consistent with the reviewer's Amdahl analysis.
+So, **of a row**: observation columns ≈ 34–42%, structural identity fields ≈ 34–45%, syntax ≈ 20–25%. **Of the whole prompt**: catalog rows ≈ 8.8k of ~9.5k serialized tokens ≈ **93%** (legends + instructions + arm context + history ≈ 600 tok). The earlier inconsistent figure ("structural fields 85–90% of catalog") conflated row-share with prompt-share; corrected accounting above: within the catalog, obs columns ≈ 40%, structure ≈ 60%; the catalog itself is ≈ 93% of the prompt.
 
-## 3. Design questions the measurement forces (for the reviewer)
+## 3. Consequences and reviewer rulings applied
 
-1. **numel precision** — `23592960` (11 tok) vs `23M` (6). numel is proposer-visible scale metadata; exact-value parity would be violated by K-suffix. Is a preregistered precision reduction (exact → order-of-magnitude) acceptable for this field?
-2. **mag-cap precision** — `0.004588` (10 tok, arm A per-row) vs `0.0045` floor-rounded 2sf (8). Floor-rounding stays inside the legal bound but *reduces* the advertised surface; acceptable?
-3. **numel at all?** — its role is edit-count feasibility (`count ≤ numel`). If the validator already enforces it, the proposer may only need coarse scale. Removal is a bigger cut than suffixing — also a field-parity violation requiring spec amendment.
-4. **The 78–79% proposal-stage share** decomposes: catalog ≈ 8.8–8.9k tok of the ~9.4–9.5k serialized prompt ≈ **93% of the surface**. Instructions + arm context + history are only ~600 tok. So "compress the channel" ≈ compress the catalog; the catalog is ~85–90% structural fields.
+- Precision reductions (numel→`23M`, mag→2sf, numel removal) are **information-ablation experiments, not channel candidates** — they change what the proposer knows, so they cannot run inside the information-matched epoch (HZN-IR-08 d8, resolving my earlier §3 questions 1–3).
+- **Eligibility is against the L baseline**, not the previous best alternative: s3 qualifies on tokens (−16/−19%), parity (canonical equality), and must still pass C1–C4 before trajectories (HZN-IR-08 d7 fix — the earlier "must beat S1" clause would have excluded S1 itself).
+- Separator/field-name optimization was explicitly sanctioned with complete semantics retained — that is exactly what s3 is.
+- Realistic ceiling at full precision: **≈ −20% catalog ≈ −18% of the serialized prompt.** The 10–30× figure remains a documented negative result.
+- The addressable-store arm and KV-cache/static-prefix reuse (with post-edit invalidation) become the more promising structural directions — filed as the deferred candidates; the catalog's static-vs-dynamic split (identity/bounds vs ar/lc/freshness) is the formal hook.
 
-## 4. Honest implications for HZN-OC-01
+## 4. What remains before campaign authorization
 
-- The first S-II draft is dominated (S1 beats it on tokens). The encoding registry should evolve by measured token count — next candidates: space-separated symbolic (`O 17 L5 F7 N23M AR82 LC-3`), precision-relaxed structural variants pending §3 answers.
-- The interesting scientific question shifts slightly: not "can we compress the evidence 10×" but "does a ~20% channel-cost reduction + identical evidence change anything?" — and, deeper, "is in-context catalog completeness needed at all" (the addressable-store arm now looks *more* attractive relative to compression than it did).
-- Preflight gate for campaign design holds: an S-level must (a) preserve field parity or have each precision loss preregistered, (b) beat S1 on measured tokens, (c) pass C1–C4 comprehension, before any trajectory runs.
+- Comprehension gate operational run: ≥60 C4 probes/encoding across ≥3 independently generated campaign-realistic catalogs, zero failures, plus C1–C3 at differential thresholds (95/90/90) — harness ready, counts preregistered (`MIN_PROBES`).
+- Paired within-seed sensitivity analysis over plausible effect sizes (ε/δ set independently of Gate 1.2 observations).
+- Budget accounting split: in-loop compute vs fixed final-eval allowance vs overshoot vs wall time.
+- Provenance threading: wire `audit_record` into the live observation path so collected stats carry the full `{base, edit-chain, context, config}` binding.
 
 ## 5. Artifacts
 
-- `results/gate1_3_channel_profile.json` — full per-level profile + parity results
-- `results/_profile_channels.py` — deterministic reproduction (model + obs pipeline, same as campaign)
-- `src/jarvis_research/gate1_3_channel.py`, `gate1_3_comprehension.py`, `tests/test_gate1_3_channel.py`
+- `results/gate1_3_channel_profile.json` — per-level profile + parity on the real catalogs
+- `results/_profile_channels.py` — deterministic reproduction
+- `src/jarvis_research/gate1_3_channel.py` (canonical parity, audit, s3), `gate1_3_comprehension.py` (fail-closed, strict grading, realistic catalogs), `tests/test_gate1_3_channel.py` (47 tests incl. the HZN-IR-08 regression set)
