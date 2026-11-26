@@ -171,3 +171,22 @@ Accuracy is within noise at every cell — compression costs nothing in retrieva
 - **Ambiguity refusal: absent at every scale and prompt design** — must be enforced mechanically at the execution gate (it is).
 - **Compression: no incremental advantage post-retrieval.**
 - No weight modifications were performed or are implied by any of the above.
+
+
+## 9. HZN-IR-11 preregistration — candidate-conditioned reasoning (written before GPU execution)
+
+**Benchmark**: rule-conditioned candidate selection tasks (`gate1_4_benchmark.py`). Correct answer is mechanical application of a stated threshold rule — independent of magnitude ranking and of any retrieval heuristic. Controlled construction: magnitude-truth agreement ≈11% of tasks (the T1 ranking-only ceiling), abstention (answer=none) ≈42% of tasks. 12 tasks, 2 per family (misleading_magnitude, conflicting, insufficient, tied, missing_obs, multiple_plausible), fixed seeds. Candidates labeled A–E; no counting or long-id transcription required.
+
+**Conditions**: T0 full 248-row catalog (candidates embedded as rows, answer by id — undelegated baseline), T1 deterministic magnitude ranking (no model), T2 model over retrieved labeled candidates, T3 model over random size-matched candidate subsets, T4 model over T2's candidates with observation correspondence shuffled, T5 correct candidate + one distractor (diagnostic ceiling).
+
+**Acceptance thresholds (preregistered)**:
+- Primary: T2 overall accuracy − T1 overall accuracy ≥ 0.25. If the gap is smaller, the model adds compute, not reasoning.
+- Secondary: T2 accuracy conditional on correct candidate present ≥ 0.70.
+- Evidence usage: T2 accuracy − T4 accuracy ≥ 0.15 (if answers don't move when evidence is scrambled, observations aren't being used).
+- Retrieval relevance: T2 conditional accuracy > T3 conditional accuracy.
+- T5 diagnostic: if T5 accuracy < 0.60, the rule-following task format itself is beyond the model regardless of retrieval — reported as such.
+- ε = δ = 0.05 preserved for the intervention evaluation protocol (unchanged; this sentinel is inference-only and does not gate interventions).
+
+**Budget**: ≤120 generations, ≤20 minutes GPU. Estimated 60 generations (12 tasks × 5 model conditions), T0 dominating wall time. No expansion without reviewer disposition.
+
+**Stop condition**: if T2 cannot outperform T1 on independently grounded tasks, report the negative result and return for architectural review.

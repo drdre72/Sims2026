@@ -705,3 +705,97 @@ class TestManifestValidation(unittest.TestCase):
                   "obsolete_field": 123}
         cur = {"model_revision": "abc", "harness_version": "v1"}
         self.assertEqual(validate_resume_manifest(stored, cur), [])
+
+
+from jarvis_research.gate1_4_benchmark import (
+    grade_task, magnitude_answer, make_task, render_task, FAMILIES)
+import random as _random
+
+
+class TestReasoningBenchmarkIR11(unittest.TestCase):
+    def test_conj_active_unique(self):
+        cands = [
+            {"label": "A", "ar": 0.8, "lc": -0.5, "obs_available": True},
+            {"label": "B", "ar": 0.9, "lc": 0.5, "obs_available": True},
+            {"label": "C", "ar": 0.2, "lc": 1.5, "obs_available": True},
+        ]
+        t = grade_task("conj_active", cands)
+        self.assertEqual(t["answer"], "B")  # tie-break: highest ar
+
+    def test_conj_strong_unique(self):
+        cands = [
+            {"label": "A", "ar": 0.8, "lc": -0.5, "obs_available": True},
+            {"label": "B", "ar": 0.9, "lc": 0.6, "obs_available": True},
+        ]
+        t = grade_task("conj_strong", cands)
+        self.assertEqual(t["answer"], "B")  # tie-break: largest |lc|
+
+    def test_avoid_negative_excludes_negative(self):
+        cands = [
+            {"label": "A", "ar": 0.9, "lc": -1.5, "obs_available": True},
+            {"label": "B", "ar": 0.9, "lc": 0.4, "obs_available": True},
+        ]
+        self.assertEqual(grade_task("avoid_negative", cands)["answer"],
+                         "B")
+
+    def test_missing_obs_never_qualify(self):
+        cands = [
+            {"label": "A", "ar": 0.9, "lc": 1.5, "obs_available": False},
+            {"label": "B", "ar": 0.7, "lc": 0.5, "obs_available": True},
+        ]
+        self.assertEqual(grade_task("conj_active", cands)["answer"], "B")
+
+    def test_tie_yields_none(self):
+        cands = [
+            {"label": "A", "ar": 0.8, "lc": 0.5, "obs_available": True},
+            {"label": "B", "ar": 0.8, "lc": 0.5, "obs_available": True},
+        ]
+        self.assertEqual(grade_task("conj_active", cands)["answer"],
+                         "none")
+
+    def test_none_qualify(self):
+        cands = [
+            {"label": "A", "ar": 0.1, "lc": 1.5, "obs_available": True},
+            {"label": "B", "ar": 0.9, "lc": -0.1, "obs_available": True},
+        ]
+        self.assertEqual(grade_task("conj_active", cands)["answer"],
+                         "none")
+
+    def test_magnitude_baseline(self):
+        cands = [
+            {"label": "A", "ar": 0.1, "lc": -1.5, "obs_available": True},
+            {"label": "B", "ar": 0.9, "lc": 0.4, "obs_available": True},
+        ]
+        self.assertEqual(magnitude_answer(cands), "A")
+
+    def test_battery_distribution_invariants(self):
+        # construction must keep magnitude-truth agreement low and
+        # produce a substantial abstention fraction
+        agree = none_ct = total = 0
+        for seed in range(120):
+            rng = _random.Random(seed)
+            t = make_task(rng, FAMILIES[seed % len(FAMILIES)])
+            total += 1
+            if t["truth"]["answer"] == t["magnitude_answer"]:
+                agree += 1
+            if t["truth"]["answer"] == "none":
+                none_ct += 1
+        self.assertLess(agree / total, 0.30)
+        self.assertGreater(none_ct / total, 0.25)
+
+    def test_render_includes_all_candidates(self):
+        t = make_task(_random.Random(0), "misleading_magnitude")
+        txt = render_task(t)
+        for c in t["candidates"]:
+            self.assertIn(f"candidate {c['label']}:", txt)
+        self.assertIn("Reply with ONLY", txt)
+
+    def test_labels_randomized_no_position_leak(self):
+        # the correct answer must not cluster on one label
+        counts = {}
+        for seed in range(200):
+            t = make_task(_random.Random(seed), "misleading_magnitude")
+            counts[t["truth"]["answer"]] =                 counts.get(t["truth"]["answer"], 0) + 1
+        for label, n in counts.items():
+            if label != "none":
+                self.assertLess(n / 200, 0.45, label)
