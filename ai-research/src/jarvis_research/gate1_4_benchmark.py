@@ -206,9 +206,9 @@ FAMILIES = ("misleading_magnitude", "conflicting", "insufficient",
             "tied", "missing_obs", "multiple_plausible")
 
 
-def render_task(task):
-    """The model-facing task text: rule + labeled candidates + output
-    instruction. Values rendered at exactly the graded precision."""
+def render_task_body(task):
+    """Rule + labeled candidates at exactly the graded precision, without
+    an output contract. Shared by reasoning and mirror renderers."""
     rule = RULES[task["rule_key"]]
     text = rule["text"].format(ar_thr=rule["ar_thr"], lc_thr=rule["lc_thr"])
     lines = []
@@ -219,6 +219,11 @@ def render_task(task):
         else:
             lines.append(f"candidate {c['label']}: no observations "
                          f"available")
-    q = (f"Rule: {text}\n\n" + "\n".join(lines) +
-         "\n\nReply with ONLY the candidate letter, or the word none.")
-    return q
+    return f"Rule: {text}\n\n" + "\n".join(lines)
+
+
+def render_task(task):
+    """The model-facing task text: rule + labeled candidates + output
+    instruction. Values rendered at exactly the graded precision."""
+    return (render_task_body(task) +
+            "\n\nReply with ONLY the candidate letter, or the word none.")
