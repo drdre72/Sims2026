@@ -1,0 +1,110 @@
+{
+  "A": {
+    "rows": 192,
+    "uniform_mag": false,
+    "parity": {
+      "linguistic": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s1": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s2": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s3": {
+        "ok": true,
+        "n_failures": 0
+      }
+    },
+    "profile": {
+      "linguistic": {
+        "tokens": 8801,
+        "chars": 9723,
+        "tokens_per_row": 45.838541666666664,
+        "token_ratio_vs_linguistic": 1.0
+      },
+      "s1": {
+        "tokens": 7811,
+        "chars": 9723,
+        "tokens_per_row": 40.682291666666664,
+        "token_ratio_vs_linguistic": 0.8875127826383366
+      },
+      "s2": {
+        "tokens": 8488,
+        "chars": 9491,
+        "tokens_per_row": 44.208333333333336,
+        "token_ratio_vs_linguistic": 0.9644358595614134
+      },
+      "s3": {
+        "tokens": 7386,
+        "chars": 7884,
+        "tokens_per_row": 38.46875,
+        "token_ratio_vs_linguistic": 0.8392228155891376
+      }
+    },
+    "sample_rows": {
+      "linguistic": "0|L11|f7|n=23592960|m=0.004303|ar=0.20|lc=-0.02",
+      "s1": "0 L11 f7 n=23592960 m=0.004303 ar=0.20 lc=-0.02",
+      "s2": "O:0|L:11|F:7|N:23592960|M:0.004303|AR:20|LC:-2",
+      "s3": "0|11|f7|23592960|0.004303|-|0.20|-0.02"
+    }
+  },
+  "B": {
+    "rows": 248,
+    "uniform_mag": true,
+    "parity": {
+      "linguistic": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s1": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s2": {
+        "ok": true,
+        "n_failures": 0
+      },
+      "s3": {
+        "ok": true,
+        "n_failures": 0
+      }
+    },
+    "profile": {
+      "linguistic": {
+        "tokens": 8877,
+        "chars": 9639,
+        "tokens_per_row": 35.79435483870968,
+        "token_ratio_vs_linguistic": 1.0
+      },
+      "s1": {
+        "tokens": 7637,
+        "chars": 9639,
+        "tokens_per_row": 30.794354838709676,
+        "token_ratio_vs_linguistic": 0.8603131688633547
+      },
+      "s2": {
+        "tokens": 8457,
+        "chars": 9375,
+        "tokens_per_row": 34.100806451612904,
+        "token_ratio_vs_linguistic": 0.952686718485975
+      },
+      "s3": {
+        "tokens": 7156,
+        "chars": 7438,
+        "tokens_per_row": 28.85483870967742,
+        "token_ratio_vs_linguistic": 0.806128196462769
+      }
+    },
+    "sample_rows": {
+      "linguistic": "0|L0|f0|n=81920|ar=1.00|lc=+0.02",
+      "s1": "0 L0 f0 n=81920 ar=1.00 lc=+0.02",
+      "s2": "O:0|L:0|F:0|N:81920|AR:100|LC:+2",
+      "s3": "0|0|f0|81920|1.00|+0.02"
+    }
+  }
+}

@@ -1,0 +1,757 @@
+{
+  "eps": 0.05,
+  "delta": 0.05,
+  "alpha": 0.05,
+  "n_sims": 20000,
+  "g12_within_seed_sd": 0.1265,
+  "g12_within_seed_sd_ci95": [
+    0.0659,
+    0.7954
+  ],
+  "g12_armB_A1_minus_A2": [
+    0.202,
+    0.017,
+    -0.04
+  ],
+  "note": "eps/delta are preregistered meaningfulness margins, independent of Gate 1.2 observations (HZN-IR-07 R2); the observed diffs only sanity-check the plausible range. Paired within-seed analysis, per R5. The within-seed sd is itself uncertain (df=2) \u2014 the seed recommendation must hold across its CI, not just its point estimate.",
+  "min_seeds_for_80pct": {
+    "correspondence": {
+      "mu=0.08,sigma=0.127": null,
+      "mu=0.08,sigma=0.08": null,
+      "mu=0.08,sigma=0.2": null,
+      "mu=0.12,sigma=0.127": 22,
+      "mu=0.12,sigma=0.08": 10,
+      "mu=0.12,sigma=0.2": null,
+      "mu=0.2,sigma=0.127": 7,
+      "mu=0.2,sigma=0.08": 4,
+      "mu=0.2,sigma=0.2": 13
+    },
+    "noninferiority_at_equality": {
+      "sigma=0.127": null,
+      "sigma=0.08": 18,
+      "sigma=0.2": null
+    }
+  },
+  "table": [
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.0,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.006,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.002,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.001,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 0.0,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 0.0,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 0.0,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.02,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.018,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.011,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.005,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 0.003,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 0.002,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 0.001,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.05,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 0.054,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.08,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.118,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.173,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.229,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 0.291,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 0.378,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 0.489,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.12,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.274,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.491,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.66,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 0.817,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 0.925,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 0.982,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.08,
+      "true_effect": 0.2,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.67,
+          "power_noninferiority": 0.187
+        },
+        "5": {
+          "power_correspondence": 0.959,
+          "power_noninferiority": 0.317
+        },
+        "7": {
+          "power_correspondence": 0.996,
+          "power_noninferiority": 0.421
+        },
+        "10": {
+          "power_correspondence": 1.0,
+          "power_noninferiority": 0.573
+        },
+        "14": {
+          "power_correspondence": 1.0,
+          "power_noninferiority": 0.724
+        },
+        "20": {
+          "power_correspondence": 1.0,
+          "power_noninferiority": 0.849
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.0,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.015,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.008,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.005,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.002,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.002,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 0.001,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.02,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.024,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.018,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.014,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.01,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.006,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 0.004,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.05,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.051,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.053,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.048,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.08,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.087,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.115,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.139,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.172,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.211,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 0.266,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.12,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.165,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.269,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.364,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.481,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.626,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 0.769,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.127,
+      "true_effect": 0.2,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.396,
+          "power_noninferiority": 0.125
+        },
+        "5": {
+          "power_correspondence": 0.7,
+          "power_noninferiority": 0.183
+        },
+        "7": {
+          "power_correspondence": 0.867,
+          "power_noninferiority": 0.24
+        },
+        "10": {
+          "power_correspondence": 0.965,
+          "power_noninferiority": 0.316
+        },
+        "14": {
+          "power_correspondence": 0.995,
+          "power_noninferiority": 0.397
+        },
+        "20": {
+          "power_correspondence": 1.0,
+          "power_noninferiority": 0.522
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.0,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.019,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.012,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.007,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.004,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.002,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.001,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.02,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.031,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.021,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.017,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.012,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.009,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.006,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.05,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.052,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.052,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.051,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.048,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.052,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.08,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.08,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.102,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.12,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.143,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.174,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.212,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.12,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.142,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.222,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.291,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.385,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.507,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.637,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.15,
+      "true_effect": 0.2,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.321,
+          "power_noninferiority": 0.111
+        },
+        "5": {
+          "power_correspondence": 0.578,
+          "power_noninferiority": 0.155
+        },
+        "7": {
+          "power_correspondence": 0.754,
+          "power_noninferiority": 0.192
+        },
+        "10": {
+          "power_correspondence": 0.894,
+          "power_noninferiority": 0.255
+        },
+        "14": {
+          "power_correspondence": 0.969,
+          "power_noninferiority": 0.325
+        },
+        "20": {
+          "power_correspondence": 0.996,
+          "power_noninferiority": 0.414
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.0,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.025,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.019,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.011,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.009,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.006,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.003,
+          "power_noninferiority": 0.284
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.02,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.031,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.026,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.023,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.019,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.015,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.01,
+          "power_noninferiority": 0.284
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.05,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.047,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.05,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.049,
+          "power_noninferiority": 0.284
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.08,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.073,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.087,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.102,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.114,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.14,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.159,
+          "power_noninferiority": 0.284
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.12,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.118,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.167,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.204,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.272,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.338,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.449,
+          "power_noninferiority": 0.284
+        }
+      }
+    },
+    {
+      "sigma_within": 0.2,
+      "true_effect": 0.2,
+      "cells": {
+        "3": {
+          "power_correspondence": 0.229,
+          "power_noninferiority": 0.092
+        },
+        "5": {
+          "power_correspondence": 0.397,
+          "power_noninferiority": 0.12
+        },
+        "7": {
+          "power_correspondence": 0.542,
+          "power_noninferiority": 0.15
+        },
+        "10": {
+          "power_correspondence": 0.7,
+          "power_noninferiority": 0.183
+        },
+        "14": {
+          "power_correspondence": 0.845,
+          "power_noninferiority": 0.225
+        },
+        "20": {
+          "power_correspondence": 0.944,
+          "power_noninferiority": 0.284
+        }
+      }
+    }
+  ]
+}

@@ -114,3 +114,60 @@ Corrected harness (F1–F7 applied), linguistic encoding, nested catalogs 16/32/
 **Cost per probe at 248:** full catalog ≈8.5k input tokens / ~22s; store-retrieved subset ≈1.3k tokens / <1s — **6.4× fewer tokens, ~20× faster, and ~2× the unique-target accuracy.**
 
 **Verdict on the IR-09 question:** grounding failure is dominated by *context scale* — it onsets sharply between 64 and 128 rows, while identifier binding (copy) is solved and semantic selection (R3) fails independently. Reliable internal addressing without weight modification is demonstrated: a deterministic store + narrow context restores ~90% grounding on the exact probes the full catalog fails. The residual ~10–30% subset-condition misses and the universal ambiguity-refusal failure are the open item for the success criterion's "no ambiguous or invalid address accepted" clause.
+
+## 8. HZN-IR-10 — deterministic grounding and semantic isolation
+
+### D1/D2 — addressing substrate (CPU-verified, 72/72 tests)
+
+The store now rejects duplicate param_ids, returns copies only, binds every verdict to catalog sha256+epoch, and always resolves against the complete catalog. `gate1_3_executor.validate_for_execution` is the sole execution path: typed refusals (malformed/unbound/mismatched/stale/missing/ambiguous), no fallback, and exact agreement with an independent loop-based reference implementation over 700 randomized cases. Zero refused addresses reach the mock executor. The gate cannot catch valid-but-semantically-wrong selection — measured separately below, exactly as the reviewer predicted mattered.
+
+### D4 — paired grounding sentinel (fixed prompt, paired targets, dual truth)
+
+| rows | full catalog | retrieved | oracle |
+|---|---|---|---|
+| 64 | 8/16 | **16/16** | 16/16 |
+| 128 | 6/16 | **16/16** | 15/16 |
+| 248 | 4/16 | **14/16** | 13/16 |
+
+Unique-target lookup, identical paired targets per condition. The retrieval advantage survives proper pairing — retrieved ≈ oracle at every scale, ~5.6× fewer tokens (0.9k vs 5.1k), ~10× faster. **Ambiguity refusal remains 0 even with the non-contradictory prompt** — a model capability gap, not a prompt artifact. Residual retrieved-condition errors are dominated by invalid picks on ambiguous targets — which the store's typed `ambiguous` verdict refuses mechanically at execution time.
+
+### Direct-ID semantic selection (paired answerable cases, 32 vs 248)
+
+The R3 critique was correct — verification: at 248 rows the descriptor space is pigeonhole-degenerate (224 possible (family,layer) pairs for 248 rows; both seeds' max-|lc| winners sat in ambiguous pairs or rendered ties). R3-at-248 measured nothing; the signed-vs-abs claim in §7 is retracted. The decisive replacement experiment — same answerable cases, direct id selection: **71% at 32 rows, 33% at 248**. At 106:248 the model answered the signed-max row for a largest-|lc| question. Every error in 58 probes was wrong-but-valid id — the output contract is never violated; selection quality is the entire bottleneck.
+
+**Multi-row transcription critique confirmed**: ordinal copy in a 32-row context is 4/16 — all correct answers were row 1; rows 9/17/31 are 0/12 (wrong ids, echoed positions, off-by-one). R2's perfect single-row score does not transfer.
+
+### D3 — semantic arithmetic isolation at micro scale (648 probes)
+
+| qtype | 2 rows | 4 rows | 8 rows |
+|---|---|---|---|
+| largest lc | 33/36 | 25/36 | 25/36 |
+| smallest lc | 35/36 | 31/36 | 27/36 |
+| largest \|lc\| | 34/36 | **12/36** | 10/36 |
+| largest alc (explicit column) | 35/36 | **10/36** | 11/36 |
+| largest ar | 34/36 | **36/36** | 28/36 |
+| smallest ar | 36/36 | 35/36 | 31/36 |
+
+The failure primitive is isolated: **multi-item comparison over mixed-sign decimals**. Two rows — the model does absolute value fine (34/36). Four rows — |lc| collapses while positive-only comparison (ar) is perfect, and even the printed alc column doesn't help. Error instances are consistent with signed-max substitution: `lc=[-2.47,-0.19,1.9,-1.97]` → picks the +1.9 row over the −2.47 row. Not notation, not scanning, not the abs operation itself — the broken primitive is magnitude comparison when signs are mixed. This compounding failure at catalog scale explains the semantic-selection bottleneck; retrieval cannot fix it because the comparison happens *inside* the retrieved subset.
+
+### D5 — compression qualification (paired retrieval probes, identical targets/subsets)
+
+| rows | cond | linguistic | s1 |
+|---|---|---|---|
+| 64 | retrieved | 24/32 | 22/32 |
+| 64 | oracle | 23/32 | 23/32 |
+| 128 | retrieved | 24/32 | 24/32 |
+| 128 | oracle | 23/32 | 22/32 |
+| 248 | retrieved | 22/32 | 23/32 |
+| 248 | oracle | 20/32 | 17/32 |
+
+Accuracy is within noise at every cell — compression costs nothing in retrieval subsets. But the token advantage also shrinks to 1.11–1.15× (vs 6.4× retrieval itself delivers), because subset prompts are dominated by per-row content. **Compression provides no meaningful incremental advantage after retrieval has already reduced context.** The channel-compression motivation is largely subsumed by the addressing architecture; s1 remains viable but marginal. s3 stays suspended.
+
+### IR-10 outcome summary
+
+- **Addressing substrate: trustworthy** — deterministic, immutable, bound, executor-gated, reference-verified.
+- **Retrieval advantage: confirmed** under paired conditions with a repaired prompt (retrieved ≈ oracle ≫ full, ~3× accuracy at every scale).
+- **Semantic-selection bottleneck: characterized** — mixed-sign multi-item numerical comparison fails even in 4-row contexts; signed-max substitution observed directly. This is the binding constraint on intervention quality and it is a MODEL capability limitation, not an architectural one. Retrieval mitigates lookup, not selection.
+- **Ambiguity refusal: absent at every scale and prompt design** — must be enforced mechanically at the execution gate (it is).
+- **Compression: no incremental advantage post-retrieval.**
+- No weight modifications were performed or are implied by any of the above.

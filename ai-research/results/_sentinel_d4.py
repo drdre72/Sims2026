@@ -20,7 +20,8 @@ sys.path.insert(0, r"C:\Users\Shadow\Documents\Sims2026\ai-research\src")
 from pathlib import Path
 
 AI_RESEARCH = Path(r"C:\Users\Shadow\Documents\Sims2026\ai-research")
-OUT = AI_RESEARCH / "results" / "gate1_3_sentinel_d4.json"
+LEVEL = sys.argv[1] if len(sys.argv) > 1 else "linguistic"
+OUT = AI_RESEARCH / "results" / f"gate1_3_sentinel_d4_{LEVEL}.json"
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -33,11 +34,11 @@ from collections import defaultdict
 
 SEEDS = [104, 106]
 SIZES = [64, 128, 248]
-CONDS = ["full", "retrieved", "oracle"]
+CONDS = ["full", "retrieved", "oracle"] if (len(sys.argv) < 2 or sys.argv[1] == "linguistic") else ["retrieved", "oracle"]
 N_UNIQUE = 8
 N_AMBIG = 4
 N_MISS = 4
-HARNESS_VERSION = "sentinel-d4-1"
+HARNESS_VERSION = "sentinel-d4-1-" + (sys.argv[1] if len(sys.argv) > 1 else "linguistic")
 SYSTEM = ("You are reading an observation catalog from a self-editing "
           "experiment. Answer each probe precisely. Reply with ONLY the "
           "requested format — no reasoning, no extra text.")
@@ -145,7 +146,7 @@ def run_size(model, tok, cat_full, seed, size):
     out = {}
 
     full_ctx = encode_catalog_text(cat, fam_code, True, True,
-                                   "linguistic", arm_mag=(-0.005, 0.005),
+                                   LEVEL, arm_mag=(-0.005, 0.005),
                                    arm_count=(1, 512))
     for kind, pair in targets:
         fam, lay = pair
@@ -156,7 +157,7 @@ def run_size(model, tok, cat_full, seed, size):
                 ctx, sub = full_ctx, cat
             elif cond == "retrieved":
                 sub = store.find(family=fam)
-                ctx = store.render_subset(sub, fam_code)
+                ctx = store.render_subset(sub, fam_code, level=LEVEL)
             else:
                 k = max(1, len(store.find(family=fam)))
                 tgt = [r for r in cat
@@ -166,7 +167,7 @@ def run_size(model, tok, cat_full, seed, size):
                              key=lambda r: r["param_id"])
                 ctx = store.render_subset(
                     [canonical_record(r, True, (-0.005, 0.005))
-                     for r in sub], fam_code)
+                     for r in sub], fam_code, level=LEVEL)
             ctx_rows = cat if cond == "full" else sub
             truth_sub, kind_sub = truth_in(ctx_rows, pair)
             resp, n_in, lat = gen_text(model, tok, ctx + "\n\n" + q)
@@ -226,7 +227,7 @@ def main():
                        if p["verdict"] == "correct")
             print(f"[{key}] {n_ok}/{len(probes)} correct "
                   f"{time.perf_counter() - t0:.0f}s", flush=True)
-    print("done -> results/gate1_3_sentinel_d4.json")
+    print(f"done -> {OUT}")
 
 
 if __name__ == "__main__":
