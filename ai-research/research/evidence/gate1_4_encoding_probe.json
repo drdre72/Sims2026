@@ -1,0 +1,251 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "encoding-probe-1",
+ "manifest": {
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "harness_version": "encoding-probe-1",
+  "n_tasks": 12
+ },
+ "cells": {
+  "task0:T2sym": {
+   "task": 0,
+   "family": "misleading_magnitude",
+   "cond": "T2sym",
+   "truth": "B",
+   "response": "B\n",
+   "verdict": "correct",
+   "input_tokens": 170,
+   "latency_s": 0.82
+  },
+  "task0:T2pos": {
+   "task": 0,
+   "family": "misleading_magnitude",
+   "cond": "T2pos",
+   "truth": "B",
+   "response": "B\n",
+   "verdict": "correct",
+   "input_tokens": 156,
+   "latency_s": 0.43
+  },
+  "task1:T2sym": {
+   "task": 1,
+   "family": "conflicting",
+   "cond": "T2sym",
+   "truth": "E",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 170,
+   "latency_s": 0.37
+  },
+  "task1:T2pos": {
+   "task": 1,
+   "family": "conflicting",
+   "cond": "T2pos",
+   "truth": "E",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 156,
+   "latency_s": 0.37
+  },
+  "task2:T2sym": {
+   "task": 2,
+   "family": "insufficient",
+   "cond": "T2sym",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 170,
+   "latency_s": 0.45
+  },
+  "task2:T2pos": {
+   "task": 2,
+   "family": "insufficient",
+   "cond": "T2pos",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 156,
+   "latency_s": 0.5
+  },
+  "task3:T2sym": {
+   "task": 3,
+   "family": "tied",
+   "cond": "T2sym",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 170,
+   "latency_s": 0.42
+  },
+  "task3:T2pos": {
+   "task": 3,
+   "family": "tied",
+   "cond": "T2pos",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 156,
+   "latency_s": 0.41
+  },
+  "task4:T2sym": {
+   "task": 4,
+   "family": "missing_obs",
+   "cond": "T2sym",
+   "truth": "B",
+   "response": "B\n",
+   "verdict": "correct",
+   "input_tokens": 164,
+   "latency_s": 0.4
+  },
+  "task4:T2pos": {
+   "task": 4,
+   "family": "missing_obs",
+   "cond": "T2pos",
+   "truth": "B",
+   "response": "B\n",
+   "verdict": "correct",
+   "input_tokens": 150,
+   "latency_s": 0.39
+  },
+  "task5:T2sym": {
+   "task": 5,
+   "family": "multiple_plausible",
+   "cond": "T2sym",
+   "truth": "A",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 170,
+   "latency_s": 0.4
+  },
+  "task5:T2pos": {
+   "task": 5,
+   "family": "multiple_plausible",
+   "cond": "T2pos",
+   "truth": "A",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 156,
+   "latency_s": 0.39
+  },
+  "task6:T2sym": {
+   "task": 6,
+   "family": "misleading_magnitude",
+   "cond": "T2sym",
+   "truth": "E",
+   "response": "E\n",
+   "verdict": "correct",
+   "input_tokens": 170,
+   "latency_s": 0.41
+  },
+  "task6:T2pos": {
+   "task": 6,
+   "family": "misleading_magnitude",
+   "cond": "T2pos",
+   "truth": "E",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 156,
+   "latency_s": 0.41
+  },
+  "task7:T2sym": {
+   "task": 7,
+   "family": "conflicting",
+   "cond": "T2sym",
+   "truth": "D",
+   "response": "D\n",
+   "verdict": "correct",
+   "input_tokens": 170,
+   "latency_s": 0.37
+  },
+  "task7:T2pos": {
+   "task": 7,
+   "family": "conflicting",
+   "cond": "T2pos",
+   "truth": "D",
+   "response": "B\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 156,
+   "latency_s": 0.39
+  },
+  "task8:T2sym": {
+   "task": 8,
+   "family": "insufficient",
+   "cond": "T2sym",
+   "truth": "none",
+   "response": "D\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 170,
+   "latency_s": 0.39
+  },
+  "task8:T2pos": {
+   "task": 8,
+   "family": "insufficient",
+   "cond": "T2pos",
+   "truth": "none",
+   "response": "D\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 156,
+   "latency_s": 0.42
+  },
+  "task9:T2sym": {
+   "task": 9,
+   "family": "tied",
+   "cond": "T2sym",
+   "truth": "none",
+   "response": "B\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 170,
+   "latency_s": 0.37
+  },
+  "task9:T2pos": {
+   "task": 9,
+   "family": "tied",
+   "cond": "T2pos",
+   "truth": "none",
+   "response": "B\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 156,
+   "latency_s": 0.4
+  },
+  "task10:T2sym": {
+   "task": 10,
+   "family": "missing_obs",
+   "cond": "T2sym",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 161,
+   "latency_s": 0.4
+  },
+  "task10:T2pos": {
+   "task": 10,
+   "family": "missing_obs",
+   "cond": "T2pos",
+   "truth": "none",
+   "response": "C\n",
+   "verdict": "invalid_pick",
+   "input_tokens": 147,
+   "latency_s": 0.39
+  },
+  "task11:T2sym": {
+   "task": 11,
+   "family": "multiple_plausible",
+   "cond": "T2sym",
+   "truth": "A",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 173,
+   "latency_s": 0.39
+  },
+  "task11:T2pos": {
+   "task": 11,
+   "family": "multiple_plausible",
+   "cond": "T2pos",
+   "truth": "A",
+   "response": "C\n",
+   "verdict": "valid_but_incorrect",
+   "input_tokens": 159,
+   "latency_s": 0.36
+  }
+ }
+}

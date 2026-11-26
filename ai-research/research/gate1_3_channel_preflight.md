@@ -232,3 +232,16 @@ Removing the signed column does **not** rescue performance (V3 ≈ V1), and the 
 ### Interpretation for the three-domain architecture
 
 The division of labor is now empirically grounded: deterministic retrieval + ranking turns a 0% task into a 58% task, and the model's 58% is *real reasoning* — it tracks evidence, applies conjunctive rules, and is not explainable by magnitude endorsement (T1 = 8%). The residual gap to T5's perfect score is multi-candidate evaluation noise plus weak abstention — the next research targets. Negative-result stop condition NOT triggered: candidate-conditioned reasoning clearly outperforms ranking-only.
+
+
+## 11. Encoding probe — is the English rule prose unnecessary translation? (24 generations, inside sentinel budget)
+
+Same 12 tasks, T2 condition, three renderings paired: English (T2, from the sentinel), symbolic rule + labeled data (T2sym), symbolic rule + positional data (T2pos).
+
+| rendering | accuracy | mean input tokens |
+|---|---|---|
+| T2 English | 7/12 | 198 |
+| T2sym symbolic | 4/12 | 170 (-14%) |
+| T2pos positional | 2/12 | 156 (-21%) |
+
+Findings: (1) stripping English costs 3/12 accuracy for only 14% token savings — fixed chat-template/output-contract overhead dominates at this scale. (2) Regressions hit exactly the tasks English got right, including both correct-abstention tasks (8, 10) — the rule prose is load-bearing for the none-qualify branch especially. (3) Responses are IDENTICAL across encodings on most tasks, including identical wrong letters on abstention failures — the model parses symbolic notation fine; its failures are rule-application failures, not notation failures. (4) Positional data (no field names) degrades further — `ar`/`lc` are doing real binding work between rule variables and data columns. Conclusion: at reasoning-prompt scale the English is not unnecessary translation — it is the semantic interface. Data-encoding compression (already proven accuracy-neutral in IR-10) remains available for large catalog contexts where repetition dominates, but instruction prose earns its tokens.
