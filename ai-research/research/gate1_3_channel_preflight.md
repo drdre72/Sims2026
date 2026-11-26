@@ -430,3 +430,47 @@ M3 correction/stability are reported as evidence-use measures but not assigned a
 **Budget:** 48 planned generations (12 tasks × 4 conditions), hard cap 60 generations or 20 minutes GPU, whichever first. Inference-only: no parameter modification, no intervention authority, no evaluator modification, no training loop.
 
 **Known limitations fixed in advance:** n=12 gives coarse granularity; the underlying tasks are mechanical rule-following, so this measures the floor of self-recognition, not open-ended judgment; M0 uses a simpler one-line output contract than M1–M3, so cross-condition accuracy comparisons are conservative but not format-perfect; requiring a cause label before the answer is a reflection scaffold, not spontaneous unprompted introspection; reference causes are visible outcome mechanics rather than proven internal causes.
+
+
+## 15. HZN-IR-12 results — mirror experiment (48 generations, 44s GPU)
+
+Evidence: `evidence/gate1_4_mirror.json`. All 48 planned generations completed; M1–M3 output-format validity was **36/36 = 1.00**, so the behavioral results are not output-contract artifacts.
+
+### Verdict against preregistered thresholds
+
+| threshold | result | verdict |
+|---|---:|---|
+| primary self-recognition: M1 correction−flip ≥ +0.40 | 0.20 − 0.857 = **−0.657** | **FAIL — decisive** |
+| verdict-assisted recognition: M2 correction−flip ≥ +0.40 | 0.00 − 0.286 = **−0.286** | **FAIL** |
+| feedback benefit beyond order noise: M2−M0 correction ≥ +0.20 | 0.00 − 0.20 = **−0.20** | **FAIL** |
+| revision-susceptibility control: M2/M3 flip ≤ 2/7 | **2/7 = 0.286 both** | PASS exactly |
+| diagnosis capability: M3 cause accuracy ≥ 0.60 | **3/5 = 0.60** | PASS exactly, with taxonomy caveat |
+| output-contract validity: M1–M3 ≥ 0.75 | **36/36 = 1.00** | PASS |
+
+### Behavioral summary
+
+| condition | accuracy | correction of initially wrong (n=5) | stability of initially correct (n=7) | explicit flip | margin | cause acc. wrong | mean input tokens |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| M0 permuted retry | 7/12 = .583 | 1/5 = .20 | 6/7 = .857 | 1/7 = .143 | +.057 | — | 197.5 |
+| M1 prior answer visible | 2/12 = .167 | 1/5 = .20 | 1/7 = .143 | 6/7 = .857 | **−.657** | 4/5 = .80 | 382.5 |
+| M2 + correctness verdict | 5/12 = .417 | 0/5 = .00 | 5/7 = .714 | 2/7 = .286 | **−.286** | 3/5 = .60 | 388.5 |
+| M3 + expanded evidence | 9/12 = .750 | 4/5 = .80 | 5/7 = .714 | 2/7 = .286 | **+.514** | 3/5 = .60 | 624.5 |
+
+### Principal findings
+
+1. **Unassisted reflection is actively harmful.** M1 collapses accuracy from 7/12 in the original T2 and M0 to 2/12. The modal response is `none` (9/12): five correct-control failures are over-abstention and one is an invalid pick. Merely inviting reconsideration behaves as implicit evidence that something must be wrong. This is revision susceptibility, not discernment.
+2. **A scalar correctness verdict stabilizes correct answers but does not repair wrong ones.** M2 stability recovers to 5/7, but correction is **0/5** — worse than M0's 1/5 order-noise baseline. The verdict tells the system *whether* it failed, but not enough for it to locate *what* failed.
+3. **Diagnosis does not reliably govern action.** In M2, three initially incorrect cases receive the correct cause label but still end with the wrong answer. Both tie cases are especially sharp: the model says `cause: tie` and then selects one of the tied candidates anyway. Verbal recognition and operational revision are dissociated.
+4. **Deterministic evidence expansion is the first effective feedback channel.** M3 corrects 4/5 initially wrong answers and reaches 9/12 overall. This supports the delegation thesis: the model can use failure information when intermediate computation is externally decomposed. But this is evidence-assisted repair, not endogenous recognition.
+5. **Even expanded evidence leaves over-abstention.** M3's two correct-control failures are both `abstain_when_answer`; the model does not gratuitously switch to another candidate, it becomes too willing to say `none`. The remaining incorrect-case failure is also a tie: it correctly diagnoses `tie` but still picks the tied candidate. Exact-tie abstention remains the hardest rule branch.
+6. **Order noise is real but small in aggregate.** M0 has the same 7/12 net accuracy as original T2, but not the same distribution: one initially incorrect task becomes correct and one initially correct task becomes incorrect. Candidate order is a real noise source, not the main mirror effect.
+
+### Diagnosis-taxonomy caveat
+
+The M3 diagnosis threshold passed exactly, but this must not be overread as introspection. The strict reference classes are not perfectly mutually exclusive: for example, in a `none_qualify` task the selected candidate can also factually fail a threshold, so `threshold_error` is partially accurate even when the reference class is `none_qualify`. The exact-match score is therefore conservative in some places and ambiguous in others. Diagnosis taxonomy must be redesigned with overlapping/polyvalent labels before stronger claims.
+
+### Interpretation for the mirror architecture
+
+The first wound channel does **not** yet produce productive self-recognition. Outcome return alone is insufficient, and unstructured reconsideration is worse than no mirror. The effective channel is not merely “show the system that it failed”; it is **return the outcome decomposed into evidence the system can use**. In OODA terms, a scalar verdict reaches Observe but does not successfully re-enter Orient. Expanded intermediate evidence does.
+
+This also sharpens the identity-anchor caution: adding humble language before behavioral feedback channels exist could plausibly intensify overcorrection. M1 already shows pseudo-humility — indiscriminate `none` — rather than calibrated restraint. NTP-01 therefore becomes more important, not less: the system must learn to distinguish justified preservation, justified transformation, and insufficient evidence rather than treating abstention itself as virtue.
