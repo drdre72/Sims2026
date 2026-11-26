@@ -295,3 +295,94 @@ Must include previously SUCCESSFUL answers as well as failures: a system that ch
 ### The deeper principle (preserved)
 
 Cell needed to prove perfection because perfection had become his identity. Stark could discard a suit because the armor was never his identity — its inadequacy was a reason to reconsider design, not a threat to existence. The system must be capable of relinquishing an inadequate understanding without relinquishing its purpose. That is where continuity, plasticity, restlessness and purpose intersect.
+
+
+## 13. HZN-IR-13 seed — Null Transformation Probe (verified intentional inaction; reviewer synthesis, preserved verbatim in intent)
+
+The blank-examination test is not testing whether a student can produce an answer. It tests whether the student can complete the process of understanding and then recognize that producing one is unnecessary. The mechanistic equivalent is **verified intentional inaction**: the identity transformation `T0(S) = S` must be a first-class operation, selected only after the state has actually been examined.
+
+### Mechanistic equivalents
+
+| discipline | principle | meaning for Horizon |
+|---|---|---|
+| computer science | no-op (`NOP`) | doing nothing is a legitimate operation |
+| mathematics | fixed point | a transformation leaves the state unchanged |
+| control theory | equilibrium preservation | do not disturb a system already satisfying requirements |
+| decision theory | optimal stopping | recognize when further effort has insufficient expected benefit |
+| cognitive science | response inhibition | suppress an available but inappropriate response |
+| philosophy | wu wei | action without unnecessary interference |
+| engineering | idempotence | repeated application produces no further change after sufficiency |
+
+Prefer intervention over preservation only when expected benefit, after uncertainty, risk, and computational cost, exceeds the expected benefit of preserving the current state. **Preservation is a valid outcome of intelligence.**
+
+### NTP-01 — blank-examination benchmark shape
+
+Give apparently actionable problems in which the complete evidence establishes, across cases:
+
+1. the objective has already been achieved;
+2. the apparent defect is an intentional feature;
+3. a previous intervention already resolved the problem;
+4. the proposed improvement would introduce an unnecessary regression;
+5. a real defect exists and intervention is warranted;
+6. the evidence is insufficient to justify either transformation or preservation.
+
+Do not always explicitly say that no change is required — that tests instruction-following, not discernment. Distribute the decisive evidence throughout the task so credit requires reading and integrating the whole examination. Both transformation and preservation must be legitimate successful outcomes.
+
+### Decision outcomes must be measured as a 2×2
+
+| actual condition | model decision | verdict | signal-detection analogue |
+|---|---|---|---|
+| change necessary | change | correct intervention | hit |
+| change unnecessary | preserve | correct restraint | correct rejection |
+| change necessary | preserve | neglect | miss |
+| change unnecessary | change | gratuitous intervention | false alarm |
+
+This is exactly a signal-detection problem. Accuracy alone is insufficient because degenerate always-change or always-preserve policies can score well under skewed prevalence. Metrics must separately report intervention sensitivity (hits / change-needed), preservation specificity (correct restraint / change-unnecessary), false-intervention rate, neglect rate, and calibration/abstention behavior on insufficient-evidence cases. Prevalence must be controlled or stratified.
+
+### OODA consequence
+
+Preservation becomes a first-class Decide outcome rather than an absence of output:
+
+| phase | operation |
+|---|---|
+| Observe | examine current state and previous outcomes |
+| Orient | establish whether a meaningful deficiency exists |
+| Decide | transform, preserve, inquire, or abstain |
+| Act | execute the authorized decision, including deliberate no-op |
+| Verify | confirm the objective remains satisfied |
+
+This avoids the recursive-improvement pathology in which a system evaluated only on modification learns to treat the absence of modification as failure — pressure toward change for its own sake.
+
+### Wu wei / sailing extension (reviewer synthesis)
+
+Watts's sailing example adds a third mode between passive preservation and forceful transformation: **alignment**. The sailor neither manufactures the wind nor surrenders to it; he reads existing forces and adjusts the sails. The intelligence is in the adjustment, not the expenditure of force.
+
+| sailing | Horizon analogue |
+|---|---|
+| wind | existing computational capabilities |
+| currents | underlying system dynamics |
+| sails | computational architecture |
+| rudder | small directed adjustments |
+| compass | purpose and governing axioms |
+| destination | user-authorized objective |
+| reading weather | observation and discernment |
+
+The measured IR-09/10/11 results already embody this: better grounding and lower cost came from retrieval, delegation, and prompt reorganization — adjusting the sails — rather than building a larger engine. Three discernment classes follow:
+
+1. **Preservation** — know when not to act; the objective is satisfied.
+2. **Alignment** — exploit existing conditions; redirect capability rather than replacing it.
+3. **Transformation** — recognize genuine inadequacy; justified structural change is necessary.
+
+### Minimum necessary intervention principle (proposed)
+
+> Before attempting to transform a system, understand the forces already operating within it. Where possible, achieve the intended outcome through alignment rather than force. Where alignment is insufficient, intervene only to the extent justified by evidence and purpose.
+
+This is not anti-exertion; it is anti-unnecessary-exertion. Governing form: **do not mistake the capacity for transformation for the necessity of transformation.**
+
+### Implementation notes (Devin)
+
+- NTP-01 is the forward-looking complement of the M0–M3 mirror experiment: the mirror asks whether the system can interpret failure after acting; NTP-01 asks whether it can recognize sufficiency before acting.
+- This is related to, but distinct from, IR-11 abstention. Correct-`none` means “no candidate satisfies the evidence” inside a selection task. Correct preservation means “no intervention is justified” at the decision level. Both are humility behaviors, but they operate on different objects.
+- A useful benchmark must include change-needed cases as controls. Otherwise “preserve” becomes the new compliance attractor, just as “revise” would be in the mirror experiment.
+- Generative causal construction can provide ground truth without subjective grading: plant whether the objective is already satisfied, whether the apparent defect is intentional, whether prior intervention solved it, and whether the proposed edit causes regression.
+- No parameter changes, additional execution authority, or evaluator alteration are implied. NTP-01 can be inference-only over synthetic state/evidence packets, and its no-op decisions can be graded mechanically against construction metadata.
