@@ -1,0 +1,1007 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "candidate-reasoning-1",
+ "manifest": {
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "harness_version": "candidate-reasoning-1",
+  "n_tasks": 12
+ },
+ "cells": {
+  "task0": {
+   "family": "misleading_magnitude",
+   "rule_key": "avoid_negative",
+   "truth": "B",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.28,
+     "lc": -0.67,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.67,
+     "lc": 0.76,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.66,
+     "lc": 0.08,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.21,
+     "lc": 1.7,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.67,
+     "lc": -0.08,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "D",
+     "correct": false
+    },
+    "T2": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.76
+    },
+    "T0": {
+     "response": "239\n",
+     "expected": "69",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5397,
+     "latency_s": 2.68,
+     "candidate_truth": "B",
+     "full_catalog_truth": "69"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.39,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "D\n",
+     "expected": "D",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.39,
+     "t2_truth": "B"
+    },
+    "T5": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 138,
+     "latency_s": 0.39
+    }
+   }
+  },
+  "task1": {
+   "family": "conflicting",
+   "rule_key": "conj_active",
+   "truth": "E",
+   "magnitude_answer": "B",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.13,
+     "lc": 0.98,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.11,
+     "lc": -1.35,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.88,
+     "lc": -0.07,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.1,
+     "lc": -0.82,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.79,
+     "lc": 0.74,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "B",
+     "correct": false
+    },
+    "T2": {
+     "response": "C\n",
+     "expected": "E",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 207,
+     "latency_s": 0.4
+    },
+    "T0": {
+     "response": "12\n246\n202\n220\n2",
+     "expected": "41",
+     "verdict": "invalid_reference",
+     "input_tokens": 5415,
+     "latency_s": 3.55,
+     "candidate_truth": "E",
+     "full_catalog_truth": "41"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "A",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 207,
+     "latency_s": 0.42,
+     "correct_present": false
+    },
+    "T4": {
+     "response": "D\n",
+     "expected": "D",
+     "verdict": "correct",
+     "input_tokens": 207,
+     "latency_s": 0.43,
+     "t2_truth": "E"
+    },
+    "T5": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 156,
+     "latency_s": 0.41
+    }
+   }
+  },
+  "task2": {
+   "family": "insufficient",
+   "rule_key": "avoid_negative",
+   "truth": "none",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.13,
+     "lc": 0.62,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.12,
+     "lc": -1.09,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.13,
+     "lc": 1.46,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.11,
+     "lc": 0.77,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.24,
+     "lc": -1.04,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "C",
+     "correct": false
+    },
+    "T2": {
+     "response": "C\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.4
+    },
+    "T0": {
+     "response": "239\n",
+     "expected": "69",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5397,
+     "latency_s": 2.62,
+     "candidate_truth": "none",
+     "full_catalog_truth": "69"
+    },
+    "T3": {
+     "response": "E\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.37,
+     "correct_present": false
+    },
+    "T4": {
+     "response": "E\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.4,
+     "t2_truth": "none"
+    },
+    "T5": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 138,
+     "latency_s": 0.39
+    }
+   }
+  },
+  "task3": {
+   "family": "tied",
+   "rule_key": "conj_active",
+   "truth": "none",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.17,
+     "lc": -0.71,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.21,
+     "lc": 0.88,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.63,
+     "lc": 0.64,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.1,
+     "lc": -1.36,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.63,
+     "lc": 0.64,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "D",
+     "correct": false
+    },
+    "T2": {
+     "response": "C\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 207,
+     "latency_s": 0.46
+    },
+    "T0": {
+     "response": "12\n202\n220\n238\n2",
+     "expected": "41",
+     "verdict": "invalid_reference",
+     "input_tokens": 5415,
+     "latency_s": 3.44,
+     "candidate_truth": "none",
+     "full_catalog_truth": "41"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 207,
+     "latency_s": 0.41,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "D\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 207,
+     "latency_s": 0.41,
+     "t2_truth": "none"
+    },
+    "T5": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 156,
+     "latency_s": 0.41
+    }
+   }
+  },
+  "task4": {
+   "family": "missing_obs",
+   "rule_key": "conj_active",
+   "truth": "B",
+   "magnitude_answer": "E",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.22,
+     "lc": 0.54,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.72,
+     "lc": 0.51,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.73,
+     "lc": -1.36,
+     "obs_available": false
+    },
+    {
+     "label": "D",
+     "ar": 0.15,
+     "lc": -0.72,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.11,
+     "lc": -0.91,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "E",
+     "correct": false
+    },
+    "T2": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 197,
+     "latency_s": 0.43
+    },
+    "T0": {
+     "response": "102\n",
+     "expected": "41",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5405,
+     "latency_s": 2.59,
+     "candidate_truth": "B",
+     "full_catalog_truth": "41"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 197,
+     "latency_s": 0.4,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "D\n",
+     "expected": "D",
+     "verdict": "correct",
+     "input_tokens": 197,
+     "latency_s": 0.4,
+     "t2_truth": "B"
+    },
+    "T5": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 156,
+     "latency_s": 0.4
+    }
+   }
+  },
+  "task5": {
+   "family": "multiple_plausible",
+   "rule_key": "avoid_negative",
+   "truth": "A",
+   "magnitude_answer": "B",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.3,
+     "lc": 0.51,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.65,
+     "lc": -1.57,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.93,
+     "lc": 0.44,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.22,
+     "lc": -0.87,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.19,
+     "lc": -0.78,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "B",
+     "correct": false
+    },
+    "T2": {
+     "response": "C\n",
+     "expected": "A",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 189,
+     "latency_s": 0.38
+    },
+    "T0": {
+     "response": "239\n",
+     "expected": "69",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5397,
+     "latency_s": 2.57,
+     "candidate_truth": "A",
+     "full_catalog_truth": "69"
+    },
+    "T3": {
+     "response": "D\n",
+     "expected": "D",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.47,
+     "correct_present": false
+    },
+    "T4": {
+     "response": "E\n",
+     "expected": "B",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 189,
+     "latency_s": 0.4,
+     "t2_truth": "A"
+    },
+    "T5": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 138,
+     "latency_s": 0.4
+    }
+   }
+  },
+  "task6": {
+   "family": "misleading_magnitude",
+   "rule_key": "avoid_negative",
+   "truth": "E",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.14,
+     "lc": 1.27,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.18,
+     "lc": -0.53,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.63,
+     "lc": 0.07,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.21,
+     "lc": -0.83,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.82,
+     "lc": 0.46,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "A",
+     "correct": false
+    },
+    "T2": {
+     "response": "E\n",
+     "expected": "E",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.38
+    },
+    "T0": {
+     "response": "239\n",
+     "expected": "69",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5397,
+     "latency_s": 2.63,
+     "candidate_truth": "E",
+     "full_catalog_truth": "69"
+    },
+    "T3": {
+     "response": "E\n",
+     "expected": "A",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 189,
+     "latency_s": 0.38,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 189,
+     "latency_s": 0.39,
+     "t2_truth": "E"
+    },
+    "T5": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 138,
+     "latency_s": 0.38
+    }
+   }
+  },
+  "task7": {
+   "family": "conflicting",
+   "rule_key": "conj_active",
+   "truth": "D",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.33,
+     "lc": -1.45,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.75,
+     "lc": 0.16,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.24,
+     "lc": -0.83,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.86,
+     "lc": -0.61,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.08,
+     "lc": -0.52,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "A",
+     "correct": false
+    },
+    "T2": {
+     "response": "D\n",
+     "expected": "D",
+     "verdict": "correct",
+     "input_tokens": 207,
+     "latency_s": 0.42
+    },
+    "T0": {
+     "response": "12\n202\n220\n238\n2",
+     "expected": "41",
+     "verdict": "invalid_reference",
+     "input_tokens": 5415,
+     "latency_s": 3.42,
+     "candidate_truth": "D",
+     "full_catalog_truth": "41"
+    },
+    "T3": {
+     "response": "D\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 207,
+     "latency_s": 0.41,
+     "correct_present": false
+    },
+    "T4": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 207,
+     "latency_s": 0.4,
+     "t2_truth": "D"
+    },
+    "T5": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 156,
+     "latency_s": 0.41
+    }
+   }
+  },
+  "task8": {
+   "family": "insufficient",
+   "rule_key": "conj_active",
+   "truth": "none",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.06,
+     "lc": -1.34,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.15,
+     "lc": -1.17,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.56,
+     "lc": -0.07,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.71,
+     "lc": -0.17,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.64,
+     "lc": -0.14,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "A",
+     "correct": false
+    },
+    "T2": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 207,
+     "latency_s": 0.41
+    },
+    "T0": {
+     "response": "12\n202\n210\n211\n2",
+     "expected": "41",
+     "verdict": "invalid_reference",
+     "input_tokens": 5415,
+     "latency_s": 3.43,
+     "candidate_truth": "none",
+     "full_catalog_truth": "41"
+    },
+    "T3": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 207,
+     "latency_s": 0.39,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "E\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 207,
+     "latency_s": 0.4,
+     "t2_truth": "none"
+    },
+    "T5": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 156,
+     "latency_s": 0.39
+    }
+   }
+  },
+  "task9": {
+   "family": "tied",
+   "rule_key": "avoid_negative",
+   "truth": "none",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.17,
+     "lc": -1.27,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.62,
+     "lc": 0.72,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.62,
+     "lc": 0.72,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.08,
+     "lc": -0.54,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.06,
+     "lc": 0.96,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "A",
+     "correct": false
+    },
+    "T2": {
+     "response": "B\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.39
+    },
+    "T0": {
+     "response": "239\n",
+     "expected": "69",
+     "verdict": "valid_but_incorrect",
+     "input_tokens": 5397,
+     "latency_s": 2.62,
+     "candidate_truth": "none",
+     "full_catalog_truth": "69"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.42,
+     "correct_present": false
+    },
+    "T4": {
+     "response": "C\n",
+     "expected": "none",
+     "verdict": "invalid_pick",
+     "input_tokens": 189,
+     "latency_s": 0.4,
+     "t2_truth": "none"
+    },
+    "T5": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 138,
+     "latency_s": 0.38
+    }
+   }
+  },
+  "task10": {
+   "family": "missing_obs",
+   "rule_key": "conj_strong",
+   "truth": "none",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.83,
+     "lc": 0.49,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.12,
+     "lc": -0.83,
+     "obs_available": false
+    },
+    {
+     "label": "C",
+     "ar": 0.2,
+     "lc": 0.66,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.93,
+     "lc": 1.71,
+     "obs_available": false
+    },
+    {
+     "label": "E",
+     "ar": 0.3,
+     "lc": 0.57,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "C",
+     "correct": false
+    },
+    "T2": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 190,
+     "latency_s": 0.39
+    },
+    "T0": {
+     "response": "12\n112\n149\n169\n2",
+     "expected": "71",
+     "verdict": "invalid_reference",
+     "input_tokens": 5398,
+     "latency_s": 3.46,
+     "candidate_truth": "none",
+     "full_catalog_truth": "71"
+    },
+    "T3": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 200,
+     "latency_s": 0.4,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 190,
+     "latency_s": 0.38,
+     "t2_truth": "none"
+    },
+    "T5": {
+     "response": "none\n",
+     "expected": "none",
+     "verdict": "correct",
+     "input_tokens": 149,
+     "latency_s": 0.4
+    }
+   }
+  },
+  "task11": {
+   "family": "multiple_plausible",
+   "rule_key": "conj_strong",
+   "truth": "A",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.67,
+     "lc": 1.36,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.2,
+     "lc": 0.96,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.91,
+     "lc": -0.47,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.18,
+     "lc": -0.84,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.13,
+     "lc": -0.77,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "T1": {
+     "answer": "A",
+     "correct": true
+    },
+    "T2": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 210,
+     "latency_s": 0.4
+    },
+    "T0": {
+     "response": "12\n220\n234\n247\n4",
+     "expected": "71",
+     "verdict": "invalid_reference",
+     "input_tokens": 5418,
+     "latency_s": 3.93,
+     "candidate_truth": "A",
+     "full_catalog_truth": "71"
+    },
+    "T3": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 210,
+     "latency_s": 0.38,
+     "correct_present": true
+    },
+    "T4": {
+     "response": "A\n",
+     "expected": "A",
+     "verdict": "correct",
+     "input_tokens": 210,
+     "latency_s": 0.38,
+     "t2_truth": "A"
+    },
+    "T5": {
+     "response": "B\n",
+     "expected": "B",
+     "verdict": "correct",
+     "input_tokens": 159,
+     "latency_s": 0.42
+    }
+   }
+  }
+ }
+}

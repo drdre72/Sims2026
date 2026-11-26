@@ -190,3 +190,45 @@ Accuracy is within noise at every cell — compression costs nothing in retrieva
 **Budget**: ≤120 generations, ≤20 minutes GPU. Estimated 60 generations (12 tasks × 5 model conditions), T0 dominating wall time. No expansion without reviewer disposition.
 
 **Stop condition**: if T2 cannot outperform T1 on independently grounded tasks, report the negative result and return for architectural review.
+
+
+## 10. HZN-IR-11 results — candidate-conditioned reasoning (capped sentinel: 60 generations, ~7 min GPU)
+
+12 rule-conditioned tasks (2 per family), magnitude-truth agreement 1/12 by construction, 5/12 abstention tasks. T1 deterministic magnitude baseline; T0/T2/T3/T4/T5 model conditions, 60 generations total (cap 120 / 20 min — half the cap used). Evidence: `evidence/gate1_4_candidate_reasoning.json`, `evidence/gate1_4_arith_control.json`.
+
+### Verdict against preregistered thresholds
+
+| threshold | result | verdict |
+|---|---|---|
+| primary: T2 − T1 ≥ +0.25 | 0.58 − 0.08 = **+0.50** | **PASS** |
+| T2 conditional accuracy (answer present) ≥ 0.70 | 5/7 = **0.71** | PASS (marginal) |
+| evidence usage: T2 − T4 ≥ +0.15 | 0.58 − 0.58 = **0.00** | FAIL as written — **metric mis-signed, see below** |
+| retrieval relevance: T2 > T3 | 0.58 > 0.50 | pass (nominal; n=12, one probe = ±0.08) |
+| T5 diagnostic ≥ 0.60 | **12/12 = 1.00** | PASS |
+
+### The evidence-sensitivity preregistration error
+
+The T4 metric as preregistered had the wrong sign. T4 is graded against the **shuffled** correspondence: a model that uses presented evidence should apply the rule correctly to the shuffled values and score **parity** with T2, while a model ignoring evidence would repeat its T2 answers and collapse against shuffled truth. The correct test is answer tracking: in the 6/12 tasks where the shuffle changed the correct answer, **the model's answer moved with the evidence 6/6 times and was correct 5/6; it never once repeated its T2 answer**. The model genuinely reads and uses observation correspondence. The literal preregistered threshold failed because the metric was mis-specified, not because evidence usage is absent — reported here rather than silently corrected.
+
+### Principal findings
+
+1. **The model contributes real reasoning value after delegation.** T2 (58%) massively exceeds magnitude ranking T1 (8%) — the model applies threshold rules, handles conjunctive conditions, and abstains sometimes: operations magnitude cannot perform. This is the positive answer to the reviewer's central question: intelligence remains after computation is delegated, and it is usable.
+2. **The undelegated baseline is dead.** T0 = **0/12** — full-catalog rule application fails completely: half valid-but-wrong ids, half output-contract breakdown (the model emits *lists* of ids instead of one). Delegation is not optional at 248 rows; it is the difference between zero and 58%.
+3. **T5 = 12/12 with T2 = 7/12.** Perfect rule application with 2 noise-free candidates, 58% with 5 real candidates. Residual reasoning noise scales with distractor count even at ~200 input tokens — the bottleneck is no longer retrieval or context size but multi-candidate rule evaluation itself.
+4. **Abstention is weak**: correct-none 2/5 on tasks whose truth is "none" (invalid_pick — picking a candidate when none qualify — is the modal T2 error, 3/12).
+5. **Errors concentrate on label C** (4/5 errors) — weak evidence of a position/label artifact; not conclusive at this n.
+6. **Cost**: T2 uses 198 input tokens / 0.43s per decision vs T0's 5,406 / 3.1s — and T0 scores zero. Delegation is simultaneously 27× cheaper and infinitely more accurate.
+
+### D3 arithmetic control (60 probes, randomized ids)
+
+| presentation | accuracy |
+|---|---|
+| V1 signed lc only, ask \|lc\| | 14/20 |
+| V2 signed lc + derived alc column | 11/20 |
+| V3 abs-only (signed column removed) | 13/20 |
+
+Removing the signed column does **not** rescue performance (V3 ≈ V1), and the explicit derived column is if anything slightly worse. This rules out competing-field interference and printed-signed-max capture as the primary mechanism: **multi-item magnitude comparison itself is the fragile primitive regardless of presentation** — consistent with the reviewer's alternatives (c/d): failure to maintain intermediate comparisons across rows. It reinforces rather than reopens the delegation decision.
+
+### Interpretation for the three-domain architecture
+
+The division of labor is now empirically grounded: deterministic retrieval + ranking turns a 0% task into a 58% task, and the model's 58% is *real reasoning* — it tracks evidence, applies conjunctive rules, and is not explainable by magnitude endorsement (T1 = 8%). The residual gap to T5's perfect score is multi-candidate evaluation noise plus weak abstention — the next research targets. Negative-result stop condition NOT triggered: candidate-conditioned reasoning clearly outperforms ranking-only.
