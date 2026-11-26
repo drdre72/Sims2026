@@ -31,10 +31,28 @@ def catalog_sha256(records) -> str:
 
 
 class ObservationStore:
-    """Read-only canonical catalog with exact mechanical retrieval."""
+    """Read-only canonical catalog with exact mechanical retrieval.
 
-    def __init__(self, canonical_records):
+    HZN-IR-10 D1 hardening:
+    - duplicate param_ids are rejected at construction (an address
+      space with collisions is not an address space)
+    - every accessor returns COPIES — callers can never mutate the
+      stored canonical records
+    - the store carries its catalog fingerprint and observation epoch;
+      resolution verdicts are bound to both, so an address resolved
+      against one catalog/epoch can never be silently replayed against
+      another
+    - resolve() always evaluates against the COMPLETE catalog, never a
+      truncated retrieval view — retrieval narrows presentation, never
+      identity
+    """
+
+    def __init__(self, canonical_records, epoch=None, provenance=None):
         self._rows = [dict(r) for r in canonical_records]
+        ids = [r["param_id"] for r in self._rows]
+        if len(set(ids)) != len(ids):
+            dupes = sorted({i for i in ids if ids.count(i) > 1})
+            raise ValueError(f"duplicate param_ids rejected: {dupes[:5]}")
         self._by_id = {r["param_id"]: r for r in self._rows}
         self._by_pair = {}
         self._by_family = {}
@@ -42,19 +60,26 @@ class ObservationStore:
             self._by_pair.setdefault((r["family"], r["layer"]), []).append(r)
             self._by_family.setdefault(r["family"], []).append(r)
         self.catalog_sha256 = catalog_sha256(self._rows)
+        self.epoch = epoch
+        self.provenance = dict(provenance) if provenance else None
 
     def __len__(self):
         return len(self._rows)
 
+    def _binding(self):
+        return {"catalog_sha256": self.catalog_sha256, "epoch": self.epoch}
+
     # ---- retrieval -------------------------------------------------
     def get(self, param_id):
-        """Exact id lookup; None when absent (never fabricated)."""
-        return self._by_id.get(param_id)
+        """Exact id lookup; COPY or None when absent (never fabricated,
+        never a mutable reference)."""
+        r = self._by_id.get(param_id)
+        return dict(r) if r is not None else None
 
     def find(self, family=None, layer=None, obs_available=None,
              min_abs_lc=None, max_abs_lc=None,
              min_ar=None, max_ar=None, limit=None):
-        """Exact conjunctive filter; sorted by param_id."""
+        """Exact conjunctive filter; sorted by param_id; copies."""
         out = []
         for r in self._rows:
             if family is not None and r["family"] != family:
@@ -73,35 +98,39 @@ class ObservationStore:
                 continue
             if max_ar is not None and (r["ar"] is None or r["ar"] > max_ar):
                 continue
-            out.append(r)
+            out.append(dict(r))
         out.sort(key=lambda r: r["param_id"])
         return out[:limit] if limit else out
 
     def resolve(self, family, layer):
-        """Identity resolution for a (family, layer) descriptor.
+        """Identity resolution for a (family, layer) descriptor over the
+        COMPLETE catalog.
 
-        Returns a typed verdict — the store never picks an arbitrary
-        member of an ambiguous set and never invents a missing row:
-          {"status": "unique",    "param_id": int}
-          {"status": "ambiguous", "param_ids": [int, ...]}
-          {"status": "missing"}
+        Returns a typed verdict bound to the catalog fingerprint and
+        epoch — the store never picks an arbitrary member of an
+        ambiguous set and never invents a missing row:
+          {"status": "unique",    "param_id": int,     + binding}
+          {"status": "ambiguous", "param_ids": [...],  + binding}
+          {"status": "missing",                        + binding}
         """
         hits = self._by_pair.get((family, layer), [])
         if not hits:
-            return {"status": "missing"}
+            return {"status": "missing", **self._binding()}
         if len(hits) > 1:
             return {"status": "ambiguous",
-                    "param_ids": sorted(h["param_id"] for h in hits)}
-        return {"status": "unique", "param_id": hits[0]["param_id"]}
+                    "param_ids": sorted(h["param_id"] for h in hits),
+                    **self._binding()}
+        return {"status": "unique", "param_id": hits[0]["param_id"],
+                **self._binding()}
 
     def top_abs_lc(self, k, obs_only=True):
         """The k rows with largest |lc| — exact sort, ties broken by
-        param_id for determinism."""
+        param_id for determinism; copies."""
         rows = [r for r in self._rows
                 if (r["obs_available"] and r["lc"] is not None)
                 or not obs_only]
         rows.sort(key=lambda r: (-abs(r["lc"] or 0.0), r["param_id"]))
-        return rows[:k]
+        return [dict(r) for r in rows[:k]]
 
     # ---- rendering --------------------------------------------------
     def render_subset(self, records, fam_code, uniform_mag=True,

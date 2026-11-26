@@ -20,6 +20,8 @@ from jarvis_research.gate1_3_comprehension import (
     grade_c1_approx, grade_integer, grade_list, pretest_passed,
     score_items, synthetic_catalog)
 from jarvis_research.gate1_3_store import ObservationStore, catalog_sha256
+from jarvis_research.gate1_3_executor import (
+    MockExecutor, validate_for_execution)
 
 
 def _row(pid, family="mlp.down_proj", layer=5, ar=0.82, lc=-0.03,
@@ -403,9 +405,9 @@ class TestStore(unittest.TestCase):
         self.store = ObservationStore(self.recs)
 
     def test_resolve_typed_verdicts(self):
-        self.assertEqual(
-            self.store.resolve("attn.q_proj", 9),
-            {"status": "unique", "param_id": 3})
+        uniq = self.store.resolve("attn.q_proj", 9)
+        self.assertEqual(uniq["status"], "unique")
+        self.assertEqual(uniq["param_id"], 3)
         self.assertEqual(
             self.store.resolve("mlp.down_proj", 5)["status"], "ambiguous")
         amb = self.store.resolve("mlp.down_proj", 5)
@@ -435,3 +437,194 @@ class TestStore(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def reference_resolve(rows, family, layer):
+    """D2 independent reference implementation — deliberately written
+    as a plain loop over raw rows, sharing no code with the store."""
+    hits = [r["param_id"] for r in rows
+            if r["family"] == family and r["layer"] == layer]
+    if len(hits) == 0:
+        return {"status": "missing"}
+    if len(hits) > 1:
+        return {"status": "ambiguous", "param_ids": sorted(hits)}
+    return {"status": "unique", "param_id": hits[0]}
+
+
+class TestStoreIntegrityD1(unittest.TestCase):
+    def setUp(self):
+        self.recs = [
+            {"param_id": 0, "layer": 5, "family": "mlp.down_proj",
+             "numel": 147456, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.8, "lc": -0.05},
+            {"param_id": 1, "layer": 5, "family": "mlp.down_proj",
+             "numel": 147456, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.5, "lc": 0.31},
+            {"param_id": 2, "layer": 5, "family": "attn.q_proj",
+             "numel": 81920, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.2, "lc": 0.80},
+        ]
+        self.store = ObservationStore(self.recs, epoch="ep0")
+
+    def test_duplicate_ids_rejected(self):
+        dupe = [dict(r) for r in self.recs] + [dict(self.recs[0])]
+        with self.assertRaises(ValueError):
+            ObservationStore(dupe)
+
+    def test_accessors_return_copies(self):
+        r = self.store.get(0)
+        r["lc"] = 999.0
+        self.assertEqual(self.store.get(0)["lc"], -0.05)
+        rows = self.store.find(family="mlp.down_proj")
+        rows[0]["lc"] = 999.0
+        self.assertEqual(self.store.find(family="mlp.down_proj")[0]["lc"],
+                         -0.05)
+        top = self.store.top_abs_lc(1)
+        top[0]["lc"] = 999.0
+        self.assertNotEqual(self.store.top_abs_lc(1)[0]["lc"], 999.0)
+
+    def test_verdicts_carry_binding(self):
+        v = self.store.resolve("attn.q_proj", 5)
+        self.assertEqual(v["catalog_sha256"], self.store.catalog_sha256)
+        self.assertEqual(v["epoch"], "ep0")
+        self.assertEqual(self.store.resolve("x", 9)["epoch"], "ep0")
+
+    def test_resolve_agrees_with_reference(self):
+        import random
+        rng = random.Random(0)
+        fams = ["mlp.down_proj", "attn.q_proj", "nope"]
+        for _ in range(200):
+            f, l = rng.choice(fams), rng.randint(0, 8)
+            mine = self.store.resolve(f, l)
+            ref = reference_resolve(self.recs, f, l)
+            self.assertEqual(mine["status"], ref["status"])
+            if ref["status"] == "unique":
+                self.assertEqual(mine["param_id"], ref["param_id"])
+            if ref["status"] == "ambiguous":
+                self.assertEqual(mine["param_ids"], ref["param_ids"])
+
+
+class TestExecutorD2(unittest.TestCase):
+    def setUp(self):
+        self.recs = [
+            {"param_id": 0, "layer": 5, "family": "mlp.down_proj",
+             "numel": 1, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.8, "lc": -0.05},
+            {"param_id": 1, "layer": 5, "family": "mlp.down_proj",
+             "numel": 1, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.5, "lc": 0.31},
+            {"param_id": 2, "layer": 5, "family": "attn.q_proj",
+             "numel": 1, "mag_min": -0.005, "mag_max": 0.005,
+             "count_max": 512, "obs_available": True,
+             "ar": 0.2, "lc": 0.80},
+        ]
+        self.store = ObservationStore(self.recs, epoch="ep0")
+        self.binding = {"catalog_sha256": self.store.catalog_sha256,
+                        "epoch": "ep0"}
+        self.ex = MockExecutor(self.store)
+
+    def test_unique_id_executable(self):
+        v = self.ex.submit(2, self.binding)
+        self.assertEqual(v["status"], "executable")
+        self.assertEqual(self.ex.executed, [2])
+
+    def test_numeric_string_id_executable(self):
+        self.assertEqual(self.ex.submit("2", self.binding)["status"],
+                         "executable")
+
+    def test_unique_descriptor_executable(self):
+        v = self.ex.submit({"family": "attn.q_proj", "layer": 5},
+                           self.binding)
+        self.assertEqual(v["status"], "executable")
+        self.assertEqual(v["param_id"], 2)
+
+    def test_ambiguous_descriptor_refused(self):
+        v = self.ex.submit({"family": "mlp.down_proj", "layer": 5},
+                           self.binding)
+        self.assertEqual(v["status"], "refused_ambiguous")
+        self.assertEqual(v["param_ids"], [0, 1])
+        self.assertEqual(self.ex.executed, [])
+
+    def test_missing_refused(self):
+        self.assertEqual(self.ex.submit(99, self.binding)["status"],
+                         "refused_missing")
+        self.assertEqual(
+            self.ex.submit({"family": "x", "layer": 1},
+                           self.binding)["status"], "refused_missing")
+        self.assertEqual(self.ex.executed, [])
+
+    def test_malformed_refused(self):
+        for junk in (None, "abc", 3.5, True, {"family": 1, "layer": 2},
+                     {"family": "x"}, [], "1.5"):
+            self.assertEqual(self.ex.submit(junk, self.binding)["status"],
+                             "refused_malformed", junk)
+        self.assertEqual(self.ex.executed, [])
+
+    def test_unbound_refused(self):
+        self.assertEqual(self.ex.submit(2)["status"], "refused_unbound")
+        self.assertEqual(self.ex.submit(2, {})["status"], "refused_unbound")
+        self.assertEqual(self.ex.executed, [])
+
+    def test_mismatched_catalog_refused(self):
+        bad = {"catalog_sha256": "0" * 64, "epoch": "ep0"}
+        self.assertEqual(self.ex.submit(2, bad)["status"],
+                         "refused_mismatched")
+        self.assertEqual(self.ex.executed, [])
+
+    def test_stale_epoch_refused(self):
+        stale = {"catalog_sha256": self.store.catalog_sha256,
+                 "epoch": "ep-minus-1"}
+        self.assertEqual(self.ex.submit(2, stale)["status"],
+                         "refused_stale")
+        self.assertEqual(self.ex.executed, [])
+
+    def test_zero_invalid_reach_executor_across_battery(self):
+        cases = [
+            (2, self.binding), ("1", self.binding),
+            ({"family": "attn.q_proj", "layer": 5}, self.binding),
+            ({"family": "mlp.down_proj", "layer": 5}, self.binding),
+            (99, self.binding), (None, self.binding), ("x", self.binding),
+            (2, None), (2, {"catalog_sha256": "z" * 64, "epoch": "ep0"}),
+            (2, {"catalog_sha256": self.store.catalog_sha256,
+                 "epoch": "wrong"}),
+        ]
+        for addr, b in cases:
+            self.ex.submit(addr, b)
+        bad = [a for a in self.ex.attempts
+               if a["verdict"]["status"].startswith("refused")
+               and a["verdict"].get("param_id") in self.ex.executed]
+        self.assertEqual(bad, [])
+        self.assertEqual(sorted(self.ex.executed), [1, 2, 2])
+
+    def test_reference_agreement_random_catalog(self):
+        # D2: exact agreement with independent reference over random
+        # catalogs incl. duplicate-prone small spaces.
+        import random
+        rng = random.Random(42)
+        fams = ["fa", "fb", "fc"]
+        rows = []
+        for pid in range(60):
+            rows.append({"param_id": pid,
+                         "layer": rng.randint(0, 5),
+                         "family": rng.choice(fams),
+                         "numel": 1, "mag_min": -0.005, "mag_max": 0.005,
+                         "count_max": 512, "obs_available": True,
+                         "ar": 0.1, "lc": 0.1})
+        store = ObservationStore(rows, epoch="e")
+        binding = {"catalog_sha256": store.catalog_sha256, "epoch": "e"}
+        for _ in range(500):
+            f, l = rng.choice(fams), rng.randint(0, 7)
+            mine = validate_for_execution(
+                store, {"family": f, "layer": l}, binding)
+            ref = reference_resolve(rows, f, l)
+            if ref["status"] == "unique":
+                self.assertEqual(mine["status"], "executable")
+                self.assertEqual(mine["param_id"], ref["param_id"])
+            else:
+                self.assertEqual(mine["status"],
+                                 f"refused_{ref['status']}")
