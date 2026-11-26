@@ -30,6 +30,7 @@ from jarvis_research.gate1_3_channel import (
     canonical_record, encode_catalog_text)
 from jarvis_research.gate1_3_store import ObservationStore, catalog_sha256
 from jarvis_research.gate1_pilot import MODEL_ID, DTYPE, local_provenance
+from jarvis_research.run_manifest import validate_resume_manifest
 from collections import defaultdict
 
 SEEDS = [104, 106]
@@ -185,8 +186,10 @@ def run_size(model, tok, cat_full, seed, size):
 def main():
     report = {"model": MODEL_ID, "harness": HARNESS_VERSION,
               "manifest": {}, "cells": {}}
+    stored_manifest = {}
     if OUT.exists():
         report = json.loads(OUT.read_text())
+        stored_manifest = dict(report.get("manifest", {}))
         print(f"[resume] {len(report['cells'])} cells", flush=True)
 
     provenance = local_provenance(MODEL_ID)
@@ -207,6 +210,15 @@ def main():
         "seeds": SEEDS, "sizes": SIZES, "conds": CONDS,
         "lookup_template_sha256": hashlib.sha256(
             LOOKUP_TEMPLATE.encode()).hexdigest()[:16]}
+
+    if stored_manifest:
+        errs = validate_resume_manifest(stored_manifest, report["manifest"])
+        if errs:
+            print("REFUSING resume - manifest mismatch:", flush=True)
+            for e in errs:
+                print("  - " + e, flush=True)
+            print("delete the stale results file or restore the matching configuration", flush=True)
+            raise SystemExit(1)
 
     for s in SEEDS:
         for size in SIZES:

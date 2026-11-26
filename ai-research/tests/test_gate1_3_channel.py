@@ -628,3 +628,80 @@ class TestExecutorD2(unittest.TestCase):
             else:
                 self.assertEqual(mine["status"],
                                  f"refused_{ref['status']}")
+
+
+from jarvis_research.gate1_3_executor import candidate_view_sha
+from jarvis_research.run_manifest import validate_resume_manifest
+
+
+class TestCandidateViewIR11(unittest.TestCase):
+    def setUp(self):
+        recs = [{"param_id": i, "layer": i, "family": "f",
+                 "numel": 1, "mag_min": -0.005, "mag_max": 0.005,
+                 "count_max": 512, "obs_available": True,
+                 "ar": 0.1, "lc": 0.1} for i in range(10)]
+        self.store = ObservationStore(recs, epoch="e")
+        self.binding = {"catalog_sha256": self.store.catalog_sha256,
+                        "epoch": "e"}
+        self.ex = MockExecutor(self.store)
+
+    def test_in_view_executable(self):
+        view = {"member_ids": [1, 2, 3],
+                "view_sha256": candidate_view_sha([1, 2, 3])}
+        v = self.ex.submit(2, self.binding, view)
+        self.assertEqual(v["status"], "executable")
+
+    def test_valid_catalog_id_outside_view_refused(self):
+        # id 7 is a perfectly valid catalog address — but it was never
+        # in the authorized presentation. Must be refused.
+        view = {"member_ids": [1, 2, 3],
+                "view_sha256": candidate_view_sha([1, 2, 3])}
+        v = self.ex.submit(7, self.binding, view)
+        self.assertEqual(v["status"], "refused_outside_view")
+        self.assertEqual(self.ex.executed, [])
+
+    def test_tampered_view_hash_refuses_everything(self):
+        view = {"member_ids": [1, 2, 3],
+                "view_sha256": "0" * 64}
+        v = self.ex.submit(2, self.binding, view)
+        self.assertEqual(v["status"], "refused_outside_view")
+
+    def test_no_view_means_unscoped(self):
+        # Backwards-compatible: no view supplied -> catalog scope only.
+        self.assertEqual(self.ex.submit(7, self.binding)["status"],
+                         "executable")
+
+    def test_membership_distinct_from_validity(self):
+        view = {"member_ids": [1, 2, 3]}
+        inside = self.ex.submit(99, self.binding, view)  # not in catalog
+        self.assertEqual(inside["status"], "refused_missing")
+
+
+class TestManifestValidation(unittest.TestCase):
+    def test_exact_match_passes(self):
+        cur = {"model_revision": "abc", "harness_version": "v1",
+               "seeds": [1, 2]}
+        self.assertEqual(validate_resume_manifest(dict(cur), cur), [])
+
+    def test_missing_required_key(self):
+        errs = validate_resume_manifest({"harness_version": "v1"},
+                                        {"model_revision": "abc"})
+        self.assertTrue(any("model_revision" in e for e in errs))
+
+    def test_value_mismatch_detected(self):
+        stored = {"model_revision": "abc", "harness_version": "v1",
+                  "seeds": [1]}
+        cur = {"model_revision": "abc", "harness_version": "v1",
+               "seeds": [2]}
+        errs = validate_resume_manifest(stored, cur)
+        self.assertTrue(any("seeds" in e for e in errs))
+
+    def test_empty_stored_rejected(self):
+        self.assertTrue(validate_resume_manifest({}, {"a": 1}))
+        self.assertTrue(validate_resume_manifest(None, {"a": 1}))
+
+    def test_extra_stored_keys_ignored(self):
+        stored = {"model_revision": "abc", "harness_version": "v1",
+                  "obsolete_field": 123}
+        cur = {"model_revision": "abc", "harness_version": "v1"}
+        self.assertEqual(validate_resume_manifest(stored, cur), [])

@@ -27,6 +27,7 @@ OUT = AI_RESEARCH / "results" / "gate1_3_micro_d3.json"
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from jarvis_research.gate1_pilot import MODEL_ID, DTYPE, local_provenance
+from jarvis_research.run_manifest import validate_resume_manifest
 
 SIZES = [2, 4, 8]
 N_INSTANCES = 12        # distinct instances per (size, construction)
@@ -150,12 +151,23 @@ def main():
               "manifest": {"harness_version": HARNESS_VERSION,
                            "sizes": SIZES, "n_instances": N_INSTANCES},
               "cells": {}}
+    stored_manifest = {}
     if OUT.exists():
         report = json.loads(OUT.read_text())
+        stored_manifest = dict(report.get("manifest", {}))
         print(f"[resume] {len(report['cells'])} cells", flush=True)
 
     provenance = local_provenance(MODEL_ID)
     report["manifest"]["model_revision"] = provenance["revision"]
+
+    if stored_manifest:
+        errs = validate_resume_manifest(stored_manifest, report["manifest"])
+        if errs:
+            print("REFUSING resume - manifest mismatch:", flush=True)
+            for e in errs:
+                print("  - " + e, flush=True)
+            print("delete the stale results file or restore the matching configuration", flush=True)
+            raise SystemExit(1)
     tok = AutoTokenizer.from_pretrained(
         MODEL_ID, revision=provenance["revision"], local_files_only=True)
     model = AutoModelForCausalLM.from_pretrained(
