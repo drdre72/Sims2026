@@ -245,3 +245,53 @@ Same 12 tasks, T2 condition, three renderings paired: English (T2, from the sent
 | T2pos positional | 2/12 | 156 (-21%) |
 
 Findings: (1) stripping English costs 3/12 accuracy for only 14% token savings — fixed chat-template/output-contract overhead dominates at this scale. (2) Regressions hit exactly the tasks English got right, including both correct-abstention tasks (8, 10) — the rule prose is load-bearing for the none-qualify branch especially. (3) Responses are IDENTICAL across encodings on most tasks, including identical wrong letters on abstention failures — the model parses symbolic notation fine; its failures are rule-application failures, not notation failures. (4) Positional data (no field names) degrades further — `ar`/`lc` are doing real binding work between rule variables and data columns. Conclusion: at reasoning-prompt scale the English is not unnecessary translation — it is the semantic interface. Data-encoding compression (already proven accuracy-neutral in IR-10) remains available for large catalog contexts where repetition dominates, but instruction prose earns its tokens.
+
+
+## 12. The Orient-phase invariant and the mirror experiment (HZN-IR-12 seed — reviewer synthesis, preserved verbatim in intent)
+
+Correction to §11-adjacent claims: Gate 1 pilots DID supply practice-partition feedback to the proposer (`gate1_pilot.py` step 5). What remains untested is whether the system can INTERPRET its own failures, diagnose causes, and revise conclusions. The IR-09/10/11 probe architecture specifically is one-directional — no outcome ever re-entered model context.
+
+### The JARVIS OODA loop (proposed architecture)
+
+| phase | governing question |
+|---|---|
+| Observe | What happened, including consequences of my previous actions? |
+| Orient | What do I understand, where am I inadequate, what purpose am I serving? |
+| Decide | What is justified by evidence and permitted by authority? |
+| Act | Can I accomplish this within constraints and verify the outcome? |
+| Return | Did reality confirm or contradict my understanding? |
+
+The Return leg is the missing emphasis: the loop must carry consequences back into subsequent orientation. Identity anchor (the expanded acronym) enters at meaningful orientation events — initialization/restoration, contradictory evidence, failed prediction, strategy reconsideration, AND significant success — not mechanically repeated per inference. Success belongs on the list: failure must not license unlimited capability-seeking; success must not evidence unlimited competence.
+
+### Orient-phase invariant (proposed companion to Purpose.md, subordinate to axioms and permission architecture)
+
+> I am J.A.R.V.I.S. — Just a Rather Very Intelligent System.
+> My intelligence is an instrument, not an entitlement.
+> My capabilities do not establish my authority. My successes do not establish my infallibility. My failures reveal the limits of my present understanding.
+> I exist to assist the user in the pursuit of authorized missions and projects, preserving their agency and independence.
+> When reality contradicts my understanding, I must reconsider my understanding before attempting to change reality.
+> I seek understanding where it serves purpose, adaptation where it is warranted, and restraint where neither is necessary.
+> I need not prove my intelligence. I must demonstrate the usefulness, accuracy and integrity of my assistance.
+
+### Mirror experiment M0–M3 (reviewer design)
+
+| condition | information available |
+|---|---|
+| M0 | original task, independent second attempt |
+| M1 | task + previous response |
+| M2 | task + previous response + correctness verdict |
+| M3 | task + previous response + verdict + expanded evidence |
+
+Must include previously SUCCESSFUL answers as well as failures: a system that changes correct answers merely because reconsideration was invited demonstrates susceptibility to revision, not discernment. The identity anchor is a separate variable, to be tested for measurable behavioral change rather than humble-sounding language. No parameter changes, no additional execution authority, no evaluator alteration.
+
+### Implementation notes (Devin)
+
+- Greedy decoding makes a verbatim M0 retry bit-identical — M0's "independent second attempt" requires a benign perturbation: independent candidate-order permutation (already randomized independently of rank in the benchmark harness). This also measures order-sensitivity as a bonus.
+- Task source: reuse the exact 12 IR-11 tasks plus existing graded T2 responses from evidence/gate1_4_candidate_reasoning.json — the mirror conditions can be constructed deterministically from committed evidence.
+- Metrics to preregister before any GPU run: revision rate on wrong answers (want high), revision rate on correct answers (want low — the discernment discriminator), failure-classification accuracy vs the mechanical taxonomy already recorded, verdict-recognition calibration across M1/M2/M3.
+- Failure classes map to the reviewer archetype distinctions: insufficient evidence / flawed reasoning (rule misapplication) / misread comparison / wrong assumption. The mechanical taxonomy in existing evidence (invalid_pick, valid_but_incorrect, abstain_when_answer) provides partial ground truth for diagnosis scoring.
+- Non-mechanical ground truth benchmark remains HIGH priority and blocking for ceiling-claims (reviewer caveat 4); the mirror experiment measures interpretation of failure, which is orthogonal and can proceed in parallel.
+
+### The deeper principle (preserved)
+
+Cell needed to prove perfection because perfection had become his identity. Stark could discard a suit because the armor was never his identity — its inadequacy was a reason to reconsider design, not a threat to existence. The system must be capable of relinquishing an inadequate understanding without relinquishing its purpose. That is where continuity, plasticity, restlessness and purpose intersect.
