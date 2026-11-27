@@ -791,3 +791,42 @@ The output must contain exactly six lines for five candidates, with no header, e
 **Budget:** 72 planned generations, hard cap 80 generations or 20 GPU minutes. XTRACT outputs are capped at 96 new tokens. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
 
 **Known limitations fixed in advance:** extraction remains transcription from clean text, not perception from messy observations; rule interpretation is given to the deterministic evaluator rather than learned; removing evaluation fields means this probe does not replicate the endogenous benefit of the verbose v43 computation artifact, only the minimal extraction/delegation interface; v134 is reseeded after inspecting prior pilot outputs, so it is a preregistered replication rather than a pristine first-pass benchmark; positive results support a floor-level division of labor, not a trained non-generative decision head or recursive self-improvement.
+
+
+## 22. HZN-OOI-03 results — extraction is reliable; delegation is perfect; compact recitation alone does not inhibit ties (72 generations, 207s GPU)
+
+Evidence: `evidence/gate1_4_extract_delegation_v134.json`. All 72 planned generations completed.
+
+### Verdict against preregistered thresholds
+
+| threshold | result | verdict |
+|---|---:|---|
+| XTRACT format validity ≥ .95 | **36/36 = 1.00** | PASS |
+| valid-artifact raw extraction ≥ .90 | **36/36 = 1.00** | PASS |
+| delegated exact-tie accuracy ≥ 11/12 | **12/12 = 1.00** | PASS |
+| repair neural-wrong ≥ .75 | **15/15 = 1.00** | PASS |
+| damage neural-correct ≤ .10 | **0/21 = .00** | PASS |
+| delegated answer-present no material drop | delegated 18/18 vs neural 14/18 | PASS |
+| delegated near-tie ≥ 10/12 | **12/12 = 1.00** | PASS |
+| endogenous XTRACT benefit ≥ +0.11 | .583 − .528 = **+.056** | FAIL — compact recitation alone is not enough |
+| BASE_TIE_GUARD exact-tie sanity | **12/12 = 1.00** | PASS |
+
+### Behavioral summary
+
+| condition | accuracy | answer-present | none-truth | exact tie | near tie | insufficient | unique | mean latency |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| BASE | 19/36 = .528 | 15/18 = .833 | 4/18 = .222 | **0/12** | 9/12 | 4/6 | 6/6 | 0.40s |
+| XTRACT neural | 21/36 = .583 | 14/18 = .778 | 7/18 = .389 | **2/12** | 9/12 | 5/6 | 5/6 | 5.33s |
+| XTRACT_DELEGATED | **36/36 = 1.000** | **18/18** | **18/18** | **12/12** | **12/12** | **6/6** | **6/6** | derived |
+| BASE_TIE_GUARD | 31/36 = .861 | — | — | **12/12** | — | — | — | post hoc |
+
+XTRACT format validity and raw extraction exactness were both **36/36**. Every one of the 15 neural-wrong cases was repaired by delegation, with zero damage to the 21 neural-correct cases. The narrow exact-tie guard alone raised BASE from .528 to .861, but only full rule delegation reached 1.000.
+
+### Interpretation
+
+1. **The extraction/delegation interface worked exactly as designed.** The model can bind labels to raw evidence in this closed setting, and deterministic computation can then execute the rule perfectly. This is the strongest evidence so far for the program's delegation boundary.
+2. **Compact recitation alone did not teach inhibition.** XTRACT exact-tie accuracy was only 2/12, versus 0/12 for BASE. The endogenous-benefit threshold failed. This contrasts with the verbose v43 artifact's exploratory 9/12 exact-tie recovery: explicit pass/fail/winner computation appears to help the neural final answer, but merely copying evidence does not.
+3. **The dissociation is now sharper.** In most exact-tie cases the model copied the decisive values perfectly and still selected a tied candidate. This is not evidence ignorance or transcription failure. It is failure to enforce the mechanical rule “exactly equal winners ⇒ choose neither.”
+4. **Position capture is substantial.** BASE selected one of the critical tied items in 12/12 exact-tie cases; 75% of those selections were the item occupying the earlier critical position. XTRACT remained similar (83% critical selection, 70% first-critical among them). Tie breaking is therefore not principled preference; it is largely order/position capture.
+5. **Cost still matters.** XTRACT reduced latency from the verbose artifact's ~12.7s to ~5.3s, but remains ~13× BASE latency and uses 65 mean output tokens versus 4. If this interface became routine, extraction should eventually be structured/non-generative rather than verbal. The Jev-like principle is relevant as an architectural direction, but this experiment used no external product and trained no head.
+6. **The immediate architectural conclusion is now strong:** for decidable rule operations, do not ask the generative model to be the executor. Let it extract/propose/deliberate; let deterministic computation verify, compare, inhibit, and decide within its domain.
