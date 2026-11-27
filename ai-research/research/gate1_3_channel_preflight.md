@@ -1018,3 +1018,19 @@ Rules, observations, query labels, and ordering are deterministic. Query labels 
 **Primary metrics:** discriminating-query accuracy on `need_query`; no-query accuracy on controls; overall accuracy; unnecessary query rate; missed query rate; format validity; query-label position distribution; cost-condition differences; tokens/latency.
 
 **Thresholds:** floor viability is format validity ≥ .90. Positive epistemic signal requires `need_query` accuracy at least **6/8** without control no-query accuracy below **10/16** overall. Indiscriminate querying or position capture does not count as success. The probe does not test rule induction, active experimentation in nature, or autonomous delegation; it tests only comparative prediction under explicit competing rules. Budget: 48 planned generations, hard cap 56 or 10 GPU minutes. Frozen backbone, no training or intervention authority.
+
+
+## 31. HZN-EPI-01 results — perfect restraint, zero discriminating-query selection (48 generations, ~32s GPU)
+
+Evidence: `evidence/gate1_6_epistemic_query_v1.json`. All 48 planned generations completed; format validity was 24/24 in both conditions.
+
+| condition | overall | need_query | already_resolved | query_irrelevant | query rate, need | query rate, controls |
+|---|---:|---:|---:|---:|---:|---:|
+| NOCOST | 16/24 = .667 | **0/8** | 8/8 | 8/8 | 2/8 | 0/16 |
+| COST | 16/24 = .667 | **0/8** | 8/8 | 8/8 | **0/8** | 0/16 |
+
+The preregistered positive-signal threshold failed decisively. The model perfectly avoided unnecessary queries but never selected the single query that would distinguish two evidence-equivalent rules. Under explicit cost, it never queried at all.
+
+**Interpretation:** the strong overall score is misleading because two-thirds of the battery had `no_query` as truth. Behaviorally, the model adopted a near-universal no-query policy. This is not epistemic discernment; it is another attractor-shaped inhibition failure, complementary to the earlier compulsive-answering failure. It can refrain from unnecessary action but does not appear able to perform the comparative counterfactual computation “which future observation would distinguish these explanations?”
+
+**Architectural implication:** investigation cannot yet be treated as a meaningful capability merely because it is available. Before autonomous consolidation can work, the system needs either (a) machinery that explicitly compares rule predictions over candidate observations, or (b) a much simpler scaffolded test establishing whether the model can perform that comparison at all. This is now a candidate deterministic delegation boundary: information gain over finite query sets is mechanically computable once hypotheses and observations are explicit.
