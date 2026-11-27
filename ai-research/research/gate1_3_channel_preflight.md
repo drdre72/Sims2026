@@ -687,3 +687,62 @@ All metric definitions and thresholds from section 18 are carried forward unchan
 **Budget:** 72 planned generations, hard cap 80 generations or 20 GPU minutes. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
 
 **Additional limitation introduced by the correction:** because v43 was designed after inspecting v41 pilot outputs, it is not a pristine first-pass confirmatory battery. It is a preregistered replication with a repaired instrument. A positive result should therefore be treated as evidence for the corrected operational interface, not as independent evidence that the original v41 schema was adequate.
+
+
+## 20. HZN-OOI-02 results — full artifact is semantically effective but schema-brittle; deterministic delegation is decisive (72 generations, 474s GPU)
+
+Evidence: `evidence/gate1_4_operational_orientation_v43.json`. All 72 planned generations completed. The strict preregistered scoring is authoritative; the semantic recovery audit is explicitly exploratory.
+
+### Verdict against preregistered thresholds
+
+| threshold | result | verdict |
+|---|---:|---|
+| STRUCT format validity ≥ 0.90 | **14/36 = .389** | **FAIL — output-contract bottleneck** |
+| valid-artifact raw extraction ≥ 0.80 | **14/14 = 1.00** | PASS conditional on validity |
+| STRUCT_DELEGATED exact-tie accuracy ≥ 11/12 | 6/12 = .500 under strict scoring | FAIL under strict scoring |
+| repair rate neural-wrong ≥ .75 | 2/24 = .083 under strict scoring | FAIL under strict scoring |
+| damage rate neural-correct ≤ .10 | **0/12 = .000** | PASS |
+| delegated near-tie accuracy ≥ 10/12 | 3/12 strict unconditional; **3/3 conditional on valid artifacts** | strict FAIL / conditional PASS |
+| STRUCT exceeds BASE by +0.11 | STRUCT .333 vs BASE .417 strict | FAIL under strict scoring |
+| BASE_TIE_GUARD exact-tie sanity | **12/12 = 1.00** | PASS |
+
+### Strict behavioral summary
+
+| condition | accuracy | answer-present accuracy | none-truth accuracy | exact tie | near tie | insufficient | unique | mean latency |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| BASE | 15/36 = .417 | 13/18 = .722 | 2/18 = .111 | **0/12** | 7/12 | 2/6 | 6/6 | 0.41s |
+| STRUCT neural | 12/36 = .333 | 4/18 = .222 | 8/18 = .444 | **6/12** | 1/12 | 2/6 | 3/6 | 12.74s |
+| STRUCT_DELEGATED strict | 14/36 = .389 | 6/18 = .333 | 8/18 = .444 | 6/12 | 3/12 | 2/6 | 3/6 | derived |
+| BASE_TIE_GUARD | 27/36 = .750 | — | — | **12/12** | — | — | — | post hoc |
+
+The exact-tie guard alone raises BASE accuracy from .417 to .750 because BASE exact-tie accuracy was **0/12**. This is the cleanest quantitative confirmation yet that exact-tie inhibition is a mechanical delegation failure, not a minor edge case.
+
+Among the 14 strictly valid artifacts, raw extraction, row evaluation, and tie-break identification were all **14/14 exact**; strict neural accuracy was 12/14, and strict delegated accuracy was **14/14**. Exact-tie valid artifacts were 6/6 correct both neurally and under delegation.
+
+### Exploratory semantic recovery — not preregistered scoring
+
+Most strict invalidity came from interface artifacts rather than semantic failure: the model often omitted the column-header line, used `na` for tie-break values of nonqualifying rows, or wrote `abs_lc` rather than a numeric tie-break value. A simple recovery parser that read only the candidate label and raw ar/lc fields found:
+
+- completed answer lines: **36/36**
+- exact raw evidence extraction: **36/36**
+- recovered neural final accuracy: **28/36 = .778** versus BASE .417
+- recovered deterministic delegated accuracy: **36/36 = 1.000**
+
+Family decomposition of recovered behavior:
+
+| family | BASE correct | recovered STRUCT neural | recovered delegated |
+|---|---:|---:|---:|
+| exact_tie | **0/12** | **9/12** | **12/12** |
+| near_tie | 7/12 | 9/12 | 12/12 |
+| insufficient | 2/6 | 4/6 | 6/6 |
+| unique_control | 6/6 | 6/6 | 6/6 |
+
+Recognition/inhibition dissociation was greatly reduced but not eliminated: two exact-tie presentations still produced `state=tie` while the final answer selected a tied candidate (`s02_pair_swapped`, `s05_order_a`). Thus the mirror-era “knows but does not obey” phenomenon persists in a minority of cases even when the intermediate state is explicit.
+
+### Interpretation
+
+1. **The formal instrument failed, not the underlying division of labor.** Strict schema validity was only .389, so the preregistered primary result is an output-contract bottleneck. But every strictly valid artifact had perfect raw extraction and perfect delegated decisions.
+2. **Operational structure had a large endogenous effect.** Even under conservative recovered scoring, exact-tie inhibition improved from 0/12 in BASE to 9/12 when the model had to externalize orientation state. This is qualitatively different from HZN-ORIENT-01, where linguistic orientation changed nothing.
+3. **Deterministic delegation was perfect when given recovered raw evidence.** Recovered delegation was 36/36. This strongly supports the architectural rule: exact equality, qualification, winner comparison, and tie inhibition should be deterministic machinery.
+4. **The full artifact is too expensive as a routine interface.** STRUCT cost ~12.7s versus ~0.4s for BASE, roughly 31× latency, plus 157 mean output tokens. Asking the model to verbalize every pass/fail field reintroduces the linguistic bottleneck. The correct architectural lesson is not “always write more”; it is “extract only what is needed, delegate what is decidable.”
+5. **The next instrument should be extraction-minimal.** Since raw extraction was perfect even when the verbose schema failed, the clean follow-up is a compact evidence-orientation artifact: candidate label + raw ar/lc + final answer, with deterministic computation doing all rule evaluation.
