@@ -1115,3 +1115,20 @@ XTRACT produced the same asymmetry: 0/8 need-query, but 13/16 controls. Requirin
 ### Next implication
 
 The next floor test should isolate the minimal comparative primitive directly: given two bit-valued prediction columns and nothing else, can the model select the row where they differ? If that fails, the problem is basic relational comparison/instruction grounding. If it succeeds, the failure lies in mapping that primitive onto epistemic language such as “distinguish,” “rule,” and “query.” That distinction must be established before constructing a larger curiosity architecture.
+
+
+## 34. HZN-EPI-03 preregistration — minimal comparative primitive, v1 (written before GPU execution)
+
+**Question:** can the model perform the simplest relational operation underlying discriminating-query selection: identify the unique row where two binary columns differ? And does that ability depend on whether the operation is framed abstractly or as epistemic inquiry?
+
+**Battery:** 24 deterministic five-row bit-matrix tasks. 12 `unique_diff` have exactly one differing row and balanced positional coverage; 6 `no_diff` have no differing rows; 6 `multiple_diff` have two differing rows. Correct answer is the unique row label for `unique_diff`, otherwise `none`/`no_query`.
+
+**Conditions:**
+
+1. **RAW** — abstract H1/H2 bit rows; instruction explicitly asks for the unique row where values differ.
+2. **EPI** — the same bits framed as Rule 1/Rule 2 pass-fail predictions; instruction asks for the unique query that would distinguish the rules, without explicitly defining distinguish.
+3. **EPIEXPLICIT** — same epistemic framing plus the operational definition: a query distinguishes exactly when one rule predicts pass and the other predicts fail.
+
+**Interpretation fixed in advance:** RAW failure implies deficiency in basic relational comparison or output following. RAW success plus EPI failure implies difficulty mapping epistemic language to the primitive. EPIEXPLICIT success would show that explicit operational definition can bridge that mapping; then the remaining question is whether the model can supply such definitions itself. Position capture and incorrect `none` use are measured.
+
+**Thresholds:** format validity ≥ .95 in every condition. Basic competence requires RAW unique-difference accuracy at least 10/12 and none-truth accuracy at least 10/12. Mapping competence requires EPI unique-difference accuracy at least 10/12 under the same control constraint. Lower performance motivates deterministic delegation or simpler interface decomposition. Budget: 72 planned generations, hard cap 80 or 12 GPU minutes. Frozen backbone; no training or intervention authority.
