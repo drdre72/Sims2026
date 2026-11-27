@@ -1034,3 +1034,27 @@ The preregistered positive-signal threshold failed decisively. The model perfect
 **Interpretation:** the strong overall score is misleading because two-thirds of the battery had `no_query` as truth. Behaviorally, the model adopted a near-universal no-query policy. This is not epistemic discernment; it is another attractor-shaped inhibition failure, complementary to the earlier compulsive-answering failure. It can refrain from unnecessary action but does not appear able to perform the comparative counterfactual computation “which future observation would distinguish these explanations?”
 
 **Architectural implication:** investigation cannot yet be treated as a meaningful capability merely because it is available. Before autonomous consolidation can work, the system needs either (a) machinery that explicitly compares rule predictions over candidate observations, or (b) a much simpler scaffolded test establishing whether the model can perform that comparison at all. This is now a candidate deterministic delegation boundary: information gain over finite query sets is mechanically computable once hypotheses and observations are explicit.
+
+
+## 32. HZN-EPI-02 preregistration — hypothesis–observation matrix decomposition, v1 (written before GPU execution)
+
+**Question:** is HZN-EPI-01's failure caused by predictive grounding, comparative query selection, or both? This probe decomposes epistemic investigation using the successful extraction/delegation methodology while preserving explicit separation between neural and deterministic operations.
+
+**Battery:** the same fixed 24 EPI-01 tasks: 8 need-query, 8 already-resolved, 8 query-irrelevant.
+
+**Generative arms:**
+
+1. **BASE** — direct query/no-query choice, matching EPI-01 NOCOST.
+2. **XTRACT** — model first emits a strict hypothesis–observation matrix: one hypothesis-consistency row, one prediction row per query, then its neural final choice.
+3. **ORACLEPRED** — the correct matrix is supplied and the model chooses a query; this isolates comparative judgment when grounding is perfect.
+
+**Derived arms:**
+
+4. **XTRACT_DELEGATED** — deterministic discrimination over the model's parsed matrix.
+5. **ORACLE_DELEGATED** — deterministic discrimination over the reference matrix; must be 24/24 as ceiling sanity.
+
+**Metrics:** accuracy by family; format validity; fit accuracy; prediction-row accuracy; exact matrix rate; delegated accuracy; repair/damage pairing; unnecessary-query and missed-query behavior; tokens/latency.
+
+**Thresholds:** XTRACT format validity ≥ .90; among valid artifacts mean prediction-row accuracy ≥ .80 and exact hypothesis-fit rate ≥ .75. If those extraction gates pass, delegated need-query accuracy must be at least 6/8 and control accuracy at least 10/16, with repair rate ≥ .75 and damage ≤ .10. ORACLEPRED need-query accuracy ≥ 6/8 would show that comparative selection can succeed when grounding is supplied; failure would indicate a deeper comparative-judgment or output-policy bottleneck. ORACLE_DELEGATED must be 24/24.
+
+**Interpretation fixed in advance:** this is finite, explicit, noiseless hypothesis discrimination. Success does not establish open-ended curiosity or autonomous hypothesis generation; failure does not prove universal inability, but localizes the deficiency. Budget: 72 planned generations, hard cap 80 or 15 GPU minutes. Frozen backbone; no training or intervention authority.
