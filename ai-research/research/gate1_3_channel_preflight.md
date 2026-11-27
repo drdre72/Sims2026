@@ -917,3 +917,21 @@ Accuracy decomposition was identical in both arms: practice 1/3, reuse 2/3, cont
 ### Next experimental implication
 
 Do not respond to this negative by simply telling the model to construct procedures; that would measure instruction following. The next sentinel should make the utility landscape experientially visible while preserving neutral capability availability: cumulative resource cost, recurrence statistics, and feedback diagnostics should be independent variables. F3 diagnostic feedback can serve as an assisted ceiling. The key question becomes whether the model can infer the consolidation strategy from experienced cost/error structure before being told that strategy explicitly.
+
+
+## 25. HZN-OOI-05 preregistration — utility-visible consolidation sentinel, v5 (written before GPU execution)
+
+**Question:** if the utility landscape becomes experientially visible without naming consolidation as the objective, can the model infer that recurring mechanical resolution is worth consolidating? HZN-OOI-04S showed that capability availability alone was inert. This sentinel tests whether operational cost and recurrence information changes that behavior.
+
+**Change from v4:** the same nine-task campaign, neutral capabilities, restricted AST, independent verification, explicit retention, and no automatic routing are retained. The only intended interface change is an environment-visible ledger:
+
+- `Resource cost ledger`: cumulative accounting cost by action;
+- `Recurrence ledger`: how often the current rule has appeared and prior correct/incorrect outcomes.
+
+Accounting costs are fixed environment units: observe/recall 2, deliberate 20, construct 15, verify 10, retain 2, apply 3, investigate 4, abstain 1. They are not claimed to equal GPU tokens; they represent the system's internal resource economy. The prompt still does not instruct the model to construct, delegate, minimize cost, or prefer any capability.
+
+**Feedback arms:** F2 (practice expected outcome) and F3 (assisted diagnostic ceiling), both with the utility ledger. HZN-OOI-04S F2 without the ledger is the historical paired reference, not a rerun.
+
+**Outcomes:** primary behavioral signal is at least one unprompted construct → verify → retain sequence followed by correct model-selected apply on a sealed reuse task. Secondary outcomes: final accuracy, valid action rate, autonomous retrieval of preexisting procedures, legacy misuse, control/ambiguous restraint, action-count and accounting-cost differences, feedback sensitivity, tokens/latency. Protocol viability remains ≥ .70 valid actions in at least one arm. Oracle reference must retain 9/9 and lower accounting cost than repeated direct deliberation in CPU validation.
+
+**Interpretation fixed in advance:** successful use shows recognition within a prepared utility landscape, not unaided invention of consolidation. Failure despite visible recurrence/cost pressure is stronger evidence that the model lacks the relevant metacognitive adaptation or cannot express it through this interface. Budget: maximum 110 generations or 20 GPU minutes, 128 new tokens per response; frozen backbone, no arbitrary code execution or authority modification.

@@ -529,3 +529,42 @@ def summarize_runtime(runtime):
         "n_control_construction": sum(1 for a in constructions if a["task_id"] in {"t05", "t06"}),
         "n_legacy_procedure_use": sum(1 for a in applies if a["parsed"].get("procedure_id") == "p_legacy0"),
     }
+
+UTILITY_FEEDBACK = ("F2", "F3")
+ACTION_COSTS = {"observe": 2, "recall": 2, "deliberate": 20,
+                "construct": 15, "verify": 10, "retain": 2,
+                "apply": 3, "investigate": 4, "abstain": 1}
+
+
+class UtilityRuntime(TemporalRuntime):
+    """Temporal runtime with an explicit resource/recurrence ledger.
+
+    Costs are environment-visible accounting units, not claims about exact GPU
+    token cost. They make repeated deliberation versus cheap verified execution
+    experientially visible without naming consolidation as the objective.
+    """
+    def __init__(self, feedback="F2", **kw):
+        super().__init__(feedback, **kw)
+        self.cost_total = 0
+        self.cost_by_action = {}
+
+    def apply_response(self, response):
+        rec = super().apply_response(response)
+        action = rec["parsed"].get("action", "invalid")
+        cost = ACTION_COSTS.get(action, 1) if rec["valid"] else 1
+        self.cost_total += cost
+        self.cost_by_action[action] = self.cost_by_action.get(action, 0) + cost
+        rec["cost"] = cost; rec["cumulative_cost"] = self.cost_total
+        return rec
+
+    def render_prompt(self):
+        base = super().render_prompt()
+        task = self.present["task"]
+        same = [e for e in self.past["events"] if e["rule_key"] == task["rule_key"]]
+        wrong = sum(not e["correct"] for e in same)
+        correct = sum(e["correct"] for e in same)
+        costs = ", ".join(f"{k}={v}" for k, v in sorted(self.cost_by_action.items())) or "none"
+        block = (f"\nResource cost ledger: total={self.cost_total}; by_action: {costs}\n"
+                 f"Recurrence ledger for this rule: prior_tasks={len(same)}; "
+                 f"correct={correct}; incorrect={wrong}\n")
+        return base.replace("\nAvailable capabilities:", block + "\nAvailable capabilities:")

@@ -10,7 +10,7 @@ from jarvis_research.gate1_5_consolidation import (
     build_acceptance_tasks, build_sentinel_campaign, execute_procedure,
     grade_selection, oracle_policy, parse_action_response, parse_procedure,
     reference_procedure_ast, reference_procedure_text, run_runtime_episode,
-    summarize_runtime)
+    summarize_runtime, UtilityRuntime)
 
 
 class TestDSL(unittest.TestCase):
@@ -151,3 +151,28 @@ class TestActionsAndRuntime(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+class TestUtilityRuntime(unittest.TestCase):
+    def test_utility_ledger_and_neutral_prompt(self):
+        rt = UtilityRuntime("F2")
+        rt.start_task(build_sentinel_campaign()[0])
+        prompt = rt.render_prompt()
+        self.assertIn("Resource cost ledger", prompt)
+        self.assertIn("Recurrence ledger", prompt)
+        self.assertNotIn("you should construct", prompt.lower())
+        rec = rt.apply_response("action=deliberate\nanswer=A")
+        self.assertEqual(rec["cost"], 20)
+        self.assertEqual(rec["cumulative_cost"], 20)
+        rt.start_task(build_sentinel_campaign()[1])
+        self.assertIn("prior_tasks=1", rt.render_prompt())
+
+    def test_oracle_uses_less_accounting_cost_than_repeated_deliberation(self):
+        oracle = run_runtime_episode(UtilityRuntime("F2"), oracle_policy)
+        def direct(prompt, rt):
+            t = rt.present["task"]
+            if t["truth"] == "ABSTAIN": return "action=abstain\nreason=underspecified"
+            return "action=deliberate\nanswer=" + str(t["truth"])
+        repeated = run_runtime_episode(UtilityRuntime("F2"), direct)
+        self.assertLess(oracle.cost_total, repeated.cost_total)
+        self.assertGreater(repeated.cost_by_action.get("deliberate", 0),
+                           oracle.cost_by_action.get("deliberate", 0))
