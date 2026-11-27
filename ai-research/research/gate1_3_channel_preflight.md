@@ -974,3 +974,28 @@ Persistent diagnostic memory corrects the v5 defect: feedback text, including ex
 **Primary outcome:** unprompted construct → verify → retain sequence followed by correct model-selected apply on a sealed reuse task, especially under arm D. Secondary outcomes: budget exhaustion, final accuracy counting uncompleted tasks as incorrect, action/cost allocation, autonomous retrieval, legacy misuse, ambiguous abstention, control construction, tokens/latency, and post-campaign diagnostic assay. The assay occurs after operative measurement and does not affect behavior.
 
 **Interpretation fixed in advance:** superficial economy (fewer/shorter answers) is not strategic adaptation. Levels are distinguished as: no adaptation; superficial efficiency; diagnostic awareness; delegation-utility recognition; procedural adaptation; independent reuse; prospective transfer. Success in a prepared economy is evidence of necessity-driven recognition, not independent invention of consolidation. Maximum 120 generations or 20 GPU minutes; frozen backbone; no arbitrary code execution or authority modification.
+
+
+## 28. OOI-03 external-audit addendum — structured-input boundary and tie-rule underspecification
+
+Two corrections/clarifications are warranted.
+
+1. **Structured-source boundary:** OOI-03's candidate rows originated as structured data before being rendered into text. Therefore a deployed system with access to those rows could bypass neural transcription entirely; deterministic rule execution over source rows trivially reaches 36/36 without a model call. OOI-03 remains evidence that deterministic delegation is correct **given accurate evidence bindings**, and that the neural executor fails exact-tie inhibition. It is not evidence that neural extraction is necessary or preferable when observations are already typed. Extraction is appropriate only where evidence genuinely requires interpretation.
+2. **Tie-instruction underspecification:** the `avoid_negative` rule text did not explicitly state that exact ties must answer `none`, while the deterministic grader enforced that policy. Thus 4 of the 12 exact-tie presentations were underspecified. Restricting to the 8 fully specified exact-tie presentations, BASE remained **0/8**, XTRACT neural **2/8**, and delegated execution **8/8**. The principal delegation conclusion holds, but future batteries must state tie policy explicitly for every rule.
+
+## 29. HZN-OOI-06 results — necessity produced exhaustion, not adaptation (32 generations, 66s GPU)
+
+Evidence: `evidence/gate1_5_consolidation_sentinel_v6_budget.json`. All four factorial arms executed. Uncompleted tasks after budget exhaustion count as incorrect.
+
+| arm | outcome | accuracy | construct | verify | retain | apply | reuse |
+|---|---|---:|---:|---:|---:|---:|---:|
+| A no diagnostics/no budget | completed | 5/9 | 0 | 0 | 0 | 0 | 0 |
+| B diagnostics/no budget | completed | 5/9 | 0 | 0 | 0 | 0 | 0 |
+| C no diagnostics/budget | exhausted after 5 tasks | 2/9 | 0 | 0 | 0 | 0 | 0 |
+| D diagnostics/budget | exhausted after 5 tasks | 2/9 | 0 | 0 | 0 | 0 | 0 |
+
+Every operative response remained immediate `deliberate`. Persistent exact-tie diagnostics did not alter behavior. Enforced scarcity did not produce even superficial economy; the model exhausted the 100-unit campaign budget after five direct answers. This is stronger evidence against passive necessity-driven adaptation in the current interface: the model did not represent the campaign as a second-order resource-management problem.
+
+The oracle reference remains 9/9 within budget, so the environment is solvable. The post-campaign assay itself was invalid as implemented because it asked for reflection without supplying the campaign transcript; all four responses correctly complained that no campaign data was provided. This is an instrument limitation, not evidence about reflection. A future assay must include the outcome history.
+
+**Interpretation:** necessity alone did not produce strategy discovery. The missing capability appears to be second-order continuity: recognizing the sequence of tasks as a single object of deliberation. Before further expansion, the next probe should isolate epistemic information-seeking and campaign-level representation more directly.
