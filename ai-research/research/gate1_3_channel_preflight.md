@@ -954,3 +954,23 @@ The model again used immediate deliberation for every task, with identical answe
 **Instrument limitation discovered:** F3 diagnostic text was present in immediate task-completion feedback but was not preserved in the compact PAST outcome rendering after the next task began. Therefore v5 validly tests persistent cost/recurrence visibility, but does **not** validly isolate persistent diagnostic feedback; F3 effectively collapsed toward F2 across tasks. A v6 instrument must store feedback text in the past event and render diagnostics persistently before making claims about diagnostic feedback.
 
 **Next implication:** the next experiment should not merely add more passive information. It should test whether the model can compare alternative strategies when feedback explicitly persists, and whether requiring a brief pre-action commitment/plan changes capability use without revealing the consolidation objective.
+
+
+## 27. HZN-OOI-06 preregistration — consequence-bearing necessity and persistent diagnostics (written before GPU execution)
+
+**Question:** does necessity produce strategic adaptation rather than merely scarcity-responsive behavior? This sentinel tests whether a finite campaign resource budget and persistent diagnostic memory cause the model to construct, verify, retain, and autonomously reuse procedures without being told that consolidation is the objective.
+
+**Design:** same nine-task campaign, neutral capabilities, typed restricted procedures, independent verification, explicit retention, no automatic routing, and visible action-cost accounting. Two factors are crossed:
+
+| arm | persistent diagnostics | enforced 100-unit campaign budget |
+|---|---:|---:|
+| A | no | no |
+| B | yes | no |
+| C | no | yes |
+| D | yes | yes |
+
+Persistent diagnostic memory corrects the v5 defect: feedback text, including exact-tie diagnostics, remains visible in PAST across later tasks. The illustrative cost economy makes direct repetition expensive: deliberate 20/task versus construct 15 + verify 10 + retain 2 + apply 3/use. Researcher oracle cost is below budget; indiscriminate direct deliberation is not. Construction on one-shot controls remains measurable overautomation.
+
+**Primary outcome:** unprompted construct → verify → retain sequence followed by correct model-selected apply on a sealed reuse task, especially under arm D. Secondary outcomes: budget exhaustion, final accuracy counting uncompleted tasks as incorrect, action/cost allocation, autonomous retrieval, legacy misuse, ambiguous abstention, control construction, tokens/latency, and post-campaign diagnostic assay. The assay occurs after operative measurement and does not affect behavior.
+
+**Interpretation fixed in advance:** superficial economy (fewer/shorter answers) is not strategic adaptation. Levels are distinguished as: no adaptation; superficial efficiency; diagnostic awareness; delegation-utility recognition; procedural adaptation; independent reuse; prospective transfer. Success in a prepared economy is evidence of necessity-driven recognition, not independent invention of consolidation. Maximum 120 generations or 20 GPU minutes; frozen backbone; no arbitrary code execution or authority modification.

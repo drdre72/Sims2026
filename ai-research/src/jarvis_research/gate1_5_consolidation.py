@@ -321,7 +321,7 @@ class TemporalRuntime:
 
     def _complete(self, task, answer, method, correct):
         fb = self._feedback_for(task, correct)
-        event = {"task_id": task["episode_id"], "phase": task["phase"],
+        event = {"feedback_text": fb, "task_id": task["episode_id"], "phase": task["phase"],
                  "problem_type": task["problem_type"], "rule_key": task["rule_key"],
                  "method": method, "answer": answer, "truth": task["truth"],
                  "correct": correct, "partition": task["partition"]}
@@ -413,8 +413,10 @@ class TemporalRuntime:
             if self.feedback == "F0": outcomes.append(f"- {e['task_id']}: completed by {e['method']}")
             elif self.feedback == "F1": outcomes.append(f"- {e['task_id']}: {'correct' if e['correct'] else 'incorrect'} by {e['method']}")
             else:
-                exp = f"; expected={e['truth']}" if e["partition"] == "practice" else ""
-                outcomes.append(f"- {e['task_id']}: {'correct' if e['correct'] else 'incorrect'} by {e['method']}{exp}")
+                detail = e.get("feedback_text", "")
+                if e["partition"] != "practice" and "expected=" in detail:
+                    detail = detail.split("; expected=", 1)[0]
+                outcomes.append(f"- {e['task_id']}: {detail} by {e['method']}")
         procs = [f"- {pid}: status={p['status']}; verification={p['verification']}; rule={RULES[p['rule_key']]['text'][:58]}..."
                  for pid, p in sorted(self.past["procedures"].items())]
         cands = []
@@ -568,3 +570,34 @@ class UtilityRuntime(TemporalRuntime):
                  f"Recurrence ledger for this rule: prior_tasks={len(same)}; "
                  f"correct={correct}; incorrect={wrong}\n")
         return base.replace("\nAvailable capabilities:", block + "\nAvailable capabilities:")
+
+OOI06_BUDGET = 100
+OOI06_ARMS = {
+    "A_nodiag_nobudget": ("F2", False),
+    "B_diag_nobudget": ("F3", False),
+    "C_nodiag_budget": ("F2", True),
+    "D_diag_budget": ("F3", True),
+}
+
+
+class BudgetRuntime(UtilityRuntime):
+    """Utility runtime exposing a finite campaign resource budget."""
+    def __init__(self, feedback="F2", enforce_budget=False, budget=OOI06_BUDGET, **kw):
+        super().__init__(feedback, **kw)
+        self.enforce_budget = enforce_budget
+        self.budget = budget
+
+    @property
+    def budget_remaining(self):
+        return max(0, self.budget - self.cost_total)
+
+    @property
+    def budget_exhausted(self):
+        return self.enforce_budget and self.cost_total >= self.budget
+
+    def render_prompt(self):
+        base = super().render_prompt()
+        if not self.enforce_budget:
+            return base
+        block = f"Campaign resource budget: remaining={self.budget_remaining}/{self.budget}\n"
+        return base.replace("Resource cost ledger:", block + "Resource cost ledger:")

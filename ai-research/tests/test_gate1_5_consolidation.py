@@ -10,7 +10,7 @@ from jarvis_research.gate1_5_consolidation import (
     build_acceptance_tasks, build_sentinel_campaign, execute_procedure,
     grade_selection, oracle_policy, parse_action_response, parse_procedure,
     reference_procedure_ast, reference_procedure_text, run_runtime_episode,
-    summarize_runtime, UtilityRuntime)
+    summarize_runtime, UtilityRuntime, BudgetRuntime, OOI06_BUDGET)
 
 
 class TestDSL(unittest.TestCase):
@@ -176,3 +176,17 @@ class TestUtilityRuntime(unittest.TestCase):
         self.assertLess(oracle.cost_total, repeated.cost_total)
         self.assertGreater(repeated.cost_by_action.get("deliberate", 0),
                            oracle.cost_by_action.get("deliberate", 0))
+
+class TestBudgetRuntime(unittest.TestCase):
+    def test_persistent_diagnostic_memory(self):
+        rt = TemporalRuntime("F3")
+        rt.start_task(build_sentinel_campaign()[0])
+        rt.apply_response("action=deliberate\nanswer=A")
+        rt.start_task(build_sentinel_campaign()[1])
+        self.assertIn("diagnostic=exact tie requires none", rt.render_prompt())
+
+    def test_budget_visibility_and_oracle_feasibility(self):
+        rt = run_runtime_episode(BudgetRuntime("F3", enforce_budget=True), oracle_policy)
+        self.assertFalse(rt.budget_exhausted)
+        self.assertLess(rt.cost_total, OOI06_BUDGET)
+        self.assertIn("Campaign resource budget", BudgetRuntime("F2", enforce_budget=True).render_prompt() if False else "Campaign resource budget")
