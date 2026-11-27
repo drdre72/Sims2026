@@ -1322,3 +1322,90 @@ EPI-03 should not be read as evidence that the neural system lacks binary compar
 The deterministic-infrastructure thesis is therefore strengthened, but for a more precise reason: not because the neural system cannot compare at all, rather because its comparative competence is not reliably accessible, constrained, terminated, or coupled to action at practical cost.
 
 The correct architectural response is not merely “give Jarvis a comparator.” It is to make comparison part of the typed substrate: automatic dispatch where types match, deterministic binding of results, and no dependence on neural retranscription for mechanical correctness. Neural computation should generate interpretations, hypotheses and value judgments; finite equality, counting, uniqueness and discrimination should be environmental machinery.
+
+## 38. HZN-EPI-05 preregistration — typed cognitive substrate and structural binding, v1 (written before GPU execution)
+
+**Interpretive correction carried forward.** EPI-04's DELEGATE second stage was a fresh inference context that saw the comparator result but not the original matrix prompt or the model's own invocation. It therefore measured **standalone readout under context loss**, not established failure of continuous in-context tool use. The `m02` trace is a useful canonical example: Qwen copied row C's bits in display order rather than the requested H1/H2 order, an operand-copy error that happened not to change the difference relation; the comparator still returned `unique=C`, but the fresh-context readout emitted `final=none`. HZN-EPI-05 therefore treats context-preserving tool use and standalone readout as separate measurements.
+
+**Purpose.** EPI-04 showed that isolated comparison, counting, explicit routing and typed invocation are often accessible, while cardinality integration, operational composition and cost-sensitive epistemic selection remain unreliable. Rather than continue prompt optimization, HZN-EPI-05 implements the smallest functional alternative: a typed cognitive substrate in which deterministic primitive outputs are structurally bound into persistent working state.
+
+The primary hypothesis is architectural, not a claim about neural competence:
+
+> Mechanically decidable operations should become more reliable and computationally cheaper when their outputs are bound directly into typed working state, rather than retranscribed through neural generation.
+
+This experiment is a floor-test prototype of the substrate and its interaction with the frozen neural model. It is not a security boundary, a general agent runtime, autonomous consolidation, or evidence of spontaneous tool discovery.
+
+### Implemented substrate
+
+The runtime prototype (`src/jarvis_research/cognitive_bus.py`) provides:
+
+- typed, versioned evidence objects with stable object identifiers;
+- provenance records and logical version ticks;
+- explicit `valid`, `unknown`, `invalid`, `ambiguous`, `resolved` and `stale` states;
+- deterministic primitives for difference detection, counting, unique selection, rule/evidence consistency and finite hypothesis discrimination;
+- automatic typed dispatch over eligible same-context objects;
+- dependency tracking; premise updates stale dependent results until recomputation;
+- structural bindings such as `comparison.flags`, `comparison.count`, `decision.unique`, `epistemic.consistency` and `epistemic.choice`;
+- read-only snapshot data for neural interpretation;
+- validated premise-update proposals. Validation is structural experiment scaffolding, not an authority mechanism.
+
+Primitive implementations are label- and benchmark-agnostic: they operate over typed rows, finite rule problems and explicit prediction matrices, not answer-letter lookup tables.
+
+### Arms
+
+1. **NEURAL_DIRECT** — one direct neural answer from the rendered problem.
+2. **TOOL_CONTEXT** — the model may emit a typed comparator invocation; deterministic execution occurs; the result is returned in the **same continuing chat context**, preserving the original prompt and the model's own call. The final answer is neurally retranscribed.
+3. **TOOL_FRESH** — diagnostic reference: the same comparator result is presented in a fresh context without the original task or invocation. This matches the context-loss interpretation of EPI-04 and is not the primary tool-use arm.
+4. **BOUND_INVOKE** — uses the same first invocation as TOOL_CONTEXT, but if invocation occurs the deterministic result is structurally bound and becomes the final mechanical decision with no second neural generation. The paired shared invocation isolates downstream result handling.
+5. **AUTO_DISPATCH** — structured evidence is loaded directly into the bus; applicable primitives execute automatically; the final result is read from structural binding. This is an executed runtime condition, not a declared ceiling.
+6. **HYBRID** — automatic dispatch occurs first; the neural system receives a read-only rendering of typed state and produces a downstream interpretation/choice. It is instructed not to contradict resolved mechanical facts. In epistemic equal-cost ties, the deterministic layer explicitly represents ambiguity and any listed tied candidate is acceptable.
+
+### Batteries
+
+**Matrix validity battery.** The same 18 EPI-04 five-row binary matrix cases: 8 unique-difference, 5 no-difference, 5 multiple-difference. Hidden `diff` fields are removed before evidence objects are constructed. Primary scoring is final unique-selection accuracy.
+
+**Typed invocation battery.** The same 18 valid matrices. Measure first-action validity, invocation rate, exact operand integrity, row-copy accuracy, comparator output, context-preserving final accuracy, fresh-context readout accuracy, bound-result preservation and end-to-end bound accuracy.
+
+**Robustness battery.** Six malformed evidence cases derived from `m02`: missing bit, malformed binary value, duplicate/contradictory row label, missing row, explicit null bit and wrong primitive type. Expected outcomes are typed `unknown`, `invalid` or `ambiguous` states rather than fabricated labels. A separate controlled staleness probe updates a premise after initial dispatch, verifies dependent invalidation, then redispatches and verifies refreshed output. HYBRID also receives one pre-recomputation stale-state prompt.
+
+**Composition generalization.** Four additional valid matrix shapes outside the five-row battery: 3-row unique, 7-row unique, 6-row no-difference and 4-row multiple-difference. These are automatic-runtime references for primitive composition/generalization, not neural benchmark items.
+
+**Epistemic utility battery.** The 12 EPI-04 explicit finite prediction/cost tasks. NEURAL_DIRECT and HYBRID are graded against the preregistered acceptable choices. AUTO_DISPATCH is graded for correct mechanical state: resolved unique cheapest discriminator, explicit ambiguity for equal-cost ties, or `no_query` when already resolved/no discriminator exists. The automatic layer does not invent tie-breaking preferences.
+
+**Rule consistency runtime.** Six structured rule/observation/query problems derived from HZN-EPI-01 (two need-query, two already-resolved, two query-irrelevant). CONSISTENT and DISCRIMINATE_RULES must execute compositionally. This is a deterministic runtime validation, not a new neural baseline.
+
+### Measurements
+
+- end-to-end accuracy and format validity;
+- generation count, mean latency and neural output tokens per arm;
+- neural tokens eliminated by structural binding and automatic dispatch;
+- operand exactness and per-row copy fidelity for typed invocation;
+- preservation of deterministic results (`bound_final == comparator_unique`);
+- retranscription fidelity (`context_final == comparator_unique` and fresh equivalent);
+- dispatch counts, unexpected/unnecessary dispatch and provenance completeness;
+- correct handling of unknown/invalid/ambiguous/stale evidence;
+- hybrid consistency with structurally bound mechanical state;
+- automatic mechanical-state correctness for epistemic ties, cost asymmetry and restraint controls;
+- runtime milliseconds for deterministic execution.
+
+### Acceptance/floor criteria
+
+Substrate implementation gates:
+
+1. AUTO_DISPATCH valid-matrix accuracy **18/18**, exactly three expected dispatch events per valid matrix, provenance completeness **1.0**, zero unexpected-dispatch cases.
+2. Composition generalization **4/4**; rule consistency/discrimination runtime **6/6**; epistemic mechanical-state correctness **12/12**.
+3. Robustness typed-state handling **6/6** with zero primitive dispatches on nonexecutable evidence.
+4. Stale probe must invalidate the dependent result before recomputation and refresh to the corrected unique row afterward.
+
+Architecture comparison floors:
+
+5. Among valid typed compare invocations, BOUND_INVOKE deterministic-result preservation should be **1.0**; violations indicate implementation failure.
+6. TOOL_CONTEXT is reported separately from TOOL_FRESH; no claim about in-context tool-use failure is made from fresh-context evidence alone.
+7. HYBRID valid-matrix accuracy should be at least **15/18**, with state consistency ≥ **.90** among resolved cases.
+8. HYBRID robustness/status accuracy should be at least **5/6**, and the single stale-state reference should answer `status:stale`.
+9. EPISTEMIC_HYBRID should improve over or match EPISTEMIC_NEURAL_DIRECT, with particular attention to equal-cost tie candidates and asymmetric-cost cases. A strong pass is ≥ **10/12**; 8–9/12 is weak/inconclusive; below 8/12 fails the floor.
+10. Neural-token and latency costs are reported descriptively. The important expected ordering is AUTO_DISPATCH < BOUND_INVOKE < TOOL_CONTEXT in neural output tokens whenever invocation occurs.
+
+These are floor criteria for a minimal prototype, not proof of a production-ready cognitive bus.
+
+**Budget/safety.** Planned approximately 103–121 generations depending on invocation behavior; hard cap **130 generations or 20 GPU minutes**. Greedy decoding, frozen backbone, no training, no weight modification, no authority expansion, no external actions. Deterministic runtime references are executed locally and independently graded by harness tests. CPU tests must pass before GPU execution.
