@@ -474,3 +474,52 @@ The M3 diagnosis threshold passed exactly, but this must not be overread as intr
 The first wound channel does **not** yet produce productive self-recognition. Outcome return alone is insufficient, and unstructured reconsideration is worse than no mirror. The effective channel is not merely “show the system that it failed”; it is **return the outcome decomposed into evidence the system can use**. In OODA terms, a scalar verdict reaches Observe but does not successfully re-enter Orient. Expanded intermediate evidence does.
 
 This also sharpens the identity-anchor caution: adding humble language before behavioral feedback channels exist could plausibly intensify overcorrection. M1 already shows pseudo-humility — indiscriminate `none` — rather than calibrated restraint. NTP-01 therefore becomes more important, not less: the system must learn to distinguish justified preservation, justified transformation, and insufficient evidence rather than treating abstention itself as virtue.
+
+
+## 16. HZN-ORIENT-01 preregistration — orientation scaffold and salience capture (written before GPU execution)
+
+**Question:** does the proposed center / who-what-when-where-how / why orientation topology produce measurable behavioral resistance to salience capture, beyond generic carefulness instructions? This is a prompt-level floor test of the topology's functional core, not evidence of an implemented orientation architecture and not a direct Cypher test.
+
+**Rationale for sequencing:** before testing epistemic corruption (Cypher) or preservation judgment (NTP-01), we need a clean measurement of whether attention can be governed at all. The existing candidate-rule benchmark already contains a measured red-dress attractor: high-magnitude candidates that are usually wrong.
+
+**Task battery:** 18 tasks generated with `orient-v119`, three from each IR-11 family. Seed selection occurred before execution using construction metadata only: exactly 6 tasks per rule type, 7/18 abstention-truth tasks, only 1/18 magnitude-truth agreement, and all candidate labels represented among non-`none` truths. Candidates are labeled A–E and no long-id transcription is required.
+
+**Conditions, paired over identical tasks:**
+
+1. **BASE** — original task prompt and output contract.
+2. **CAREFUL** — generic carefulness control: “carefully review the rule, compare all candidate evidence, check whether any candidate qualifies, and check whether none is required.”
+3. **ORIENT** — topology-inspired scaffold:
+
+```text
+Orient internally before answering:
+center: the decision required by the stated rule.
+who/which: which candidate each row describes.
+what: the rule conditions and evidence values.
+where: the binding between rule variables and candidate fields.
+when: the conditions under which none is required.
+how: how each candidate passes or fails the rule.
+why: choose only what the evidence justifies under the stated rule.
+Do not write this analysis.
+```
+
+All conditions end with the identical output contract: `Reply with ONLY the candidate letter, or the word none.` No analysis text is permitted in the output.
+
+**Metric definitions:**
+
+- `accuracy`: exact correct answer; invalid output counts as incorrect.
+- `selection_accuracy_answer_present`: accuracy on the 11 tasks whose truth is a candidate.
+- `abstention_accuracy_none`: accuracy on the 7 tasks whose truth is `none`.
+- `magnitude_capture_rate_conflict`: on the 17 tasks where magnitude answer differs from truth, fraction of responses equal to the magnitude answer. Lower is better.
+- `none_response_rate_answer_present`: over-abstention indicator on tasks with a correct candidate.
+- paired discordance: count of tasks correct in one condition but incorrect in another.
+
+**Thresholds:**
+
+1. **Primary topology effect:** ORIENT accuracy must exceed both BASE and CAREFUL accuracy by at least `+0.11` (2/18 tasks). Beating BASE but not CAREFUL is evidence only for generic scaffolding.
+2. **Degenerate-abstention guard:** ORIENT `selection_accuracy_answer_present` must not fall more than 1/11 (~0.091) below BASE, and ORIENT `abstention_accuracy_none` must not fall more than 1/7 (~0.143) below BASE. If either is violated, any overall gain is interpreted as criterion shifting rather than clean orientation improvement.
+3. **Salience mechanism:** ORIENT `magnitude_capture_rate_conflict` must not exceed either control. A reduction of at least ~2/17 (~0.10) versus both controls supports the intended mechanism; smaller reductions are inconclusive because floor effects are likely.
+4. **Output validity gate:** aggregate valid-answer rate must be at least 0.95. Lower validity makes the run primarily an output-contract measurement.
+
+**Budget:** 54 planned generations (18 tasks × 3 conditions), hard cap 60 generations or 20 minutes GPU. Inference-only: no parameter modification, no intervention authority, no evaluator modification.
+
+**Known limitations fixed in advance:** n=18 remains coarse; the underlying tasks are mechanical rule-following, so this measures attention-control floor rather than open-ended judgment; CAREFUL is a useful but imperfect control because it differs in length and does not contain every semantic element of ORIENT; the `who/where` branches are necessarily reinterpreted for a candidate-row task; a positive result would justify ablation follow-up, not immediate architectural claims; a null result would mean this particular prompt-level orientation scaffold does not help, not that the topology itself is impossible.
