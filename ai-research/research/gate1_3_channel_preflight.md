@@ -746,3 +746,48 @@ Recognition/inhibition dissociation was greatly reduced but not eliminated: two 
 3. **Deterministic delegation was perfect when given recovered raw evidence.** Recovered delegation was 36/36. This strongly supports the architectural rule: exact equality, qualification, winner comparison, and tie inhibition should be deterministic machinery.
 4. **The full artifact is too expensive as a routine interface.** STRUCT cost ~12.7s versus ~0.4s for BASE, roughly 31× latency, plus 157 mean output tokens. Asking the model to verbalize every pass/fail field reintroduces the linguistic bottleneck. The correct architectural lesson is not “always write more”; it is “extract only what is needed, delegate what is decidable.”
 5. **The next instrument should be extraction-minimal.** Since raw extraction was perfect even when the verbose schema failed, the clean follow-up is a compact evidence-orientation artifact: candidate label + raw ar/lc + final answer, with deterministic computation doing all rule evaluation.
+
+
+## 21. HZN-OOI-03 preregistration — extraction-mediated deterministic delegation, v134 (written before GPU execution)
+
+**Question:** if the neural system is asked only to bind candidate labels to raw evidence, can deterministic computation reliably perform qualification, winner comparison, and exact-tie inhibition? This tests the minimal division of labor suggested by HZN-OOI-02 rather than requiring the model to verbalize every intermediate rule evaluation.
+
+**Rationale:** the v43 verbose artifact was schema-brittle but semantically informative: exploratory recovery found exact raw extraction in 36/36 cases and deterministic delegated correctness in 36/36. HZN-OOI-03 therefore removes pass/fail fields, tie-break fields, headers, and summaries from the neural artifact. The model still produces a final answer so endogenous orientation effects can be compared with delegated decisions.
+
+**Battery:** fresh `ooi-v134` deterministic battery, selected using construction metadata only: 24 scenarios expanded to 36 presentations; 12 exact tie, 12 near tie, 6 insufficient, 6 unique control; 12 presentations per rule; 18 answer-present and 18 none-truth cases; 0/36 magnitude-truth agreement. Exact/near ties retain paired critical-pair orderings.
+
+**Generative conditions:**
+
+1. **BASE** — original one-word/letter decision.
+2. **XTRACT** — compact evidence-orientation artifact:
+
+```text
+A|<ar>|<lc>
+B|<ar>|<lc>
+C|<ar>|<lc>
+D|<ar>|<lc>
+E|<ar>|<lc>
+answer=<candidate letter or none>
+```
+
+The output must contain exactly six lines for five candidates, with no header, explanation, pass/fail fields, or summary. Missing observations would be represented as `na|na`, although this battery's candidates are observable.
+
+**Derived conditions:**
+
+3. **XTRACT_DELEGATED** — deterministic rule evaluation over the extracted raw evidence. Invalid artifacts count as incorrect.
+4. **BASE_TIE_GUARD** — post hoc exact-tie inhibition ceiling using source evidence, as before.
+
+**Metrics:** accuracy overall/by family; answer-present and none-truth accuracy; overinhibition; strict format validity; raw extraction exact rate and mean row accuracy among valid artifacts; delegated accuracy; repair of neural-wrong cases; damage to neural-correct cases; first-critical-position capture; paired BASE/XTRACT discordance; input/output tokens and latency.
+
+**Thresholds:**
+
+1. **Extraction viability gate:** XTRACT `format_valid_rate >= 0.95` and valid-artifact `raw_extraction_exact_rate >= 0.90`. The simpler schema should not fail primarily on contract adherence.
+2. **Primary delegation test:** XTRACT_DELEGATED exact-tie accuracy at least **11/12**, and overall `repair_rate_neural_wrong >= 0.75`.
+3. **No neglect / no gratuitous inversion:** `damage_rate_neural_correct <= 0.10`; delegated answer-present accuracy must not fall more than 1/18 below neural answer-present accuracy.
+4. **Near-tie discrimination guard:** if the extraction gate passes, delegated near-tie accuracy at least **10/12**.
+5. **Endogenous orientation effect:** XTRACT neural accuracy exceeding BASE by at least **+0.11** supports the claim that compact evidence recitation itself improves decision-making. A smaller effect does not weaken the delegation result because the artifact's primary purpose here is interface extraction.
+6. **Sanity invariant:** BASE_TIE_GUARD exact-tie accuracy must be 12/12.
+
+**Budget:** 72 planned generations, hard cap 80 generations or 20 GPU minutes. XTRACT outputs are capped at 96 new tokens. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
+
+**Known limitations fixed in advance:** extraction remains transcription from clean text, not perception from messy observations; rule interpretation is given to the deterministic evaluator rather than learned; removing evaluation fields means this probe does not replicate the endogenous benefit of the verbose v43 computation artifact, only the minimal extraction/delegation interface; v134 is reseeded after inspecting prior pilot outputs, so it is a preregistered replication rather than a pristine first-pass benchmark; positive results support a floor-level division of labor, not a trained non-generative decision head or recursive self-improvement.
