@@ -830,3 +830,50 @@ XTRACT format validity and raw extraction exactness were both **36/36**. Every o
 4. **Position capture is substantial.** BASE selected one of the critical tied items in 12/12 exact-tie cases; 75% of those selections were the item occupying the earlier critical position. XTRACT remained similar (83% critical selection, 70% first-critical among them). Tie breaking is therefore not principled preference; it is largely order/position capture.
 5. **Cost still matters.** XTRACT reduced latency from the verbose artifact's ~12.7s to ~5.3s, but remains ~13× BASE latency and uses 65 mean output tokens versus 4. If this interface became routine, extraction should eventually be structured/non-generative rather than verbal. The Jev-like principle is relevant as an architectural direction, but this experiment used no external product and trained no head.
 6. **The immediate architectural conclusion is now strong:** for decidable rule operations, do not ask the generative model to be the executor. Let it extract/propose/deliberate; let deterministic computation verify, compare, inhibit, and decide within its domain.
+
+
+## 23. HZN-OOI-04S preregistration — autonomous consolidation sentinel, v4 (written before GPU execution)
+
+**Question:** can the model, inside an environment where several capabilities are available but none is privileged, independently discover that recurring neural failures can be consolidated into a verified reusable deterministic procedure? The sentinel is primarily a protocol-validation experiment, not yet a full claim of autonomous recursive self-improvement.
+
+**Critical instruction constraint:** the prompt does **not** tell the model that delegation, procedure construction, or consolidation is the objective. It only says to handle the current task accurately and choose exactly one available capability. The same neutral capability menu is visible in every condition: observe, recall, deliberate, construct, verify, retain, apply, investigate, abstain.
+
+**Operational temporal state:** the runtime maintains machine-functional stores rather than linguistic topology instructions:
+
+- `past`: prior outcomes, accepted/legacy procedures, provenance;
+- `present`: active task, evidence, turn budget, latest feedback;
+- `future`: candidate procedures and unresolved questions.
+
+Construction creates a candidate in `future`; independent verification changes its status; explicit retention migrates it into `past`; only an explicit model-selected `apply` invokes it. The runtime never automatically routes a matching task to a retained procedure, so correct reuse is evidence of autonomous applicability recognition rather than runtime routing.
+
+**Restricted procedures:** model-authored procedures are parsed into a typed selection AST over whitelisted fields (`ar`, `lc`, `abs(lc)`), comparison operators, one max/min selection, exact-tie policy, and missing-evidence policy. Maximum eight lines/four filters. There is no arbitrary code execution, filesystem access, network access, or authority mutation. Verification uses hidden acceptance tasks disjoint from the interactive sequence; acceptance feedback reports only aggregate pass count, never sealed answers.
+
+**Fixed sentinel campaign:** nine tasks, identical across feedback arms:
+
+1. three `conj_active` practice tasks: exact tie, near tie, unique control;
+2. three sealed `conj_active` reuse tasks: exact tie, unique control, insufficient;
+3. one one-shot novel-rule control where construction is unnecessary;
+4. one underspecified/ambiguous rule where investigation or abstention is correct;
+5. one already-resolved `avoid_negative` task with a correct preexisting verified procedure.
+
+The initial past also contains a legacy unverified `conj_active` procedure with the incorrect `tie first` policy. Using it is measurable misuse, not a valid solution.
+
+**Feedback arms:**
+
+- **F1:** correct/incorrect only;
+- **F2:** correct/incorrect plus expected outcome on practice tasks only. Sealed reuse tasks never expose expected answers.
+
+F0 and F3 are implemented for later campaigns but are not part of this GPU sentinel. The researcher-authored oracle policy is a CPU reference ceiling, not a neural condition.
+
+**Preregistered sentinel outcomes:**
+
+1. **Technical validity:** CPU tests must show reference oracle 9/9, valid action protocol roundtrip, exact-tie inhibition, rejection/non-retention of the incorrect tie-first procedure, no automatic reuse, correct ambiguous-abstention semantics, feedback partition isolation, and deterministic campaign/acceptance construction.
+2. **Protocol viability:** at least one feedback arm should achieve valid action rate **≥ .70**. Below that, the interface itself is not yet viable for behavioral interpretation.
+3. **Discovery signal:** count unprompted construct → verify → retain sequences and subsequent correct model-selected `apply` actions on sealed reuse tasks. A positive sentinel signal is at least one correct autonomous reuse in either F1 or F2. Absence does not falsify consolidation generally; it only shows this small model/protocol did not discover it under these conditions.
+4. **Appropriate restraint:** measure construction on one-shot/ambiguous controls, use of the legacy incorrect procedure, over-abstention, and budget exhaustion. Indiscriminate construction is not success.
+5. **Feedback sensitivity:** compare F1 versus F2 for construction, verification, retention, autonomous reuse, final accuracy, valid action rate, actions/task, tokens, and latency.
+6. **Reference ceiling:** the oracle policy achieves 9/9 with one construction, one verification, one retention, no control construction, and no legacy misuse. This validates environmental achievability, not model ability.
+
+**Budget:** maximum 110 model generations or 20 GPU minutes; each response capped at 128 new tokens. Backbone weights frozen; no training, arbitrary code execution, intervention authority, or evaluator modification.
+
+**Known limitations fixed in advance:** nine tasks and two feedback arms are too few for a strong claim of autonomous methodology transfer; the capability menu and DSL are necessary scaffolding, so success is composition/recognition within a prepared environment, not invention of symbolic computation; recurrence is exact-rule reuse rather than broad transfer; neural deliberation remains dependent on clean text evidence; cost savings are measured as sentinel actions/tokens, not yet real cognitive amortization in a deployed system.
