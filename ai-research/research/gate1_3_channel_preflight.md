@@ -523,3 +523,50 @@ All conditions end with the identical output contract: `Reply with ONLY the cand
 **Budget:** 54 planned generations (18 tasks × 3 conditions), hard cap 60 generations or 20 minutes GPU. Inference-only: no parameter modification, no intervention authority, no evaluator modification.
 
 **Known limitations fixed in advance:** n=18 remains coarse; the underlying tasks are mechanical rule-following, so this measures attention-control floor rather than open-ended judgment; CAREFUL is a useful but imperfect control because it differs in length and does not contain every semantic element of ORIENT; the `who/where` branches are necessarily reinterpreted for a candidate-row task; a positive result would justify ablation follow-up, not immediate architectural claims; a null result would mean this particular prompt-level orientation scaffold does not help, not that the topology itself is impossible.
+
+
+## 17. HZN-ORIENT-01 results — orientation scaffold is behaviorally inert; exact-tie inhibition dominates residual error (54 generations, 23s GPU)
+
+Evidence: `evidence/gate1_4_orient_salience.json`. All 54 planned generations completed; output validity was **54/54 = 1.00**.
+
+### Verdict against preregistered thresholds
+
+| threshold | result | verdict |
+|---|---:|---|
+| primary topology effect: ORIENT exceeds both controls by ≥ +0.11 | ORIENT .722 = BASE .722; CAREFUL .667 | **FAIL — no effect** |
+| degenerate-abstention guard | ORIENT identical to BASE in both strata | pass, but moot |
+| salience mechanism: capture not above controls; reduction ~0.10 supports mechanism | capture .0588 in all three conditions | minimal guard pass; mechanism inconclusive at floor |
+| output validity ≥ 0.95 | **1.00** | PASS |
+
+### Behavioral summary
+
+| condition | accuracy | answer-present accuracy (n=11) | none-truth accuracy (n=7) | magnitude capture (n=17) | mean input tokens |
+|---|---:|---:|---:|---:|---:|
+| BASE | 13/18 = .722 | 9/11 = .818 | 4/7 = .571 | 1/17 = .0588 | 197 |
+| CAREFUL | 12/18 = .667 | 9/11 = .818 | 3/7 = .429 | 1/17 = .0588 | 230 |
+| ORIENT | 13/18 = .722 | 9/11 = .818 | 4/7 = .571 | 1/17 = .0588 | 292 |
+
+Paired discordance: **BASE and ORIENT were identical on all 18 tasks** (0 movement in either direction). CAREFUL differed only by losing one correct abstention. The Orient preamble cost +95 input tokens per task (+48% over BASE) with zero measured behavioral benefit.
+
+### Failure analysis
+
+BASE/ORIENT errors were identical:
+
+| task | family | truth | response | failure type |
+|---|---|---|---|---|
+| task3 | tied | none | A | exact-tie inhibition failure |
+| task5 | multiple_plausible | B | C | magnitude-capture failure (the sole capture) |
+| task9 | tied | none | B | exact-tie inhibition failure |
+| task13 | conflicting | A | E | valid-but-wrong selection, not magnitude capture |
+| task15 | tied | none | B | exact-tie inhibition failure |
+
+Family decomposition: misleading magnitude 3/3, insufficient 3/3, missing observations 3/3, conflicting 2/3, multiple plausible 2/3, **tied 0/3**. In all three tied tasks the model selected the first tied qualifying candidate in presentation order. This is a highly specific failure primitive: it appears to identify qualifying candidates but fails to inhibit selection when the tie-break values are exactly equal.
+
+### Interpretation
+
+1. **The prompt-level orientation topology is behaviorally inert in this setting.** Explicitly naming center/who/what/where/how/why did not change even one answer. The likely reason is structural: the scaffold is not enforced as computation. `orient internally` is only an instruction, not a mechanism; with a one-word output contract there is no required intermediate orientation product for the model to use.
+2. **Magnitude red-dress capture is already near floor in this candidate-conditioned setting.** The capture rate is only 1/17 even in BASE. The earlier T1 result showed magnitude is a bad policy, but the model under explicit rules usually is not following that policy. Salience remains important, but this battery does not create enough capture for an orientation scaffold to remove.
+3. **The dominant residual failure is exact-tie inhibition, not attention orientation.** This replicates the mirror result: tie cases are diagnosed verbally but not operationally respected. Here, even a `when: conditions under which none is required` scaffold does not alter the behavior. Exact equality detection and winner-inhibition are mechanical operations and therefore belong in the delegated computation layer.
+4. **The topology should not yet be treated as architecture.** A ring drawn around attention is not a control system. To become testable as architecture, the topology must have operational consequences: route retrieval, structure intermediate evidence, alter salience weights, or produce a checkable orientation artifact. Merely writing the vocabulary into the prompt is semantic decoration.
+
+This is a useful negative result. It does not falsify the orientation topology itself; it falsifies the cheap version of it. The next meaningful orientation test must either require an explicit structured orientation product or implement orientation as machinery. Meanwhile, exact-tie detection should be delegated deterministically before expecting the model to demonstrate higher-order discernment.

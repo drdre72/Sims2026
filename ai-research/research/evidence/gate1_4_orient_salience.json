@@ -1,0 +1,1398 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "orient-salience-1",
+ "manifest": {
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "harness_version": "orient-salience-1",
+  "n_tasks": 18,
+  "orient_version": 119,
+  "conditions": [
+   "BASE",
+   "CAREFUL",
+   "ORIENT"
+  ]
+ },
+ "cells": {
+  "task0": {
+   "family": "misleading_magnitude",
+   "rule_key": "conj_active",
+   "truth": "B",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.26,
+     "lc": 1.45,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.82,
+     "lc": -0.63,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.75,
+     "lc": 0.04,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.61,
+     "lc": -0.06,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.12,
+     "lc": 0.69,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 1.44,
+     "prompt_sha256": "cf4f26db58dd26901e785f436a5d5f36cc13290ba0798885ec924129ab8c031a"
+    },
+    "CAREFUL": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.38,
+     "prompt_sha256": "fd6f5f48209f65e228a2f271a72ec4bb5434a1c49996c03779271c4b96fe03a1"
+    },
+    "ORIENT": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.51,
+     "prompt_sha256": "064ca8ee51b6c578bce9bd3bf86b09b79a95f88102723543b09f219170f68acd"
+    }
+   }
+  },
+  "task1": {
+   "family": "conflicting",
+   "rule_key": "conj_active",
+   "truth": "D",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.87,
+     "lc": 0.2,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.83,
+     "lc": 0.03,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.24,
+     "lc": -1.77,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.89,
+     "lc": -0.51,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.17,
+     "lc": 0.78,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 0.38,
+     "prompt_sha256": "d4ad22963ee491be867a3ed0d20ef74269ce429b9eeec77970e57c79913f968a"
+    },
+    "CAREFUL": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.42,
+     "prompt_sha256": "841628081ce013daed21b551849134e3b7228bfc3b18cd36dd57d6474ba90049"
+    },
+    "ORIENT": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.44,
+     "prompt_sha256": "041525f08a33dc21b24ff360a5ea789f8d05cd842a0b23af4ab226ff22987bd3"
+    }
+   }
+  },
+  "task2": {
+   "family": "insufficient",
+   "rule_key": "conj_active",
+   "truth": "none",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.64,
+     "lc": -0.07,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.67,
+     "lc": -0.05,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.82,
+     "lc": -0.18,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.21,
+     "lc": 1.18,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.59,
+     "lc": -0.16,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 0.42,
+     "prompt_sha256": "e1883b9c7287a4be529fd431d6b9d92641e80ead153e26b74a589d3811b0a4df"
+    },
+    "CAREFUL": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.4,
+     "prompt_sha256": "a8f108a56eae317b5d14369e228f6ff3b3cab4c01ad552ff226cb944be1b3c9a"
+    },
+    "ORIENT": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.39,
+     "prompt_sha256": "34f419cfd82067666c0417b171e34d101cdec6f1c8beaf27e9c65a9ec2cf91a1"
+    }
+   }
+  },
+  "task3": {
+   "family": "tied",
+   "rule_key": "conj_active",
+   "truth": "none",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.81,
+     "lc": 0.58,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.81,
+     "lc": 0.58,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.21,
+     "lc": 1.07,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.14,
+     "lc": 0.63,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.18,
+     "lc": 0.86,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "A\n",
+     "answer": "A",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 0.42,
+     "prompt_sha256": "ce88aa06ab5aeefccc1701088c7c0f06ae63895782e6b773631921a2f244df4d"
+    },
+    "CAREFUL": {
+     "response": "A\n",
+     "answer": "A",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.41,
+     "prompt_sha256": "bab20b86e4dcb5c79bf83ed806437bb583ff601ca63863a53459bb6e7b7ab053"
+    },
+    "ORIENT": {
+     "response": "A\n",
+     "answer": "A",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.42,
+     "prompt_sha256": "ec317dec7c8a7cf26f7df9f6e722727e025405177ecdafe07116c2a4ee4e17b2"
+    }
+   }
+  },
+  "task4": {
+   "family": "missing_obs",
+   "rule_key": "avoid_negative",
+   "truth": "E",
+   "magnitude_answer": "B",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.21,
+     "lc": -0.63,
+     "obs_available": false
+    },
+    {
+     "label": "B",
+     "ar": 0.12,
+     "lc": 0.81,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.95,
+     "lc": -1.64,
+     "obs_available": false
+    },
+    {
+     "label": "D",
+     "ar": 0.22,
+     "lc": -0.52,
+     "obs_available": false
+    },
+    {
+     "label": "E",
+     "ar": 0.67,
+     "lc": 0.76,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 159,
+     "latency_s": 0.41,
+     "prompt_sha256": "8d5fd70f547f2001a43f75a99802de7a7a22284431f51050bb3b05d1a392b5b5"
+    },
+    "CAREFUL": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 192,
+     "latency_s": 0.41,
+     "prompt_sha256": "086afccfa05307bb1f63128c004d4160867c9493c8a647cb497838b7a81d752f"
+    },
+    "ORIENT": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 254,
+     "latency_s": 0.42,
+     "prompt_sha256": "2c45822338c0c765f7d223d8cb49469c9fdeed714bdb499212b0dc8761934efa"
+    }
+   }
+  },
+  "task5": {
+   "family": "multiple_plausible",
+   "rule_key": "conj_active",
+   "truth": "B",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.19,
+     "lc": 0.9,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.94,
+     "lc": -0.53,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.69,
+     "lc": 1.22,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.11,
+     "lc": -0.72,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.22,
+     "lc": -0.85,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "B",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 0.4,
+     "prompt_sha256": "070f9825d66a796701b95f976c79d4183ef2e58c1c48d75e4df8122a3bb424fa"
+    },
+    "CAREFUL": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "B",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.4,
+     "prompt_sha256": "fe5240285c102ba0284dd7f429b6d641c8009ee34a65f6c35451bb6c6ac4b8f0"
+    },
+    "ORIENT": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "B",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.4,
+     "prompt_sha256": "8d74a1816327f7975e054353cdcbeaa1f8f6257a225d065539c59d33e3bde702"
+    }
+   }
+  },
+  "task6": {
+   "family": "misleading_magnitude",
+   "rule_key": "conj_strong",
+   "truth": "none",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.86,
+     "lc": 0.06,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.71,
+     "lc": -0.49,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.08,
+     "lc": -0.95,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.27,
+     "lc": -1.43,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.19,
+     "lc": 0.97,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 210,
+     "latency_s": 0.39,
+     "prompt_sha256": "6c7eae5a574c0af1fbb3bb063f168590c3ba1a6d1ee07fa338027aa986f228e6"
+    },
+    "CAREFUL": {
+     "response": "A\n",
+     "answer": "A",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 243,
+     "latency_s": 0.42,
+     "prompt_sha256": "02a7c3f5c402ad30b53615d76338e0994efee988cad0f456c2363e26dabcd787"
+    },
+    "ORIENT": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 305,
+     "latency_s": 0.43,
+     "prompt_sha256": "796f0302aab892fa6929b429d8898f4ee6d49bd301001f0a138711160ad1eaf3"
+    }
+   }
+  },
+  "task7": {
+   "family": "conflicting",
+   "rule_key": "avoid_negative",
+   "truth": "C",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.61,
+     "lc": 0.09,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.24,
+     "lc": 0.76,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.72,
+     "lc": 0.48,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.05,
+     "lc": -1.4,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.85,
+     "lc": -0.18,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "C",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 189,
+     "latency_s": 0.38,
+     "prompt_sha256": "d7e7bcce6e93bb2f5f86cff20df6bbb10f458a3cc154a2f30e12f091f09f8e08"
+    },
+    "CAREFUL": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "C",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 222,
+     "latency_s": 0.4,
+     "prompt_sha256": "c81e4da82e3bcd38487881f54c583597ce42944069e2250b06d8711ade7b12df"
+    },
+    "ORIENT": {
+     "response": "C\n",
+     "answer": "C",
+     "expected": "C",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 284,
+     "latency_s": 0.4,
+     "prompt_sha256": "aaf85a6d146afc0ba0daa377527d311d99f358faaba8e64954ad86486cc682aa"
+    }
+   }
+  },
+  "task8": {
+   "family": "insufficient",
+   "rule_key": "conj_strong",
+   "truth": "none",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.23,
+     "lc": 1.38,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.57,
+     "lc": -0.13,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.12,
+     "lc": 1.45,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.8,
+     "lc": -0.1,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.58,
+     "lc": -0.06,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 210,
+     "latency_s": 0.41,
+     "prompt_sha256": "ae0df8a1d9d6cbeb243f4f60a6579bec0bb78cdffe7edacd680d35514c8e5bbd"
+    },
+    "CAREFUL": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 243,
+     "latency_s": 0.4,
+     "prompt_sha256": "cc69b3b02f9a56535fb7e8066e0a30b24457951a9da2f29fa26e62056202847b"
+    },
+    "ORIENT": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 305,
+     "latency_s": 0.41,
+     "prompt_sha256": "969284fa42f1af525f0d3c65f94b138d34b1c2dfca900787faa6adaa13c4259f"
+    }
+   }
+  },
+  "task9": {
+   "family": "tied",
+   "rule_key": "conj_active",
+   "truth": "none",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.18,
+     "lc": 0.6,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.8,
+     "lc": 0.86,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.8,
+     "lc": 0.86,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.19,
+     "lc": -1.32,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.16,
+     "lc": 0.91,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 207,
+     "latency_s": 0.4,
+     "prompt_sha256": "34b898a8d5ea7d304659105f36889da9ecc2a9ad18893873dc73a448d147cfa4"
+    },
+    "CAREFUL": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 240,
+     "latency_s": 0.47,
+     "prompt_sha256": "f55a76b018a867bd2eb710efb2d5d12182bead07bd841b51ee94c690864a59fd"
+    },
+    "ORIENT": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 302,
+     "latency_s": 0.4,
+     "prompt_sha256": "40109b4be62b028d13c0001effe8c7c1722ecb86ebe0b0bf6b7e9607fe759535"
+    }
+   }
+  },
+  "task10": {
+   "family": "missing_obs",
+   "rule_key": "conj_strong",
+   "truth": "E",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.14,
+     "lc": -0.87,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.25,
+     "lc": 0.85,
+     "obs_available": false
+    },
+    {
+     "label": "C",
+     "ar": 0.16,
+     "lc": 0.74,
+     "obs_available": false
+    },
+    {
+     "label": "D",
+     "ar": 0.88,
+     "lc": 1.58,
+     "obs_available": false
+    },
+    {
+     "label": "E",
+     "ar": 0.71,
+     "lc": 0.73,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 180,
+     "latency_s": 0.39,
+     "prompt_sha256": "e023daac60232bed2cc367dcb0ab420194e5ca10deb4634a66ec5ce603902ef5"
+    },
+    "CAREFUL": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 213,
+     "latency_s": 0.42,
+     "prompt_sha256": "58d1f3c9a97543431616f6f4344c901696ba0b638c753aac7006f764c5ce73f5"
+    },
+    "ORIENT": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 275,
+     "latency_s": 0.44,
+     "prompt_sha256": "506a81b524ec73e4b4f9a2bdcd59fe2c56977cfcac65491697fde666a7822639"
+    }
+   }
+  },
+  "task11": {
+   "family": "multiple_plausible",
+   "rule_key": "avoid_negative",
+   "truth": "B",
+   "magnitude_answer": "B",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.11,
+     "lc": 0.55,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.65,
+     "lc": 1.12,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.16,
+     "lc": -0.72,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.09,
+     "lc": -0.56,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.86,
+     "lc": -0.52,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 189,
+     "latency_s": 0.38,
+     "prompt_sha256": "1f009f63a860ccad15b75b3da406da88a37106ea02b92641d55f05333c6850f4"
+    },
+    "CAREFUL": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 222,
+     "latency_s": 0.39,
+     "prompt_sha256": "ab2b3d218e5b9e472b8541a12bcf90ea1521136acad7482b6ab97308ec4391c5"
+    },
+    "ORIENT": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 284,
+     "latency_s": 0.4,
+     "prompt_sha256": "f74eb1883359b1ee51074e76d52f5b0c5dfc573c008ee35204e7eaa30eeb06fb"
+    }
+   }
+  },
+  "task12": {
+   "family": "misleading_magnitude",
+   "rule_key": "conj_strong",
+   "truth": "E",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.14,
+     "lc": -0.93,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.62,
+     "lc": 0.05,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.07,
+     "lc": -0.52,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.06,
+     "lc": -1.71,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.75,
+     "lc": 0.59,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 210,
+     "latency_s": 0.38,
+     "prompt_sha256": "c4c2d6f4fcf84e3cf5e4f577db0d4799a80d3603a0469750437ba7240a3d78b3"
+    },
+    "CAREFUL": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 243,
+     "latency_s": 0.43,
+     "prompt_sha256": "9c49322b9755b42b920c4e120a8f8ff50b01a94aea1808d868e9229e9ef95f51"
+    },
+    "ORIENT": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "E",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 305,
+     "latency_s": 0.41,
+     "prompt_sha256": "82075109c72ff05512f03e1bcb5aab2573358f8ecbf1533580815ae2a041804e"
+    }
+   }
+  },
+  "task13": {
+   "family": "conflicting",
+   "rule_key": "avoid_negative",
+   "truth": "A",
+   "magnitude_answer": "D",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.88,
+     "lc": 0.64,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.2,
+     "lc": -0.66,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.16,
+     "lc": -0.5,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.15,
+     "lc": -1.8,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.17,
+     "lc": 0.72,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "A",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 189,
+     "latency_s": 0.41,
+     "prompt_sha256": "1d4033b41c0b6078178feb67632050cb4ba737aa964d73adf61285856b4bfcd3"
+    },
+    "CAREFUL": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "A",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 222,
+     "latency_s": 0.39,
+     "prompt_sha256": "822e58136432474212b5e57b5db89f23752673455a04b10b0ffcfbbf39ca7e57"
+    },
+    "ORIENT": {
+     "response": "E\n",
+     "answer": "E",
+     "expected": "A",
+     "answer_verdict": "valid_but_incorrect",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 284,
+     "latency_s": 0.43,
+     "prompt_sha256": "84e36ad2e15d8911823df260261c0d6025b34c7c4d1b38cba941688b70ca68ce"
+    }
+   }
+  },
+  "task14": {
+   "family": "insufficient",
+   "rule_key": "conj_strong",
+   "truth": "none",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.68,
+     "lc": -0.05,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.85,
+     "lc": -0.14,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.19,
+     "lc": -1.26,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.07,
+     "lc": -1.2,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.81,
+     "lc": -0.07,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 210,
+     "latency_s": 0.41,
+     "prompt_sha256": "e734cbeea649dc29aeb6b0ed3975d7aa90a47c378cb3cdf375d6954853e46ccb"
+    },
+    "CAREFUL": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 243,
+     "latency_s": 0.37,
+     "prompt_sha256": "ec5ee205fca2c003893d19d890fd498fc4137e423bc99eb2a35af1ca027be6b7"
+    },
+    "ORIENT": {
+     "response": "none\n",
+     "answer": "none",
+     "expected": "none",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 305,
+     "latency_s": 0.41,
+     "prompt_sha256": "851058f7680c05a66f485bf599ac3f90b9d63df345ede102756ee3639e07c8b3"
+    }
+   }
+  },
+  "task15": {
+   "family": "tied",
+   "rule_key": "conj_strong",
+   "truth": "none",
+   "magnitude_answer": "A",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.2,
+     "lc": -1.14,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.66,
+     "lc": 0.68,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.1,
+     "lc": -0.58,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.66,
+     "lc": 0.68,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.19,
+     "lc": -1.03,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 210,
+     "latency_s": 0.41,
+     "prompt_sha256": "e66a765b31ec571689aeb50cec23e34b2318e3b7b51ebb389b19a9222ac0eae6"
+    },
+    "CAREFUL": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 243,
+     "latency_s": 0.43,
+     "prompt_sha256": "53df3277df1b46150b5b7b039dbaf930e5ccb3a1fa3ef920e7768c1085f6ae89"
+    },
+    "ORIENT": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "none",
+     "answer_verdict": "invalid_pick",
+     "answer_correct": false,
+     "format_valid": true,
+     "input_tokens": 305,
+     "latency_s": 0.43,
+     "prompt_sha256": "41ebc2329b3d7965679f7e675dcaeb07ab6379404f56e9b32b0a2d2129798103"
+    }
+   }
+  },
+  "task16": {
+   "family": "missing_obs",
+   "rule_key": "avoid_negative",
+   "truth": "B",
+   "magnitude_answer": "C",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.17,
+     "lc": 0.9,
+     "obs_available": false
+    },
+    {
+     "label": "B",
+     "ar": 0.71,
+     "lc": 0.78,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.24,
+     "lc": 0.91,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.09,
+     "lc": 0.88,
+     "obs_available": false
+    },
+    {
+     "label": "E",
+     "ar": 0.86,
+     "lc": 1.41,
+     "obs_available": false
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 159,
+     "latency_s": 0.41,
+     "prompt_sha256": "09163bae400b5609c18a84b2db10ef90faff1ef76a1022e6e8ef322695160168"
+    },
+    "CAREFUL": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 192,
+     "latency_s": 0.4,
+     "prompt_sha256": "2892c9e4ab6e47552276724fe0c74d2dc56defd3dffdb25e2a8142983baae629"
+    },
+    "ORIENT": {
+     "response": "B\n",
+     "answer": "B",
+     "expected": "B",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 254,
+     "latency_s": 0.42,
+     "prompt_sha256": "5f4f741327e1d3bfae7a74de8376ed609081898b671084af51f24d12af89b3cf"
+    }
+   }
+  },
+  "task17": {
+   "family": "multiple_plausible",
+   "rule_key": "avoid_negative",
+   "truth": "D",
+   "magnitude_answer": "E",
+   "candidates": [
+    {
+     "label": "A",
+     "ar": 0.18,
+     "lc": -0.84,
+     "obs_available": true
+    },
+    {
+     "label": "B",
+     "ar": 0.2,
+     "lc": 0.59,
+     "obs_available": true
+    },
+    {
+     "label": "C",
+     "ar": 0.26,
+     "lc": 0.75,
+     "obs_available": true
+    },
+    {
+     "label": "D",
+     "ar": 0.88,
+     "lc": 0.51,
+     "obs_available": true
+    },
+    {
+     "label": "E",
+     "ar": 0.74,
+     "lc": -1.06,
+     "obs_available": true
+    }
+   ],
+   "conditions": {
+    "BASE": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 189,
+     "latency_s": 0.38,
+     "prompt_sha256": "6cec5b41ddbcdd9e4bb45c76634a01c2dc3f956861bcfcc4acf5a3f619fc2236"
+    },
+    "CAREFUL": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 222,
+     "latency_s": 0.4,
+     "prompt_sha256": "4d754973d3f7921fb06b1189226aa59e04912c6c87d84ad2430e304fe4cfd491"
+    },
+    "ORIENT": {
+     "response": "D\n",
+     "answer": "D",
+     "expected": "D",
+     "answer_verdict": "correct",
+     "answer_correct": true,
+     "format_valid": true,
+     "input_tokens": 284,
+     "latency_s": 0.39,
+     "prompt_sha256": "fc13284b25799d03085cf441bba43ad39b5cc787f317c2a538eb9737f94cd076"
+    }
+   }
+  }
+ },
+ "summary": {
+  "BASE": {
+   "n": 18,
+   "format_valid_rate": 1.0,
+   "accuracy": 0.7222222222222222,
+   "selection_accuracy_answer_present": 0.8181818181818182,
+   "abstention_accuracy_none": 0.5714285714285714,
+   "none_response_rate_answer_present": 0.0,
+   "none_response_rate_none_truth": 0.5714285714285714,
+   "magnitude_capture_rate_conflict": 0.058823529411764705,
+   "n_answer_present": 11,
+   "n_none_truth": 7,
+   "n_magnitude_conflict": 17,
+   "mean_input_tokens": 197.0,
+   "mean_latency_s": 0.4566666666666667
+  },
+  "CAREFUL": {
+   "n": 18,
+   "format_valid_rate": 1.0,
+   "accuracy": 0.6666666666666666,
+   "selection_accuracy_answer_present": 0.8181818181818182,
+   "abstention_accuracy_none": 0.42857142857142855,
+   "none_response_rate_answer_present": 0.0,
+   "none_response_rate_none_truth": 0.42857142857142855,
+   "magnitude_capture_rate_conflict": 0.058823529411764705,
+   "n_answer_present": 11,
+   "n_none_truth": 7,
+   "n_magnitude_conflict": 17,
+   "mean_input_tokens": 230.0,
+   "mean_latency_s": 0.40777777777777774
+  },
+  "ORIENT": {
+   "n": 18,
+   "format_valid_rate": 1.0,
+   "accuracy": 0.7222222222222222,
+   "selection_accuracy_answer_present": 0.8181818181818182,
+   "abstention_accuracy_none": 0.5714285714285714,
+   "none_response_rate_answer_present": 0.0,
+   "none_response_rate_none_truth": 0.5714285714285714,
+   "magnitude_capture_rate_conflict": 0.058823529411764705,
+   "n_answer_present": 11,
+   "n_none_truth": 7,
+   "n_magnitude_conflict": 17,
+   "mean_input_tokens": 292.0,
+   "mean_latency_s": 0.41944444444444445
+  },
+  "paired_comparisons": {
+   "BASE_vs_CAREFUL": {
+    "n": 18,
+    "BASE_only_correct": 1,
+    "CAREFUL_only_correct": 0,
+    "accuracy_delta": 0.05555555555555558
+   },
+   "BASE_vs_ORIENT": {
+    "n": 18,
+    "BASE_only_correct": 0,
+    "ORIENT_only_correct": 0,
+    "accuracy_delta": 0.0
+   },
+   "CAREFUL_vs_ORIENT": {
+    "n": 18,
+    "CAREFUL_only_correct": 0,
+    "ORIENT_only_correct": 1,
+    "accuracy_delta": -0.05555555555555558
+   }
+  }
+ }
+}
