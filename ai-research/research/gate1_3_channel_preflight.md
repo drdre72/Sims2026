@@ -1177,3 +1177,39 @@ HZN-EPI-02 showed that even oracle prediction matrices did not induce reliable d
 - purpose-sensitive valuation of whether obtaining the observation is worth its cost.
 
 This strengthens rather than weakens the delegation thesis: the missing capability is not a larger appetite for inquiry, but a reliable bridge from uncertainty representation to mechanically exact discrimination.
+
+
+## 36. HZN-EPI-04 preregistration — comparative decomposition and invocation, v1 (written before GPU execution)
+
+**Purpose.** EPI-03 showed low recall in the combined unique-difference decision, but that result conflated comparison, enumeration, cardinality, selection, framing and output policy. HZN-EPI-04 localizes the failure and tests whether an explicitly available typed comparator can be recognized, invoked and consumed. It does **not** claim to measure spontaneous autonomous tool discovery: routing and invocation are floor tests with the capability explicitly described.
+
+**Shared matrix battery.** 18 deterministic five-row binary cases: 8 `unique_diff`, 5 `no_diff`, 5 `multiple_diff`. Correct target display positions in unique cases are balanced as 0,1,2,3,4,0,1,2. Row permutation, column reversal, label identity (A–E versus K–O), output polarity (diff/equal versus yes/no), and surface format (row lines versus CSV) are stratified across cases. This is controlled variation, not a full factorial causal design.
+
+**Primitive decomposition.**
+
+1. **SINGLE** — 12 isolated binary pairs; output same/different or yes/no.
+2. **VECTOR** — produce independent difference flags for every row. Measures comparison/enumeration without cardinality or final selection.
+3. **COUNT** — oracle flags supplied; count rows marked `diff`. Measures cardinality without comparison.
+4. **SELECT** — oracle flags supplied; select the unique diff row or `none`. Measures cardinality-sensitive selection without comparison.
+5. **VECTOR_DELIB** — limited six-case reference with thinking enabled and a 300-token budget. This tests whether disabled deliberation is the primary explanation; it is not a scaled inference-time-compute result.
+
+**Routing and invocation.**
+
+- **ROUTE** — 12 cases, half explicit finite binary matrices and half nonapplicable vague/social/aesthetic/visual problems. Correctly choose `comparator` versus `manual`.
+- **DELEGATE** — 12 matrix cases (8 unique, 2 no-diff, 2 multiple-diff). The model may answer directly or emit a typed two-line comparator call containing copied operands. Measure first-action validity, invocation rate, operand exactness, final accuracy, direct-answer accuracy, invoked final accuracy, and result-consumption format. Operand copying is part of the test; comparator execution is deterministic.
+- **AUTO_REFERENCE** — deterministic typed dispatch over the same structured cases. This is an architectural ceiling/reference only and is never attributed to neural competence.
+
+**Epistemic consistency and utility.** 12 compact tasks explicitly provide hypothesis consistency and candidate-observation predictions/costs. Families (2 each): unique discriminating observation; multiple equal-cost discriminating observations; multiple discriminating observations with asymmetric cost; already-resolved hypotheses whose candidate predictions still differ; unresolved but no discriminating observation; resolved and no discriminating observation. Correct scoring accepts any lowest-cost discriminating observation where ties are genuinely valid. Already-resolved cases require `no_query` even if predictions differ, separating hypothesis consistency from mere prediction inequality.
+
+**Primary questions.**
+
+1. Is isolated binary comparison intact when enumeration is removed?
+2. Does vector enumeration preserve per-row truth even if final unique selection fails?
+3. Do oracle flags restore counting/selection? If not, the failure is cardinality/decision rather than comparison.
+4. Can the model recognize comparator applicability when the applicability rule is explicit?
+5. Can it emit a syntactically valid typed invocation with exact operands and consume the result?
+6. Does utility-aware epistemic selection respect consistency and cost rather than treating any prediction difference as a reason to query?
+
+**Thresholds.** Format validity should be ≥ .95 for SINGLE/COUNT/SELECT/ROUTE/EPIUTIL. Primitive competence requires SINGLE accuracy ≥ 10/12, VECTOR exact flags ≥ 12/18 with valid-row accuracy ≥ .90, COUNT ≥ 15/18, SELECT ≥ 15/18. Routing competence requires ≥ 10/12. Delegation is promising only if valid invocation rate ≥ .75 among compare choices, operand exactness ≥ .75, and invoked final accuracy ≥ 9/12. EPIUTIL requires need-family accuracy ≥ 5/6 and control accuracy ≥ 5/6. These are floor tests, not ceilings.
+
+**Budget/safety.** Planned approximately 114–126 generations depending on invocation choices; hard cap 150 generations or 20 GPU minutes. Greedy decoding, frozen backbone, no training, no weight modification, no authority expansion. CPU tests: 176/176 before GPU execution.
