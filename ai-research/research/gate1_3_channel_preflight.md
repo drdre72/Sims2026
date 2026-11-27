@@ -1058,3 +1058,60 @@ The preregistered positive-signal threshold failed decisively. The model perfect
 **Thresholds:** XTRACT format validity ≥ .90; among valid artifacts mean prediction-row accuracy ≥ .80 and exact hypothesis-fit rate ≥ .75. If those extraction gates pass, delegated need-query accuracy must be at least 6/8 and control accuracy at least 10/16, with repair rate ≥ .75 and damage ≤ .10. ORACLEPRED need-query accuracy ≥ 6/8 would show that comparative selection can succeed when grounding is supplied; failure would indicate a deeper comparative-judgment or output-policy bottleneck. ORACLE_DELEGATED must be 24/24.
 
 **Interpretation fixed in advance:** this is finite, explicit, noiseless hypothesis discrimination. Success does not establish open-ended curiosity or autonomous hypothesis generation; failure does not prove universal inability, but localizes the deficiency. Budget: 72 planned generations, hard cap 80 or 15 GPU minutes. Frozen backbone; no training or intervention authority.
+
+
+## 33. HZN-EPI-02 results — grounding is poor, but even oracle predictions do not induce discriminating queries (72 generations, ~374s GPU)
+
+Evidence: `evidence/gate1_6_epistemic_matrix_v1.json`. All 72 planned generations completed. The deterministic reference ceiling was corrected offline to **24/24**; the initial summary treated one invalid model artifact as a reference failure even though reference computation is independent of model output.
+
+### Preregistered verdicts
+
+| threshold | result | verdict |
+|---|---:|---|
+| XTRACT format validity ≥ .90 | **23/24 = .958** | PASS |
+| mean prediction-row accuracy ≥ .80 | **.713 exact-row mean** | FAIL |
+| exact hypothesis-fit rate ≥ .75 | **8/23 valid = .348** | FAIL |
+| delegated need-query ≥ 6/8 | **0/8** | FAIL |
+| delegated controls ≥ 10/16 | 8/16 | FAIL |
+| repair neural-wrong ≥ .75 | **0/11** | FAIL |
+| damage neural-correct ≤ .10 | **5/13 = .385** | FAIL |
+| ORACLEPRED need-query ≥ 6/8 | **0/8** | FAIL — central result |
+| ORACLE_DELEGATED ceiling | **24/24** | PASS |
+
+### Behavioral summary
+
+| condition | overall | need_query | already_resolved | query_irrelevant | mean latency |
+|---|---:|---:|---:|---:|---:|
+| BASE | 6/24 = .250 | 1/8 | 2/8 | 3/8 | 0.65s |
+| XTRACT neural | 13/24 = .542 | **0/8** | 6/8 | 7/8 | 5.89s |
+| ORACLEPRED | 15/24 = .625 | **0/8** | 7/8 | 8/8 | 0.61s |
+| XTRACT_DELEGATED | 8/24 = .333 | **0/8** | 3/8 | 5/8 | derived |
+| ORACLE_DELEGATED | **24/24 = 1.000** | **8/8** | **8/8** | **8/8** | deterministic |
+
+Artifact quality among 23 valid XTRACT artifacts:
+
+- binary hypothesis-fit accuracy: **.609**
+- exact hypothesis-fit rate: **.348**
+- exact prediction-row rate: **.217**
+- binary query-prediction-cell accuracy: **.830**
+- exact full-matrix rate: **1/23 = .043**
+
+Only one valid artifact had a fully correct matrix. Consequently delegation had no reliable input: it repaired none of 11 neural-wrong cases and damaged 5 of 13 neural-correct cases. This is a straightforward garbage-in/garbage-out failure, not a failure of deterministic discrimination.
+
+### The central dissociation
+
+ORACLEPRED is decisive. Even when the correct matrix was explicitly supplied, the model selected the discriminating query in **0/8** need-query tasks. Its need-query choices were `no_query` in 6 cases and `Q2` in 2 cases. Meanwhile it scored 7/8 and 8/8 on the two no-query control families. Thus the model can exploit the matrix enough to avoid unnecessary queries, but does not use the equally visible difference between hypothesis predictions to select the necessary query.
+
+XTRACT produced the same asymmetry: 0/8 need-query, but 13/16 controls. Requiring the matrix improved control behavior relative to this runner's BASE, without creating discriminating-query selection.
+
+### Interpretation
+
+1. **Predictive grounding is inadequate.** The model often cannot reliably determine whether explicit rules fit observations or what they predict for probe inputs. Exact full-matrix accuracy was only 4.3% among valid artifacts.
+2. **Comparative use of correct predictions is also inadequate.** The oracle-prediction arm removes the grounding burden, yet need-query accuracy remains zero. The bottleneck is therefore not merely arithmetic or extraction.
+3. **This is a symmetrical attractor failure.** In EPI-01 the model collapsed toward universal no-query; here BASE often guessed non-informative queries, while oracle/matrix conditions collapse toward no_query/Q2. The common failure is absence of a stable causal decision procedure, not a single fixed bias.
+4. **Deterministic information-gain computation remains fully validated.** Given correct explicit predictions, finite hypothesis discrimination is trivially computable and reaches 24/24. In a deployed architecture, explicit symbolic rules should remain structured rather than being flattened into prose and re-interpreted by the model.
+5. **Comparability limitation:** EPI-02 BASE is not an exact replication of EPI-01 NOCOST because the runner system prompt added stronger formatting language. This small context change coincided with a large behavioral shift and is itself a reminder that these policies are prompt-sensitive rather than stable epistemic reasoning.
+
+### Next implication
+
+The next floor test should isolate the minimal comparative primitive directly: given two bit-valued prediction columns and nothing else, can the model select the row where they differ? If that fails, the problem is basic relational comparison/instruction grounding. If it succeeds, the failure lies in mapping that primitive onto epistemic language such as “distinguish,” “rule,” and “query.” That distinction must be established before constructing a larger curiosity architecture.

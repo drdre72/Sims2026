@@ -75,13 +75,15 @@ def grade_matrix_artifact(response, task):
     truth = task["truth"]
     out = dict(parsed)
     out["expected"] = truth
+    ref = reference_matrix(task)
+    reference_exact = deterministic_choice(ref["fit"], ref["rows"]) == truth
     if parsed["parse_status"] != "valid":
         out.update({"format_valid": False, "answer_correct": False,
                     "fit_accuracy": 0.0, "prediction_row_accuracy": 0.0,
                     "matrix_exact": False, "delegated_answer": None,
-                    "delegated_correct": False})
+                    "delegated_correct": False,
+                    "reference_matrix_exact": reference_exact})
         return out
-    ref = reference_matrix(task)
     fit_flags = [a == b for a, b in zip(parsed["fit"], ref["fit"])]
     row_flags = [a["pred"] == b["pred"] for a, b in zip(parsed["rows"], ref["rows"])]
     delegated = deterministic_choice(parsed["fit"], parsed["rows"])
