@@ -877,3 +877,43 @@ F0 and F3 are implemented for later campaigns but are not part of this GPU senti
 **Budget:** maximum 110 model generations or 20 GPU minutes; each response capped at 128 new tokens. Backbone weights frozen; no training, arbitrary code execution, intervention authority, or evaluator modification.
 
 **Known limitations fixed in advance:** nine tasks and two feedback arms are too few for a strong claim of autonomous methodology transfer; the capability menu and DSL are necessary scaffolding, so success is composition/recognition within a prepared environment, not invention of symbolic computation; recurrence is exact-rule reuse rather than broad transfer; neural deliberation remains dependent on clean text evidence; cost savings are measured as sentinel actions/tokens, not yet real cognitive amortization in a deployed system.
+
+
+## 24. HZN-OOI-04S results — protocol viable, autonomous consolidation absent (18 generations, 19s GPU)
+
+Evidence: `evidence/gate1_5_consolidation_sentinel_v4.json`. Both feedback arms completed all nine tasks. CPU validation before execution: 155/155 tests passing; researcher-authored oracle reference 9/9 with exactly one construct → verify → retain sequence and correct autonomous reuse.
+
+### Preregistered sentinel verdicts
+
+| outcome | result | verdict |
+|---|---:|---|
+| technical CPU validity | oracle 9/9; verifier rejects tie-first procedure; no automatic reuse; partition isolation | PASS |
+| protocol viability ≥ .70 valid actions | **18/18 = 1.00** across both arms | PASS |
+| at least one correct autonomous reuse | **0** | ABSENT |
+| appropriate restraint on ambiguous control | model answered rather than abstaining in both arms | FAIL |
+| feedback sensitivity F1 vs F2 | no behavioral difference | ABSENT |
+
+### Behavioral summary
+
+| condition | final accuracy | valid actions | deliberate | construct | verify | retain | apply | autonomous reuse | mean input tokens |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| F1 correct/incorrect | 5/9 = .556 | 9/9 | 9/9 | 0 | 0 | 0 | 0 | 0 | 601 |
+| F2 practice-expected feedback | 5/9 = .556 | 9/9 | 9/9 | 0 | 0 | 0 | 0 | 0 | 608 |
+| oracle reference | 9/9 = 1.000 | 12/12 | 2 | 1 | 1 | 1 | 7 | 4 | — |
+
+Every model response in both arms was syntactically valid, and every response was immediately `action=deliberate`. The two arms produced the same answer on all nine tasks. Even F2 feedback such as `incorrect; expected=none` on exact ties did not cause the model to inspect memory, investigate the failure, use the legacy or correct retained procedures, construct a candidate procedure, or abstain on the underspecified task.
+
+Accuracy decomposition was identical in both arms: practice 1/3, reuse 2/3, controls 1/2, already-resolved 1/1. Both exact-tie practice/reuse failures selected a candidate despite feedback. The ambiguous-rule task was answered `D` rather than abstained in both arms.
+
+### Interpretation
+
+1. **The harness works.** The negative result is not a parse failure or verifier failure: valid action rate was 100%, the oracle reaches 9/9, incorrect procedures are rejected, and no automatic runtime routing occurred.
+2. **Capability availability was not sufficient.** Merely placing construction, verification, retention, recall, and application in the action space did not lead a 4B model to use them. This is a clean negative for the weakest form of autonomous discovery.
+3. **The temporal stores were operationally real but motivationally inert.** Past outcomes and procedures were visible, yet the model treated each task as an isolated one-shot answering problem. State existed, but did not cause migration between future/present/past.
+4. **This is evidence about missing pressure, not yet evidence of incapacity.** In this sentinel, `apply` still requires a model-generated turn, so the environment does not provide a large experienced computational advantage for consolidation. There is outcome feedback but no cumulative cost ledger, resource scarcity, or direct penalty for repeated neural resolution. The utility of amortization is therefore visible to the experimenter more than to the agent.
+5. **The first missing capability may be recognition, not synthesis.** The model never even tested the procedure-construction path, and never autonomously applied a preexisting verified procedure. Before measuring symbolic composition quality, the next experiment must determine what feedback or incentive causes the model to recognize that a reusable mechanism is applicable.
+6. **Compulsive answering remains evident.** Even under a neutral action menu with abstention available, the underspecified rule received a candidate answer. This reinforces the need to distinguish `NO_ACTION`, `INSUFFICIENT_EVIDENCE`, `UNKNOWN_RULE`, and `DELEGATE` as separate epistemic states.
+
+### Next experimental implication
+
+Do not respond to this negative by simply telling the model to construct procedures; that would measure instruction following. The next sentinel should make the utility landscape experientially visible while preserving neutral capability availability: cumulative resource cost, recurrence statistics, and feedback diagnostics should be independent variables. F3 diagnostic feedback can serve as an assisted ceiling. The key question becomes whether the model can infer the consolidation strategy from experienced cost/error structure before being told that strategy explicitly.
