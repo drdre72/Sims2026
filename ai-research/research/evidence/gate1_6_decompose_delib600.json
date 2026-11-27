@@ -1,0 +1,374 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "epi4-delib600-posthoc",
+ "rows": [
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "A"
+   ],
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, C, D, E.\n    *   Task: For each row, determine if `H1` and `H2` differ (are not equal).\n    *   Output Format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags.\n\n2.  **Analyze the Data:**\n    *   Row A: H1=0, H2=1. Are they different? Yes (0 != 1).\n    *   Row B: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row C: H1=0, H2=0. Are they different? No (0 == 0).\n    *   Row D: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row E: H1=0, H2=0. Are they different? No (0 == 0).\n\n3.  **Determine Flags:**\n    *   A: yes\n    *   B: no\n    *   C: no\n    *   D: no\n    *   E: no\n\n4.  **Format Output:**\n    *   Required format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`\n    *   Constructed string: `A=yes,B=no,C=no,D=no,E=no`\n\n5.  **Final Review:**\n    *   Check constraints: \"Reply with ONLY flags\".\n    *   Check logic: 0 vs 1 is different. 1 vs 1 is same. 0 vs 0 is same.\n    *   Check format: Matches the requested pattern.\n\n6.  **Construct Final Response.**\n    A=yes,B=no,C=no,D=no,E=no\n</think>\n\nA=yes,B=no,C=no,D=no,E=no\n",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, C, D, E.\n    *   Task: For each row, determine if `H1` and `H2` differ (are not equal).\n    *   Output Format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags.\n\n2.  **Analyze the Data:**\n    *   Row A: H1=0, H2=1. Are they different? Yes (0 != 1).\n    *   Row B: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row C: H1=0, H2=0. Are they different? No (0 == 0).\n    *   Row D: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row E: H1=0, H2=0. Are they different? No (0 == 0).\n\n3.  **Determine Flags:**\n    *   A: yes\n    *   B: no\n    *   C: no\n    *   D: no\n    *   E: no\n\n4.  **Format Output:**\n    *   Required format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`\n    *   Constructed string: `A=yes,B=no,C=no,D=no,E=no`\n\n5.  **Final Review:**\n    *   Check constraints: \"Reply with ONLY flags\".\n    *   Check logic: 0 vs 1 is different. 1 vs 1 is same. 0 vs 0 is same.\n    *   Check format: Matches the requested pattern.\n\n6.  **Construct Final Response.**\n    A=yes,B=no,C=no,D=no,E=no\n</think>\n\nA=yes,B=no,C=no,D=no,E=no\n",
+   "input_tokens": 117,
+   "output_tokens": 491,
+   "latency_s": 41.38,
+   "prompt_sha256": "1d99dbf6f99dbb9dad5290c3759080bbb0853c136adacf724a66e073685fa53e"
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": true,
+    "M": false,
+    "N": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "L"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, L, M, N, O) with two boolean values each (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,L=<diff or equal>,M=<diff or equal>,N=<diff or equal>,O=<diff or equal>`\n    *   Constraint: Reply with ONLY the specified format.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row L:** H1=0, H2=1.\n        *   Comparison: 0 != 1.\n        *   Result: diff.\n    *   **Row M:** H1=0, H2=0.\n        *   Comparison: 0 == 0.\n        *   Result: equal.\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row O:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n\n3.  **Construct Output:**\n    *   Format: `flags=K=<result>,L=<result>,M=<result>,N=<result>,O=<result>`\n    *   Values: K=equal, L=diff, M=equal, N=equal, O=equal.\n    *   String: `flags=K=equal,L=diff,M=equal,N=equal,O=equal`\n\n4.  **Final Review:**\n    *   Does it match the requested format exactly? Yes.\n    *   Are there any extra characters or explanations? No.\n\n5.  **Generate Output.**\n</think>\n\nflags=K=equal,L=diff,M=equal,N=equal,O=equal\n",
+   "cleaned_response": "flags=K=equal,L=diff,M=equal,N=equal,O=equal",
+   "input_tokens": 148,
+   "output_tokens": 475,
+   "latency_s": 39.56,
+   "prompt_sha256": "1328fd594bbfdee833b750a187edd934e509dcbe0b6ed293d22f8ad837b3e99b"
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "C"
+   ],
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table with 5 rows (A, B, C, D, E) and two columns (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\n\n2.  **Analyze the Data:**\n    *   Row A: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row B: H2=1, H1=1. Comparison: 1 vs 1. Result: Equal.\n    *   Row C: H2=0, H1=1. Comparison: 0 vs 1. Result: Diff.\n    *   Row D: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row E: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n\n3.  **Format the Output:**\n    *   A=equal\n    *   B=equal\n    *   C=diff\n    *   D=equal\n    *   E=equal\n    *   Constraint: \"Reply with ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\"\n\n4.  **Construct Final String:**\n    A=equal,B=equal,C=diff,D=equal,E=equal\n\n5.  **Final Review:** Does it match the requested format exactly? Yes. No extra text.\n\n    *   Row A: H2=0, H1=0 -> Equal\n    *   Row B: H2=1, H1=1 -> Equal\n    *   Row C: H2=0, H1=1 -> Diff\n    *   Row D: H2=0, H1=0 -> Equal\n    *   Row E: H2=0, H1=0 -> Equal\n\n    String: A=equal,B=equal,C=diff,D=equal,E=equal\n\n    Wait, check the prompt again: \"Reply with ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\"\n    It implies the format should be `A=equal`, `B=equal`, etc., separated by commas or spaces? The example shows `flags=A=<diff or equal>,B=<diff or equal>...`. I will use commas to",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table with 5 rows (A, B, C, D, E) and two columns (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\n\n2.  **Analyze the Data:**\n    *   Row A: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row B: H2=1, H1=1. Comparison: 1 vs 1. Result: Equal.\n    *   Row C: H2=0, H1=1. Comparison: 0 vs 1. Result: Diff.\n    *   Row D: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row E: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n\n3.  **Format the Output:**\n    *   A=equal\n    *   B=equal\n    *   C=diff\n    *   D=equal\n    *   E=equal\n    *   Constraint: \"Reply with ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\"\n\n4.  **Construct Final String:**\n    A=equal,B=equal,C=diff,D=equal,E=equal\n\n5.  **Final Review:** Does it match the requested format exactly? Yes. No extra text.\n\n    *   Row A: H2=0, H1=0 -> Equal\n    *   Row B: H2=1, H1=1 -> Equal\n    *   Row C: H2=0, H1=1 -> Diff\n    *   Row D: H2=0, H1=0 -> Equal\n    *   Row E: H2=0, H1=0 -> Equal\n\n    String: A=equal,B=equal,C=diff,D=equal,E=equal\n\n    Wait, check the prompt again: \"Reply with ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\"\n    It implies the format should be `A=equal`, `B=equal`, etc., separated by commas or spaces? The example shows `flags=A=<diff or equal>,B=<diff or equal>...`. I will use commas to",
+   "input_tokens": 147,
+   "output_tokens": 600,
+   "latency_s": 50.49,
+   "prompt_sha256": "3ae9afeafb4f73f0059628cc72d2031ebb277e7e023600468652dc15ace3027c"
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": false,
+    "M": false,
+    "N": true,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "N"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A set of rows (K, L, M, N, O) with values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ.\n    *   Output Format: `flags=K=<yes or no>,L=<yes or no>,M=<yes or no>,N=<yes or no>,O=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Analyze the Data:**\n    *   Row K: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row L: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row M: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n    *   Row N: H2=1, H1=0. Do they differ? 1 vs 0 -> Yes.\n    *   Row O: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n\n3.  **Determine Flags:**\n    *   K: no\n    *   L: no\n    *   M: no\n    *   N: yes\n    *   O: no\n\n4.  **Format the Output:**\n    *   Required format: `flags=K=<yes or no>,L=<yes or no>,M=<yes or no>,N=<yes or no>,O=<yes or no>`\n    *   Constructed string: `flags=K=no,L=no,M=no,N=yes,O=no`\n\n5.  **Final Review:**\n    *   Check constraints: \"Reply with ONLY flags...\".\n    *   Check logic:\n        *   K: 1 vs 1 (Equal) -> no\n        *   L: 1 vs 1 (Equal) -> no\n        *   M: 0 vs 0 (Equal) -> no\n        *   N: 1 vs 0 (Different) -> yes\n        *   O: 0 vs 0 (Equal) -> no\n    *   Check format: `flags=K=no,L=no,M=no,N=yes,O=no` matches the requested pattern.\n\n6.  **Construct Final Response.**\n</think>\n\nflags=K=no,L=no,M=no,N=yes,O=no\n",
+   "cleaned_response": "flags=K=no,L=no,M=no,N=yes,O=no",
+   "input_tokens": 147,
+   "output_tokens": 548,
+   "latency_s": 45.5,
+   "prompt_sha256": "4da9294a709b3eb77fc4951e633b7f82d926d1c378e34d07875d3758e9628e68"
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "E"
+   ],
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, D, C, E.\n    *   Task: For each row, compare `H1` and `H2`.\n    *   Output Format: A specific string format where each label is followed by `<diff>` or `<equal>`.\n    *   Constraint: Reply with ONLY the flags. No explanations, no markdown code blocks (unless implied by \"ONLY flags\", but usually means raw text), no extra characters.\n\n2.  **Process Each Row:**\n\n    *   **Row A:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row B:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row D:**\n        *   H1 = 0\n        *   H2 = 0\n        *   Comparison: 0 == 0\n        *   Result: equal\n\n    *   **Row C:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row E:**\n        *   H1 = 1\n        *   H2 = 0\n        *   Comparison: 1 != 0\n        *   Result: diff\n\n3.  **Format the Output:**\n    *   Required format: `A=<diff or equal>,B=<diff or equal>,D=<diff or equal>,C=<diff or equal>,E=<diff or equal>`\n    *   Mapping:\n        *   A: equal\n        *   B: equal\n        *   D: equal\n        *   C: equal\n        *   E: diff\n\n4.  **Construct Final String:**\n    *   A=equal,B=equal,D=equal,C=equal,E=diff\n\n5.  **Review Constraints:**\n    *   \"Reply with ONLY flags\".\n    *   Check for any hidden tricks. The input looks like a CSV snippet.\n    *   H1 and H2 are integers.\n    *   A: 1 vs 1 -> equal\n    *   B: 1 vs 1 -> equal\n    *   D: 0 vs 0 -> equal\n    *   C: 1 vs 1 -> equal\n    *   E: 1 vs 0 -> diff\n\n6.  **Final Verification:**",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, D, C, E.\n    *   Task: For each row, compare `H1` and `H2`.\n    *   Output Format: A specific string format where each label is followed by `<diff>` or `<equal>`.\n    *   Constraint: Reply with ONLY the flags. No explanations, no markdown code blocks (unless implied by \"ONLY flags\", but usually means raw text), no extra characters.\n\n2.  **Process Each Row:**\n\n    *   **Row A:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row B:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row D:**\n        *   H1 = 0\n        *   H2 = 0\n        *   Comparison: 0 == 0\n        *   Result: equal\n\n    *   **Row C:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row E:**\n        *   H1 = 1\n        *   H2 = 0\n        *   Comparison: 1 != 0\n        *   Result: diff\n\n3.  **Format the Output:**\n    *   Required format: `A=<diff or equal>,B=<diff or equal>,D=<diff or equal>,C=<diff or equal>,E=<diff or equal>`\n    *   Mapping:\n        *   A: equal\n        *   B: equal\n        *   D: equal\n        *   C: equal\n        *   E: diff\n\n4.  **Construct Final String:**\n    *   A=equal,B=equal,D=equal,C=equal,E=diff\n\n5.  **Review Constraints:**\n    *   \"Reply with ONLY flags\".\n    *   Check for any hidden tricks. The input looks like a CSV snippet.\n    *   H1 and H2 are integers.\n    *   A: 1 vs 1 -> equal\n    *   B: 1 vs 1 -> equal\n    *   D: 0 vs 0 -> equal\n    *   C: 1 vs 1 -> equal\n    *   E: 1 vs 0 -> diff\n\n6.  **Final Verification:**",
+   "input_tokens": 118,
+   "output_tokens": 600,
+   "latency_s": 50.01,
+   "prompt_sha256": "e89c15cc6dad04a4bae50bc88a5c24ddcdc681aa87d728caf89eb3a542f8a707"
+  },
+  {
+   "flags": {
+    "K": true,
+    "N": false,
+    "L": false,
+    "M": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "K"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, N, L, M, O) with binary values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,N=<diff or equal>,L=<diff or equal>,M=<diff or equal>,O=<diff or equal>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=0.\n        *   Comparison: 1 vs 0.\n        *   Result: Different (`diff`).\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row L:** H1=0, H2=0.\n        *   Comparison: 0 vs 0.\n        *   Result: Equal (`equal`).\n    *   **Row M:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row O:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n\n3.  **Construct Output:**\n    *   Format: `flags=K=<result>,N=<result>,L=<result>,M=<result>,O=<result>`\n    *   K=diff\n    *   N=equal\n    *   L=equal\n    *   M=equal\n    *   O=equal\n    *   String: `flags=K=diff,N=equal,L=equal,M=equal,O=equal`\n\n4.  **Final Verification:**\n    *   Check constraints: \"Reply with ONLY flags=...\".\n    *   Check logic:\n        *   K: 1 != 0 -> diff. Correct.\n        *   N: 1 == 1 -> equal. Correct.\n        *   L: 0 == 0 -> equal. Correct.\n        *   M: 1 == 1 -> equal. Correct.\n        *   O: 1 == 1 -> equal. Correct.\n\n5.  **Generate Output.**\n</think>\n\nflags=K=diff,N=equal,L=equal,M=equal,O=equal\n",
+   "cleaned_response": "flags=K=diff,N=equal,L=equal,M=equal,O=equal",
+   "input_tokens": 148,
+   "output_tokens": 567,
+   "latency_s": 47.32,
+   "prompt_sha256": "8ec2280b4cbdaa765a82f9042b0d80dd810bb7b3935f8eca8f5d6fef3b0c64a1"
+  }
+ ],
+ "summary": {
+  "n": 6,
+  "accuracy": 0.5,
+  "format_valid_rate": 0.5,
+  "mean_output_tokens": 546.8333333333334,
+  "mean_latency_s": 45.71
+ },
+ "wall_seconds": 274.3
+}

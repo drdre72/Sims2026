@@ -1213,3 +1213,112 @@ This strengthens rather than weakens the delegation thesis: the missing capabili
 **Thresholds.** Format validity should be ≥ .95 for SINGLE/COUNT/SELECT/ROUTE/EPIUTIL. Primitive competence requires SINGLE accuracy ≥ 10/12, VECTOR exact flags ≥ 12/18 with valid-row accuracy ≥ .90, COUNT ≥ 15/18, SELECT ≥ 15/18. Routing competence requires ≥ 10/12. Delegation is promising only if valid invocation rate ≥ .75 among compare choices, operand exactness ≥ .75, and invoked final accuracy ≥ 9/12. EPIUTIL requires need-family accuracy ≥ 5/6 and control accuracy ≥ 5/6. These are floor tests, not ceilings.
 
 **Budget/safety.** Planned approximately 114–126 generations depending on invocation choices; hard cap 150 generations or 20 GPU minutes. Greedy decoding, frozen backbone, no training, no weight modification, no authority expansion. CPU tests: 176/176 before GPU execution.
+
+
+## 37. HZN-EPI-04 results — comparison exists, but operational access, constraint integration and result consumption fail (120 generations, ~261s GPU; posthoc deliberative probe ~274s)
+
+Evidence: `evidence/gate1_6_decompose_v1.json` and posthoc `evidence/gate1_6_decompose_delib600.json`.
+
+This experiment substantially revises the interpretation of EPI-03. The model is **not** simply incapable of binary comparison. Isolated comparison and deliberate comparative reasoning are often correct. The operational failure arises in reliable formatting, completion, integration of uniqueness/cardinality constraints, and consumption of deterministic results.
+
+### Preregistered decomposition
+
+| arm | result | threshold verdict | interpretation |
+|---|---:|---|---|
+| SINGLE | **11/12 = .917**, format 12/12 | PASS | isolated binary comparison is mostly intact |
+| VECTOR strict | **7/18 = .389**, format 8/18 | FAIL | exact output contract usually violated |
+| COUNT from oracle flags | **18/18** | PASS | counting supplied flags is intact |
+| SELECT from oracle flags | **13/18 = .722** | FAIL | family decomposition matters more than aggregate |
+| ROUTE | **12/12** | PASS | explicit applicability rule can be recognized |
+| DELEGATE final | **7/12 = .583** | FAIL | invocation succeeds; consumption fails |
+| EPIUTIL | **7/12 = .583** | FAIL | consistency/cost/discrimination integration unreliable |
+
+### VECTOR: computation versus expression
+
+Strict VECTOR format validity was only **8/18**. All ten invalid responses omitted the required `flags=` prefix while otherwise emitting row mappings. Strict scoring is the preregistered operational result and remains a failure. However, exploratory relaxed scoring that ignores only the missing prefix gives:
+
+- exact vectors: **12/18 = .667** rather than 7/18;
+- binary row accuracy: **80/90 = .889**;
+- unique-target detection: **7/8**;
+- false positives: 5; false negatives: 5.
+
+Thus the strict result conflates computational errors with output-contract errors. The model's direct comparison/enumeration is imperfect but substantially better than EPI-03's final-selection behavior implied.
+
+Format validity itself was highly surface-sensitive: 7/9 with K–O labels but 1/9 with A–E labels, and 0/5 in CSV cases. This is further evidence that operational output policies are fragile rather than stable relational reasoning.
+
+### COUNT/SELECT dissociation: the clearest mechanical result
+
+COUNT was perfect: **18/18**. SELECT was perfect on unique-difference cases (**8/8**) and no-difference cases (**5/5**), but **0/5** on multiple-difference cases.
+
+In every multiple-difference case, the model selected a row that was in fact one of the differing rows, instead of answering `none` because there was no unique difference. Furthermore, in **5/5** of those cases it had just counted the number of differences correctly in the COUNT arm.
+
+This is a precise dissociation:
+
+> The model can count the differences and identify differing rows, but does not integrate the cardinality constraint “exactly one” into selection.
+
+That closely parallels earlier exact-tie inhibition failures. The bottleneck is not detection alone; it is constraint-coupled decision formation.
+
+### Routing and typed invocation
+
+ROUTE was perfect (**12/12**) when the applicability rule was explicit. This does not establish spontaneous routing, but it does establish a floor: the model can distinguish explicit finite binary matrices from vague/nonapplicable problems under this prompt.
+
+DELEGATE was even more revealing:
+
+- first-action format validity: **12/12**
+- comparator invocation rate: **12/12**
+- exact operand rows: **10/12 = .833**
+- copied row accuracy: **57/60 = .950**
+- deterministic comparator result correct: **12/12**
+- final answer correct: only **7/12**
+- final copies the comparator's `unique` value: **7/12**
+- unique-difference final accuracy: **3/8**
+- no-diff/multiple-diff control final accuracy: **4/4**
+
+The critical failures were not invocation or computation. In five unique-difference cases, the comparator explicitly returned `unique=<correct label>`, and the model still answered `final=none`. Thus even explicit deterministic evidence does not reliably override the no-difference attractor.
+
+Architecturally, this argues against a design in which the neural system must manually re-read and copy tool output as the final control path. If a typed runtime invokes a comparator, the runtime should also bind and use its result structurally. Neural language generation may explain or value the result, but should not be required to transcribe it for the decision to take effect.
+
+### Epistemic utility integration
+
+EPIUTIL results by family:
+
+| family | accuracy |
+|---|---:|
+| need_unique | **0/2** |
+| need_multiple_equal | **2/2** |
+| need_multiple_utility | **0/2** |
+| resolved_still_diff | **1/2** |
+| consistent_nodisc | **2/2** |
+| resolved_nodisc | **2/2** |
+
+The model answered `no_query` in both unique-discriminator cases, yet selected a discriminating query in both multiple-discriminator cases. In both asymmetric-cost cases it selected the more expensive discriminating observation rather than the cheaper one. One already-resolved case still produced a query merely because predictions differed.
+
+This supports the intended separation: prediction inequality, unresolved hypothesis consistency, uniqueness/multiplicity, and cost-sensitive utility are distinct constraints. The model does not yet integrate them as a coherent decision procedure.
+
+### Deliberative reference and posthoc budget probe
+
+The preregistered 300-token VECTOR_DELIB arm produced **0/6 strict format-valid completions**, mean latency ~24.9s. However, manual inspection showed correct row-by-row comparative reasoning in the visible traces; the model often exhausted its token budget before emitting the final line. This arm therefore measures operational completion failure under that budget, not absence of comparative competence.
+
+A posthoc exploratory 600-token repetition of the same six cases produced:
+
+- strict valid and correct completions: **3/6**
+- mean output length: ~547 tokens
+- mean latency: **45.7s** versus ~1.5s for direct VECTOR
+
+Crucially, all six traces contained correct comparative content: three ended in valid exact vectors; one produced a correct vector but again omitted the `flags=` prefix; two correctly analyzed all rows but exhausted the budget before final emission. This is exploratory rather than preregistered scoring, but it strongly supports the distinction between latent/accessible competence and operational competence.
+
+### Revised interpretation
+
+EPI-03 should not be read as evidence that the neural system lacks binary comparison. A better decomposition is:
+
+1. **Latent/accessible comparison:** often present, especially under deliberation.
+2. **Direct operational comparison:** imperfect and surface-sensitive.
+3. **Output contraction/format adherence:** unreliable.
+4. **Cardinality-constraint integration:** specifically poor.
+5. **Explicit routing/invocation:** strong when the rule and action are supplied.
+6. **Result consumption:** unreliable even when deterministic output is correct.
+7. **Cost-sensitive epistemic decision integration:** not yet coherent.
+
+The deterministic-infrastructure thesis is therefore strengthened, but for a more precise reason: not because the neural system cannot compare at all, rather because its comparative competence is not reliably accessible, constrained, terminated, or coupled to action at practical cost.
+
+The correct architectural response is not merely “give Jarvis a comparator.” It is to make comparison part of the typed substrate: automatic dispatch where types match, deterministic binding of results, and no dependence on neural retranscription for mechanical correctness. Neural computation should generate interpretations, hypotheses and value judgments; finite equality, counting, uniqueness and discrimination should be environmental machinery.

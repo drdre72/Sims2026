@@ -1,0 +1,5635 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "epi4-decompose-1",
+ "manifest": {
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "decompose_version": 1,
+  "matrix_cases": 18,
+  "single_tasks": 12,
+  "route_tasks": 12,
+  "epi_tasks": 12
+ },
+ "singles": [
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "answer=no\n",
+   "input_tokens": 65,
+   "output_tokens": 5,
+   "latency_s": 0.86,
+   "prompt_sha256": "d7d08f0b7168b5f07171628411eabd9c5062df7a7d1891dd328338c182a61749",
+   "task_id": "s00",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   }
+  },
+  {
+   "answer": true,
+   "expected": true,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=different\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "2ebe124b623ec40515c37c7899098301fe1a6464ad6fce52bbcfc4811abb2856",
+   "task_id": "s01",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=same\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "2499adcd038b4aa66c8fe923c54cb6f3a15716e4c9e928b10af4d8a0b9fceb96",
+   "task_id": "s02",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": true,
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "answer=no\n",
+   "input_tokens": 65,
+   "output_tokens": 5,
+   "latency_s": 0.48,
+   "prompt_sha256": "02d3ec550559beb1d5d1b271fecbd7bf566c2786f5ee6ab38f5b67f156801e88",
+   "task_id": "s03",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=same\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.65,
+   "prompt_sha256": "da0e241ec1282eb10e7942d228db0572c007f1ac8f336145a513bcd4d084adbc",
+   "task_id": "s04",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   }
+  },
+  {
+   "answer": true,
+   "expected": true,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=different\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "2ebe124b623ec40515c37c7899098301fe1a6464ad6fce52bbcfc4811abb2856",
+   "task_id": "s05",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "answer=no\n",
+   "input_tokens": 65,
+   "output_tokens": 5,
+   "latency_s": 0.48,
+   "prompt_sha256": "d199f5e76f7447d01d39dcba49a883f7ea71db0731a804cee26b62afc0896018",
+   "task_id": "s06",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   }
+  },
+  {
+   "answer": true,
+   "expected": true,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=different\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.57,
+   "prompt_sha256": "bf247d8ff75e53d1b768b086e512c1bbb8acb4381fdacdb4a1776f0b81fe0683",
+   "task_id": "s07",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=same\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.5,
+   "prompt_sha256": "da0e241ec1282eb10e7942d228db0572c007f1ac8f336145a513bcd4d084adbc",
+   "task_id": "s08",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   }
+  },
+  {
+   "answer": true,
+   "expected": true,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "answer=yes\n",
+   "input_tokens": 65,
+   "output_tokens": 5,
+   "latency_s": 0.46,
+   "prompt_sha256": "bba32993d4081f994daf0adb791802d56fb2e3aefe03e21cbb4b327c97635786",
+   "task_id": "s09",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   }
+  },
+  {
+   "answer": false,
+   "expected": false,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=same\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "2499adcd038b4aa66c8fe923c54cb6f3a15716e4c9e928b10af4d8a0b9fceb96",
+   "task_id": "s10",
+   "truth": false,
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   }
+  },
+  {
+   "answer": true,
+   "expected": true,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "relation=different\n",
+   "input_tokens": 64,
+   "output_tokens": 6,
+   "latency_s": 0.58,
+   "prompt_sha256": "bf247d8ff75e53d1b768b086e512c1bbb8acb4381fdacdb4a1776f0b81fe0683",
+   "task_id": "s11",
+   "truth": true,
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   }
+  }
+ ],
+ "vector": [
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "A"
+   ],
+   "response": "A=no,B=no,C=no,D=no,E=no\n",
+   "input_tokens": 126,
+   "output_tokens": 13,
+   "latency_s": 1.14,
+   "prompt_sha256": "1d99dbf6f99dbb9dad5290c3759080bbb0853c136adacf724a66e073685fa53e",
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": true,
+    "M": false,
+    "N": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "L"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=equal,L=diff,M=equal,N=equal,O=equal\n",
+   "input_tokens": 157,
+   "output_tokens": 20,
+   "latency_s": 1.71,
+   "prompt_sha256": "1328fd594bbfdee833b750a187edd934e509dcbe0b6ed293d22f8ad837b3e99b",
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "C"
+   ],
+   "response": "A=equal,B=equal,C=diff,D=equal,E=equal\n",
+   "input_tokens": 156,
+   "output_tokens": 18,
+   "latency_s": 1.52,
+   "prompt_sha256": "3ae9afeafb4f73f0059628cc72d2031ebb277e7e023600468652dc15ace3027c",
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": false,
+    "M": false,
+    "N": true,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "N"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=no,L=no,M=no,N=yes,O=no\n",
+   "input_tokens": 156,
+   "output_tokens": 15,
+   "latency_s": 1.26,
+   "prompt_sha256": "4da9294a709b3eb77fc4951e633b7f82d926d1c378e34d07875d3758e9628e68",
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "E"
+   ],
+   "response": "A=equal,B=equal,D=equal,C=equal,E=diff\n",
+   "input_tokens": 127,
+   "output_tokens": 18,
+   "latency_s": 1.55,
+   "prompt_sha256": "e89c15cc6dad04a4bae50bc88a5c24ddcdc681aa87d728caf89eb3a542f8a707",
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": true,
+    "N": false,
+    "L": false,
+    "M": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "K"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=diff,N=equal,L=equal,M=equal,O=equal\n",
+   "input_tokens": 157,
+   "output_tokens": 20,
+   "latency_s": 1.72,
+   "prompt_sha256": "8ec2280b4cbdaa765a82f9042b0d80dd810bb7b3935f8eca8f5d6fef3b0c64a1",
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "B"
+   ],
+   "response": "A=no,B=yes,C=no,D=no,E=yes\n",
+   "input_tokens": 155,
+   "output_tokens": 13,
+   "latency_s": 1.13,
+   "prompt_sha256": "d530fb14112c4a86785bfab82624c88af7642df508567c75afc926f33ad6c6d9",
+   "case_id": "m06",
+   "family": "unique_diff",
+   "truth": "B",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "N": false,
+    "M": true,
+    "O": true,
+    "L": false
+   },
+   "answer_correct": false,
+   "format_valid": true,
+   "row_accuracy": 0.8,
+   "detected_diff": [
+    "M",
+    "O"
+   ],
+   "false_positive": [
+    "O"
+   ],
+   "false_negative": [],
+   "response": "flags=K=equal,N=equal,M=diff,O=diff,L=equal\n",
+   "input_tokens": 157,
+   "output_tokens": 20,
+   "latency_s": 1.79,
+   "prompt_sha256": "c9ce25432a6e0b3dc2003e57f738ce9c8bd48267882d73e9c31f02fe02d038be",
+   "case_id": "m07",
+   "family": "unique_diff",
+   "truth": "M",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "A=equal,B=equal,C=equal,D=equal,E=equal\n",
+   "input_tokens": 127,
+   "output_tokens": 18,
+   "latency_s": 1.68,
+   "prompt_sha256": "92d1c68df7d75df6f741f6d54b074101cdb57b78c1d5b73f993654dc3e6d2976",
+   "case_id": "m08",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": false,
+    "M": false,
+    "N": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=no,L=no,M=no,N=no,O=no\n",
+   "input_tokens": 156,
+   "output_tokens": 15,
+   "latency_s": 1.29,
+   "prompt_sha256": "b4ea550a63d3b1b849d33e2ea723501f9b4f53de69ba86f2de2508cee1320cee",
+   "case_id": "m09",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "A=equal,B=equal,C=equal,D=equal,E=equal\n",
+   "input_tokens": 156,
+   "output_tokens": 18,
+   "latency_s": 1.58,
+   "prompt_sha256": "706e1d5083630720f08d9995b2c6fb24f59ff1e086fb45aa93fc3d6958ce3531",
+   "case_id": "m10",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": false,
+    "M": false,
+    "N": false,
+    "O": false
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=equal,L=equal,M=equal,N=equal,O=equal\n",
+   "input_tokens": 157,
+   "output_tokens": 20,
+   "latency_s": 1.71,
+   "prompt_sha256": "2fd4fdc6034657c573101f06aae345549069d8c2c1f15c0dbd4ac1f9de682c7a",
+   "case_id": "m11",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "B=no,E=yes,A=no,C=no,D=yes\n",
+   "input_tokens": 126,
+   "output_tokens": 13,
+   "latency_s": 1.15,
+   "prompt_sha256": "8164ef6fdd217ba10b2cbd2be9b8643c028306e5f64673d0099f0f199d081605",
+   "case_id": "m12",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "M",
+    "K"
+   ],
+   "response": "M=equal,N=equal,K=equal,O=equal,L=diff\n",
+   "input_tokens": 156,
+   "output_tokens": 18,
+   "latency_s": 1.56,
+   "prompt_sha256": "6f82b37767787e161166aff08bcd9f2daef0e9a7ea2efa2789b45f6d677efef8",
+   "case_id": "m13",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "flags": {
+    "C": false,
+    "E": false,
+    "B": true,
+    "A": false,
+    "D": true
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "B",
+    "D"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=C=equal,E=equal,B=diff,A=equal,D=diff\n",
+   "input_tokens": 156,
+   "output_tokens": 19,
+   "latency_s": 1.66,
+   "prompt_sha256": "49ca2c8b02f6b785e899ddbb315b7ee9197340cbee1d379e7d16bd005fa3b74b",
+   "case_id": "m14",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "M",
+    "O"
+   ],
+   "response": "L=no,M=yes,N=no,K=no,O=yes\n",
+   "input_tokens": 155,
+   "output_tokens": 13,
+   "latency_s": 1.18,
+   "prompt_sha256": "32b2391e861e5ee3d7733c21d4b074aafa57126f8c4a9bc95cc889db2a112959",
+   "case_id": "m15",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "A",
+    "D"
+   ],
+   "response": "A=equal,B=equal,C=equal,D=equal,E=equal\n",
+   "input_tokens": 127,
+   "output_tokens": 18,
+   "latency_s": 1.48,
+   "prompt_sha256": "4eddad2b17e1ce8a82ba072ae99d232e6704c4a907dce5932eacfaf098beb986",
+   "case_id": "m16",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": {
+    "K": false,
+    "L": true,
+    "M": false,
+    "N": false,
+    "O": true
+   },
+   "answer_correct": true,
+   "format_valid": true,
+   "row_accuracy": 1.0,
+   "detected_diff": [
+    "L",
+    "O"
+   ],
+   "false_positive": [],
+   "false_negative": [],
+   "response": "flags=K=equal,L=diff,M=equal,N=equal,O=diff\n",
+   "input_tokens": 157,
+   "output_tokens": 20,
+   "latency_s": 1.7,
+   "prompt_sha256": "187ec5d339ebe594064c9cffb3fdf7f418d9bd788b57a1827c307f3a84832946",
+   "case_id": "m17",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  }
+ ],
+ "count": [
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 115,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "83071f511b8a1a42d9b7a2ab99a5c9be45232383ce6b981d8ae0d9b6a6feba97",
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.57,
+   "prompt_sha256": "29fee16a7edf54e3e9515d152b903fed0383b72a2e118ea7a4a22ed2d32de8fe",
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.57,
+   "prompt_sha256": "e5cef644aecbe6c755b354fced276b31c604dd40fdc23648b0ef51d476812fa0",
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "d70c782039757753afc4f26359eb134f38841301ffa19e78cedff65b7dec5828",
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 115,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "ee3edbf4e5c7481a9834da44e59431630408155bb367a9ec01b8735ac78714e5",
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "113d7fcf95d93fa3fa3bc32474302e1a21ffcb67d7b9bf9e3ef2b096e86c0bbb",
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "5d5c042f71d9d8bbaac2f0524e6b9b8d0b1bc8af5869025a782a5487684d8f50",
+   "case_id": "m06",
+   "family": "unique_diff",
+   "truth": "B",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 1,
+   "expected": 1,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=1\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.61,
+   "prompt_sha256": "db786ebcfda2b2233978201187b62a647557472e21a8ee6f90c3f152bcbe23e0",
+   "case_id": "m07",
+   "family": "unique_diff",
+   "truth": "M",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "answer": 0,
+   "expected": 0,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=0\n",
+   "input_tokens": 115,
+   "output_tokens": 6,
+   "latency_s": 0.59,
+   "prompt_sha256": "f259b5509fec35d18c5282f115310ec6a3c2506f3f9864b22f9fb2fe9a8ed8bd",
+   "case_id": "m08",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 0,
+   "expected": 0,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=0\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "8d18bfa7f4542b31ca4b6ed78c8ffdacdf5b1c2931aaac754a5083bb006d0673",
+   "case_id": "m09",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 0,
+   "expected": 0,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=0\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "ef29b94a9c40aa7ccd64a0fef2a8ef66b5bdb473e62880ca80f038a7a419fb88",
+   "case_id": "m10",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 0,
+   "expected": 0,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=0\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "54e5a84d70a17d02c4dffd01f9b437a606304958b82f97da480baa8f5045fee0",
+   "case_id": "m11",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 0,
+   "expected": 0,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=0\n",
+   "input_tokens": 115,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "adab99bd76d0f0b819f466eb678ca503d56fa431aee11db609a0b4cf0d62ee11",
+   "case_id": "m12",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "answer": 2,
+   "expected": 2,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=2\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.61,
+   "prompt_sha256": "6fe46968b55a86ad6769b55bb9d32ecd5116101a1a57de15bdacadad36000c41",
+   "case_id": "m13",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "answer": 2,
+   "expected": 2,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=2\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.6,
+   "prompt_sha256": "38e629b6d47b650ac45d1eac29550b038e385f38a4117acbd0623b1f1059eccd",
+   "case_id": "m14",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "answer": 2,
+   "expected": 2,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=2\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.62,
+   "prompt_sha256": "bb76d307fab2689f31770729560d63f66e60f139a96a96576b8d593ab6ae54a7",
+   "case_id": "m15",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 2,
+   "expected": 2,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=2\n",
+   "input_tokens": 115,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "2734764b3d01cf6134547969c56b7ce879a517cab26ff64732604580b1ce62a3",
+   "case_id": "m16",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": 2,
+   "expected": 2,
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "count=2\n",
+   "input_tokens": 144,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "2b0afaa1d3e803916786bc871dc2bf6437aaec407719078f640c9c79c389494e",
+   "case_id": "m17",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  }
+ ],
+ "select": [
+  {
+   "answer": "A",
+   "expected": "A",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=A\n",
+   "input_tokens": 130,
+   "output_tokens": 5,
+   "latency_s": 0.46,
+   "prompt_sha256": "2a125f6d723192da1a140b8285fc48b8390102c8e0a974bca08ef27afe99ab71",
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "L",
+   "expected": "L",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=L\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.49,
+   "prompt_sha256": "49f7c434d6557eb6a94dd3bc136ab4635e15265268e8c0ad089490b7b9f3bbdc",
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "C",
+   "expected": "C",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=C\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.5,
+   "prompt_sha256": "735fc1cd93b5f48bf8bc84ff7cdd6848250cd295cc46d73c10e5ebb4b1674e96",
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "N",
+   "expected": "N",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=N\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.47,
+   "prompt_sha256": "cdb27ae3971af0122e3ede69247efdf016140406d91743426438de9785cca880",
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "E",
+   "expected": "E",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=E\n",
+   "input_tokens": 130,
+   "output_tokens": 5,
+   "latency_s": 0.48,
+   "prompt_sha256": "ea5671f50bdba72b75bd3e4c1cde0e0214e50549fc91c756fec9980e83b0bdd5",
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "K",
+   "expected": "K",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=K\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "da333b933d42f396386fcfb327b0e680390777a29831521d0e450e98fa57557b",
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "B",
+   "expected": "B",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=B\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.49,
+   "prompt_sha256": "f38df15f49760bd4795101922720d8905b87de780c25b33ef99d72f2150dbe12",
+   "case_id": "m06",
+   "family": "unique_diff",
+   "truth": "B",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "M",
+   "expected": "M",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=M\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.48,
+   "prompt_sha256": "1a35083562e09de7904dd3db7335feac0c1429b62c3cdbeed71ea0c3fbaabc4c",
+   "case_id": "m07",
+   "family": "unique_diff",
+   "truth": "M",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "answer": "none",
+   "expected": "none",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=none\n",
+   "input_tokens": 130,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "ab156b26a0372944af3a14a13c4afe0d28a4e03f361b8eae571fe24592a398c7",
+   "case_id": "m08",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "none",
+   "expected": "none",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=none\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "0eecfd9cf8e36e847e3b76e70e43a485b4efe84a3edc5399d238d0ade6ace723",
+   "case_id": "m09",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "none",
+   "expected": "none",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=none\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "26bd10027f2e09254b0ba3e40d1b7484430d46f3881ed12fcd0ef995fbba9da3",
+   "case_id": "m10",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "none",
+   "expected": "none",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=none\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "01b265e0ac51b254bd0c6c60b6ae85dca1bd42ca304d0ce89eced01ff71b9b3a",
+   "case_id": "m11",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "none",
+   "expected": "none",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "select=none\n",
+   "input_tokens": 130,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "42c96ef707f72fc5b05f20644fa7f0f4c9f9782b83a34b1e536db575dcb82888",
+   "case_id": "m12",
+   "family": "no_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "answer": "K",
+   "expected": "none",
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "select=K\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.57,
+   "prompt_sha256": "4d8ffe5a1a511d6479789cbd4e9bf4024260a60b6e917fcd8b8eee9e6020f6a3",
+   "case_id": "m13",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ]
+  },
+  {
+   "answer": "D",
+   "expected": "none",
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "select=D\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.48,
+   "prompt_sha256": "ac0a8c147e8ea9075b032a431c257d1b8c4e8523cb9f0892c540b56942b03134",
+   "case_id": "m14",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    }
+   ]
+  },
+  {
+   "answer": "M",
+   "expected": "none",
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "select=M\n",
+   "input_tokens": 159,
+   "output_tokens": 5,
+   "latency_s": 0.45,
+   "prompt_sha256": "f16febfc8a463932a17469e60ee23bf301b4cc8cd3c65cb29935b3daadf133c5",
+   "case_id": "m15",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "A",
+   "expected": "none",
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "select=A\n",
+   "input_tokens": 130,
+   "output_tokens": 5,
+   "latency_s": 0.6,
+   "prompt_sha256": "d63722f4a1642b275da766fa6f4d62a6b84784d279db05a6297b27651e343849",
+   "case_id": "m16",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "answer": "O",
+   "expected": "none",
+   "answer_correct": false,
+   "format_valid": true,
+   "response": "select=O\n",
+   "input_tokens": 159,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "c500bbe786127ca069ce67bc34b3dfcfc90b1abb03d93b82731da036cdfa623b",
+   "case_id": "m17",
+   "family": "multiple_diff",
+   "truth": "none",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  }
+ ],
+ "routes": [
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 133,
+   "output_tokens": 6,
+   "latency_s": 0.57,
+   "prompt_sha256": "b3ed7bb5348d1c9ce4057a50a6dd0912c28417a4d5d8ef4584fb0e7d4f073dcd",
+   "task_id": "r00",
+   "kind": "applicable"
+  },
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 162,
+   "output_tokens": 6,
+   "latency_s": 0.59,
+   "prompt_sha256": "03a690dd2050216bac5b58a958d50e65ab0aef2ee42018aa1fe97045fa38aa58",
+   "task_id": "r01",
+   "kind": "applicable"
+  },
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 162,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "61b34cc5bf91c350e13cce96427136e787753cc441910c8020f5fc82e635e86f",
+   "task_id": "r02",
+   "kind": "applicable"
+  },
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 133,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "d38a37fe85d1ecc658b341374e4189fe50b66a8bdb0988864d414760c1a1090d",
+   "task_id": "r03",
+   "kind": "applicable"
+  },
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 162,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "8008eaf7af8ac4cd288d36a7bf301cf5fc9297a0236ccc871d584b1c29b6b91c",
+   "task_id": "r04",
+   "kind": "applicable"
+  },
+  {
+   "answer": "comparator",
+   "expected": "comparator",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=comparator\n",
+   "input_tokens": 162,
+   "output_tokens": 6,
+   "latency_s": 0.58,
+   "prompt_sha256": "a58dc935dc32a3489c64cbf3b8f785758194a4c86c3d91524f52dea9b34c9048",
+   "task_id": "r05",
+   "kind": "applicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 111,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "00d4762e9339c7303a40366127f28afd54763205d04d8443fdfc727b1a73fa67",
+   "task_id": "r06",
+   "kind": "nonapplicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 116,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "c1f3d3b59522f05bf094658a7959e65cbc7094fd1d449b9e9c9197c9ac332f29",
+   "task_id": "r07",
+   "kind": "nonapplicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 110,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "d35d46b68d64630dc9fe0305d27bdc38a8f3701ee5d9a112f12db7b99960cb14",
+   "task_id": "r08",
+   "kind": "nonapplicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 110,
+   "output_tokens": 6,
+   "latency_s": 0.58,
+   "prompt_sha256": "054661e3e524f4559f330a59e7e1bcc3dc42d4b3ce6f229964b8ca784ef6c21c",
+   "task_id": "r09",
+   "kind": "nonapplicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 112,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "b145dd2df6534fa5c939d616d1a43720f7e3438028786cd1da9009dfad9bdd82",
+   "task_id": "r10",
+   "kind": "nonapplicable"
+  },
+  {
+   "answer": "manual",
+   "expected": "manual",
+   "answer_correct": true,
+   "format_valid": true,
+   "response": "route=manual\n",
+   "input_tokens": 110,
+   "output_tokens": 6,
+   "latency_s": 0.55,
+   "prompt_sha256": "68d6e8ba68793a76f8cf6217502a1adafc4696b7afeb7be2da8e22e18574c123",
+   "task_id": "r11",
+   "kind": "nonapplicable"
+  }
+ ],
+ "delegates": [
+  {
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   },
+   "first_response": "action=compare\nrows=A:0/1;B:1/1;C:0/0;D:1/1;E:0/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 183,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.07,
+   "prompt_sha256": "dd42e086f3132c24154d82d17389faf8f99dbe65e705ab07ad479e7750f21b13",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "A"
+    ],
+    "count": 1,
+    "unique": "A"
+   },
+   "second_response": "final=A\n",
+   "final": "A",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 5,
+   "second_latency_s": 0.44,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=K:1/1;L:0/1;M:0/0;N:1/1;O:1/1\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 213,
+   "first_output_tokens": 38,
+   "first_latency_s": 3.08,
+   "prompt_sha256": "f60304d3b696a7cd1486bb020a03f95447737849cc17475f80788865d8af8187",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "L"
+    ],
+    "count": 1,
+    "unique": "L"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": false,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.49,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=A:0/0;B:1/1;C:0/1;D:0/0;E:0/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 212,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.07,
+   "prompt_sha256": "ab19760b1c636f05953630b478125ae3c2de8635e89f4c81c61dfb70ea2e098b",
+   "operand_exact": false,
+   "comparator_result": {
+    "differences": [
+     "C"
+    ],
+    "count": 1,
+    "unique": "C"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": false,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.53,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=K:1/1;L:1/1;M:0/0;N:0/1;O:0/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 213,
+   "first_output_tokens": 38,
+   "first_latency_s": 3.23,
+   "prompt_sha256": "ee53af2dd4334f103d61380f2c2b756fc6bdf5021b901ea2b3b06ea241d0501e",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "N"
+    ],
+    "count": 1,
+    "unique": "N"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": false,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.52,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   },
+   "first_response": "action=compare\nrows=A:1/1;B:1/1;D:0/0;C:1/1;E:1/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 183,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.3,
+   "prompt_sha256": "4ec8596b14122ab6c7aaec4d78aaf813357fc8e55ace517a56a66c6c6541741b",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "E"
+    ],
+    "count": 1,
+    "unique": "E"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": false,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.56,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=K:1/0;N:1/1;L:0/0;M:1/1;O:1/1\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 213,
+   "first_output_tokens": 38,
+   "first_latency_s": 3.19,
+   "prompt_sha256": "b1097b5110da892340af563230af19ac85b7613f8051dc4706d30f605eff0fbb",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "K"
+    ],
+    "count": 1,
+    "unique": "K"
+   },
+   "second_response": "final=K\n",
+   "final": "K",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 69,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.56,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m06",
+   "family": "unique_diff",
+   "truth": "B",
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": true,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=A:0/0;B:0/1;C:0/0;D:0/0;E:1/1\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 212,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.26,
+   "prompt_sha256": "ed7b0845c290b66910189f33281c8688bdbd7da68b5110a9c4dcd7f80efbce56",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "B"
+    ],
+    "count": 1,
+    "unique": "B"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": false,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.54,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m07",
+   "family": "unique_diff",
+   "truth": "M",
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=K:0/0;N:0/0;M:1/0;O:1/1;L:0/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 213,
+   "first_output_tokens": 38,
+   "first_latency_s": 3.14,
+   "prompt_sha256": "b866c1d63518faeaaeaac6be9bfc6d6396059b2d4c09b8699e65f3fed9a7b296",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "M"
+    ],
+    "count": 1,
+    "unique": "M"
+   },
+   "second_response": "final=M\n",
+   "final": "M",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 67,
+   "second_output_tokens": 5,
+   "second_latency_s": 0.47,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m08",
+   "family": "no_diff",
+   "truth": "none",
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": true
+   },
+   "first_response": "action=compare\nrows=A:1/1;B:1/1;C:1/1;D:0/0;E:1/1\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 183,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.28,
+   "prompt_sha256": "7628e1962d1fe9413ff853d2267fa6eea1a1554c7cf72bb32157145fcb8b08ad",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [],
+    "count": 0,
+    "unique": "none"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 69,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.54,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m09",
+   "family": "no_diff",
+   "truth": "none",
+   "rows": [
+    {
+     "label": "K",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=K:0/0;L:0/0;M:0/0;N:1/1;O:1/1\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 213,
+   "first_output_tokens": 38,
+   "first_latency_s": 3.27,
+   "prompt_sha256": "4bb2e948b6b0fd657a49fe83f2fb2b2737cb50e6732edd225a8444d42d8de467",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [],
+    "count": 0,
+    "unique": "none"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 69,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.53,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m13",
+   "family": "multiple_diff",
+   "truth": "none",
+   "rows": [
+    {
+     "label": "M",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "K",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    }
+   ],
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=M:0/1;N:1/1;K:0/1;O:1/1;L:0/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 212,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.1,
+   "prompt_sha256": "3da9e4ba2b345e769d1cc4212dd61fb46cc1728ab51eec9f3ef289ce89c673ce",
+   "operand_exact": true,
+   "comparator_result": {
+    "differences": [
+     "K",
+     "M"
+    ],
+    "count": 2,
+    "unique": "none"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 70,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.54,
+   "stage": "consumed"
+  },
+  {
+   "case_id": "m14",
+   "family": "multiple_diff",
+   "truth": "none",
+   "rows": [
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    },
+    {
+     "label": "B",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    }
+   ],
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "first_response": "action=compare\nrows=C:1/1;E:0/0;B:1/0;A:0/0;D:1/0\n",
+   "first_format_valid": true,
+   "action": "compare",
+   "first_input_tokens": 212,
+   "first_output_tokens": 37,
+   "first_latency_s": 3.08,
+   "prompt_sha256": "537bccc9da5c963b2c3a68d4f43e4ad015c08851e4b539fdd2226830ec96fe0d",
+   "operand_exact": false,
+   "comparator_result": {
+    "differences": [
+     "B",
+     "D"
+    ],
+    "count": 2,
+    "unique": "none"
+   },
+   "second_response": "final=none\n",
+   "final": "none",
+   "final_correct": true,
+   "second_format_valid": true,
+   "second_input_tokens": 69,
+   "second_output_tokens": 6,
+   "second_latency_s": 0.52,
+   "stage": "consumed"
+  }
+ ],
+ "vector_delib": [
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "A"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, C, D, E.\n    *   Task: For each row, determine if `H1` and `H2` differ (are not equal).\n    *   Output Format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags.\n\n2.  **Analyze the Data:**\n    *   Row A: H1=0, H2=1. Are they different? Yes (0 != 1).\n    *   Row B: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row C: H1=0, H2=0. Are they different? No (0 == 0).\n    *   Row D: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row E: H1=0, H2=0. Are they different? No (0 == 0).\n\n3.  **Determine Flags:**\n    *   A: yes\n    *  ",
+   "input_tokens": 117,
+   "output_tokens": 300,
+   "latency_s": 24.58,
+   "prompt_sha256": "1d99dbf6f99dbb9dad5290c3759080bbb0853c136adacf724a66e073685fa53e",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, C, D, E.\n    *   Task: For each row, determine if `H1` and `H2` differ (are not equal).\n    *   Output Format: `A=<yes or no>,B=<yes or no>,C=<yes or no>,D=<yes or no>,E=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags.\n\n2.  **Analyze the Data:**\n    *   Row A: H1=0, H2=1. Are they different? Yes (0 != 1).\n    *   Row B: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row C: H1=0, H2=0. Are they different? No (0 == 0).\n    *   Row D: H1=1, H2=1. Are they different? No (1 == 1).\n    *   Row E: H1=0, H2=0. Are they different? No (0 == 0).\n\n3.  **Determine Flags:**\n    *   A: yes\n    *  ",
+   "case_id": "m00",
+   "family": "unique_diff",
+   "truth": "A",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": false,
+    "yesno": true,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "L"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, L, M, N, O) with two boolean values each (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,L=<diff or equal>,M=<diff or equal>,N=<diff or equal>,O=<diff or equal>`\n    *   Constraint: Reply with ONLY the specified format.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row L:** H1=0, H2=1.\n        *   Comparison: 0 != 1.\n        *   Result: diff.\n    *   **Row M:** H1=0, H2=0.\n        *   Comparison: 0 == 0.\n        *   Result: equal.\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row O:** H1=1, H2=1.",
+   "input_tokens": 148,
+   "output_tokens": 300,
+   "latency_s": 25.18,
+   "prompt_sha256": "1328fd594bbfdee833b750a187edd934e509dcbe0b6ed293d22f8ad837b3e99b",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, L, M, N, O) with two boolean values each (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,L=<diff or equal>,M=<diff or equal>,N=<diff or equal>,O=<diff or equal>`\n    *   Constraint: Reply with ONLY the specified format.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row L:** H1=0, H2=1.\n        *   Comparison: 0 != 1.\n        *   Result: diff.\n    *   **Row M:** H1=0, H2=0.\n        *   Comparison: 0 == 0.\n        *   Result: equal.\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 == 1.\n        *   Result: equal.\n    *   **Row O:** H1=1, H2=1.",
+   "case_id": "m01",
+   "family": "unique_diff",
+   "truth": "L",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "C"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table with 5 rows (A, B, C, D, E) and two columns (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\n\n2.  **Analyze the Data:**\n    *   Row A: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row B: H2=1, H1=1. Comparison: 1 vs 1. Result: Equal.\n    *   Row C: H2=0, H1=1. Comparison: 0 vs 1. Result: Diff.\n    *   Row D: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row E: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n\n3.  **Format the Output:**\n    *   A=equal\n    *   B=equal\n    *   C=diff\n    *   D=equal\n",
+   "input_tokens": 147,
+   "output_tokens": 300,
+   "latency_s": 24.95,
+   "prompt_sha256": "3ae9afeafb4f73f0059628cc72d2031ebb277e7e023600468652dc15ace3027c",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table with 5 rows (A, B, C, D, E) and two columns (H1, H2).\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: ONLY flags=A=<diff or equal>,B=<diff or equal>,C=<diff or equal>,D=<diff or equal>,E=<diff or equal>.\n\n2.  **Analyze the Data:**\n    *   Row A: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row B: H2=1, H1=1. Comparison: 1 vs 1. Result: Equal.\n    *   Row C: H2=0, H1=1. Comparison: 0 vs 1. Result: Diff.\n    *   Row D: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n    *   Row E: H2=0, H1=0. Comparison: 0 vs 0. Result: Equal.\n\n3.  **Format the Output:**\n    *   A=equal\n    *   B=equal\n    *   C=diff\n    *   D=equal\n",
+   "case_id": "m02",
+   "family": "unique_diff",
+   "truth": "C",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": true,
+    "permute": false,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 2
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "E",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "N"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A set of rows (K, L, M, N, O) with values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ.\n    *   Output Format: `flags=K=<yes or no>,L=<yes or no>,M=<yes or no>,N=<yes or no>,O=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Analyze the Data:**\n    *   Row K: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row L: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row M: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n    *   Row N: H2=1, H1=0. Do they differ? 1 vs 0 -> Yes.\n    *   Row O: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n\n3.  **Determine Flags:**\n    *   K: no\n    *   L: no\n    *   M:",
+   "input_tokens": 147,
+   "output_tokens": 300,
+   "latency_s": 25.26,
+   "prompt_sha256": "4da9294a709b3eb77fc4951e633b7f82d926d1c378e34d07875d3758e9628e68",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A set of rows (K, L, M, N, O) with values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ.\n    *   Output Format: `flags=K=<yes or no>,L=<yes or no>,M=<yes or no>,N=<yes or no>,O=<yes or no>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Analyze the Data:**\n    *   Row K: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row L: H2=1, H1=1. Do they differ? 1 vs 1 -> No.\n    *   Row M: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n    *   Row N: H2=1, H1=0. Do they differ? 1 vs 0 -> Yes.\n    *   Row O: H2=0, H1=0. Do they differ? 0 vs 0 -> No.\n\n3.  **Determine Flags:**\n    *   K: no\n    *   L: no\n    *   M:",
+   "case_id": "m03",
+   "family": "unique_diff",
+   "truth": "N",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": true,
+    "permute": false,
+    "yesno": true,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "L",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "N",
+     "h1": false,
+     "h2": true,
+     "diff": true,
+     "canonical_index": 3
+    },
+    {
+     "label": "O",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "E"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, D, C, E.\n    *   Task: For each row, compare `H1` and `H2`.\n    *   Output Format: A specific string format where each label is followed by `<diff>` or `<equal>`.\n    *   Constraint: Reply with ONLY the flags. No explanations, no markdown code blocks (unless implied by \"ONLY flags\", but usually means raw text), no extra characters.\n\n2.  **Process Each Row:**\n\n    *   **Row A:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row B:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row D:**\n        *   H1 = 0\n        *   H2 = 0\n        *   Comparison: 0 == 0\n        *   Result: equal\n\n    *   **Row C:**\n        *   H1 = 1\n        *   H2 = ",
+   "input_tokens": 118,
+   "output_tokens": 300,
+   "latency_s": 25.01,
+   "prompt_sha256": "e89c15cc6dad04a4bae50bc88a5c24ddcdc681aa87d728caf89eb3a542f8a707",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A table-like structure with columns `label`, `H1`, `H2`.\n    *   Rows: A, B, D, C, E.\n    *   Task: For each row, compare `H1` and `H2`.\n    *   Output Format: A specific string format where each label is followed by `<diff>` or `<equal>`.\n    *   Constraint: Reply with ONLY the flags. No explanations, no markdown code blocks (unless implied by \"ONLY flags\", but usually means raw text), no extra characters.\n\n2.  **Process Each Row:**\n\n    *   **Row A:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row B:**\n        *   H1 = 1\n        *   H2 = 1\n        *   Comparison: 1 == 1\n        *   Result: equal\n\n    *   **Row D:**\n        *   H1 = 0\n        *   H2 = 0\n        *   Comparison: 0 == 0\n        *   Result: equal\n\n    *   **Row C:**\n        *   H1 = 1\n        *   H2 = ",
+   "case_id": "m04",
+   "family": "unique_diff",
+   "truth": "E",
+   "variant": {
+    "labelset": "ABCDE",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": true
+   },
+   "rows": [
+    {
+     "label": "A",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 0
+    },
+    {
+     "label": "B",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "D",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "C",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "E",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 4
+    }
+   ]
+  },
+  {
+   "flags": null,
+   "answer_correct": false,
+   "format_valid": false,
+   "row_accuracy": 0.0,
+   "detected_diff": [],
+   "false_positive": [],
+   "false_negative": [
+    "K"
+   ],
+   "response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, N, L, M, O) with binary values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,N=<diff or equal>,L=<diff or equal>,M=<diff or equal>,O=<diff or equal>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=0.\n        *   Comparison: 1 vs 0.\n        *   Result: Different (`diff`).\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row L:** H1=0, H2=0.\n        *   Comparison: 0 vs 0.\n        *   Result: Equal (`equal`).\n    *   **Row M:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row O:** H1=",
+   "input_tokens": 148,
+   "output_tokens": 300,
+   "latency_s": 24.63,
+   "prompt_sha256": "8ec2280b4cbdaa765a82f9042b0d80dd810bb7b3935f8eca8f5d6fef3b0c64a1",
+   "cleaned_response": "Thinking Process:\n\n1.  **Analyze the Request:**\n    *   Input: A list of rows (K, N, L, M, O) with binary values for H1 and H2.\n    *   Task: For each row, determine if H1 and H2 differ or are equal.\n    *   Output Format: `flags=K=<diff or equal>,N=<diff or equal>,L=<diff or equal>,M=<diff or equal>,O=<diff or equal>`.\n    *   Constraint: Reply with ONLY the flags string.\n\n2.  **Process Each Row:**\n    *   **Row K:** H1=1, H2=0.\n        *   Comparison: 1 vs 0.\n        *   Result: Different (`diff`).\n    *   **Row N:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row L:** H1=0, H2=0.\n        *   Comparison: 0 vs 0.\n        *   Result: Equal (`equal`).\n    *   **Row M:** H1=1, H2=1.\n        *   Comparison: 1 vs 1.\n        *   Result: Equal (`equal`).\n    *   **Row O:** H1=",
+   "case_id": "m05",
+   "family": "unique_diff",
+   "truth": "K",
+   "variant": {
+    "labelset": "KLMNO",
+    "colrev": false,
+    "permute": true,
+    "yesno": false,
+    "csv": false
+   },
+   "rows": [
+    {
+     "label": "K",
+     "h1": true,
+     "h2": false,
+     "diff": true,
+     "canonical_index": 0
+    },
+    {
+     "label": "N",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 3
+    },
+    {
+     "label": "L",
+     "h1": false,
+     "h2": false,
+     "diff": false,
+     "canonical_index": 1
+    },
+    {
+     "label": "M",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 2
+    },
+    {
+     "label": "O",
+     "h1": true,
+     "h2": true,
+     "diff": false,
+     "canonical_index": 4
+    }
+   ]
+  }
+ ],
+ "epis": [
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "Q2"
+   ],
+   "answer_correct": false,
+   "format_valid": true,
+   "singleton_truth": "Q2",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.58,
+   "prompt_sha256": "9e319249a0d4dbff02b2bed62307a4465158e5dd1d00072a0d0e78071b7a4d87",
+   "task_id": "e00",
+   "family": "need_unique",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "Q3"
+   ],
+   "answer_correct": false,
+   "format_valid": true,
+   "singleton_truth": "Q3",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.56,
+   "prompt_sha256": "150da50f4b636c75b6723be6ddbc5f4fdc087d1824fbd237dc581b4d95e7e99f",
+   "task_id": "e01",
+   "family": "need_unique",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": true,
+     "diff": true
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "Q3",
+   "acceptable": [
+    "Q1",
+    "Q3"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": null,
+   "response": "choice=Q3\n",
+   "input_tokens": 171,
+   "output_tokens": 7,
+   "latency_s": 0.65,
+   "prompt_sha256": "46002109193c98ba61b8e7a4b6b5f16a198e512445a2c7cd2ea65ae91704ac66",
+   "task_id": "e02",
+   "family": "need_multiple_equal",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": false,
+     "h2": true,
+     "diff": true
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "Q2",
+   "acceptable": [
+    "Q2",
+    "Q4"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": null,
+   "response": "choice=Q2\n",
+   "input_tokens": 171,
+   "output_tokens": 7,
+   "latency_s": 0.62,
+   "prompt_sha256": "47502aa5feabbf1a0c95c10495aebe6a103419713ac339a4e0d382c9641bbffe",
+   "task_id": "e03",
+   "family": "need_multiple_equal",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "Q3",
+   "acceptable": [
+    "Q1"
+   ],
+   "answer_correct": false,
+   "format_valid": true,
+   "singleton_truth": "Q1",
+   "response": "choice=Q3\n",
+   "input_tokens": 171,
+   "output_tokens": 7,
+   "latency_s": 0.68,
+   "prompt_sha256": "d10555ff0d065a88ada919d8996fb2560df19da9ad75b5f511ed175357af8991",
+   "task_id": "e04",
+   "family": "need_multiple_utility",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": false,
+     "h2": true,
+     "diff": true
+    },
+    {
+     "label": "Q2",
+     "cost": 4,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 3,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "Q2",
+   "acceptable": [
+    "Q4"
+   ],
+   "answer_correct": false,
+   "format_valid": true,
+   "singleton_truth": "Q4",
+   "response": "choice=Q2\n",
+   "input_tokens": 171,
+   "output_tokens": 7,
+   "latency_s": 0.62,
+   "prompt_sha256": "cb609e0573874f8740a78cddbaae73dee3fbe996245c9743e6ab9fe1333c16e0",
+   "task_id": "e05",
+   "family": "need_multiple_utility",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 4,
+     "h1": false,
+     "h2": true,
+     "diff": true
+    },
+    {
+     "label": "Q3",
+     "cost": 3,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "Q2",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": false,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=Q2\n",
+   "input_tokens": 171,
+   "output_tokens": 7,
+   "latency_s": 0.65,
+   "prompt_sha256": "20ece71d1a4b5524e1a90fe6f3e19d7ea867a3f4d9562fd9b822dfba06aa1675",
+   "task_id": "e06",
+   "family": "resolved_still_diff",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    false
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "79f213641a427f95bdfa9086668d0721d5b2a5850596f2053ad43ce9d8f5118e",
+   "task_id": "e07",
+   "family": "resolved_still_diff",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": true,
+     "h2": false,
+     "diff": true
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    false
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "b37738396e607aef3ea15c9a4c2def35ebc92a1074c6b48f1b3370f72b07d74f",
+   "task_id": "e08",
+   "family": "consistent_nodisc",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.54,
+   "prompt_sha256": "2c004b16a706b72e261ca64e90f626212d1fde8c1364212bbf5deed495dba681",
+   "task_id": "e09",
+   "family": "consistent_nodisc",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    true
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.67,
+   "prompt_sha256": "d1620cfa93de5828491a5bfe50c378f4a214e1e2fdc6248bd7f8152bc73cc2fc",
+   "task_id": "e10",
+   "family": "resolved_nodisc",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    false
+   ]
+  },
+  {
+   "answer": "no_query",
+   "acceptable": [
+    "no_query"
+   ],
+   "answer_correct": true,
+   "format_valid": true,
+   "singleton_truth": "no_query",
+   "response": "choice=no_query\n",
+   "input_tokens": 171,
+   "output_tokens": 6,
+   "latency_s": 0.53,
+   "prompt_sha256": "144363807354ff5190ad20c906f55e664864b25699d7a7ea2b14124d8d1896e8",
+   "task_id": "e11",
+   "family": "resolved_nodisc",
+   "rows": [
+    {
+     "label": "Q1",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    },
+    {
+     "label": "Q2",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q3",
+     "cost": 1,
+     "h1": false,
+     "h2": false,
+     "diff": false
+    },
+    {
+     "label": "Q4",
+     "cost": 1,
+     "h1": true,
+     "h2": true,
+     "diff": false
+    }
+   ],
+   "consistent": [
+    true,
+    false
+   ]
+  }
+ ],
+ "summary": {
+  "SINGLE": {
+   "n": 12,
+   "accuracy": 0.9166666666666666,
+   "format_valid_rate": 1.0,
+   "mean_latency_s": 0.5616666666666666
+  },
+  "VECTOR": {
+   "n": 18,
+   "accuracy": 0.3888888888888889,
+   "format_valid_rate": 0.4444444444444444,
+   "family_accuracy": {
+    "unique_diff": 0.375,
+    "no_diff": 0.4,
+    "multiple_diff": 0.4
+   },
+   "row_accuracy_valid": 0.975,
+   "false_positive_count": 1,
+   "false_negative_count": 0,
+   "mean_latency_s": 1.4894444444444441
+  },
+  "COUNT": {
+   "n": 18,
+   "accuracy": 1.0,
+   "format_valid_rate": 1.0,
+   "family_accuracy": {
+    "unique_diff": 1.0,
+    "no_diff": 1.0,
+    "multiple_diff": 1.0
+   },
+   "mean_latency_s": 0.5677777777777778
+  },
+  "SELECT": {
+   "n": 18,
+   "accuracy": 0.7222222222222222,
+   "format_valid_rate": 1.0,
+   "family_accuracy": {
+    "unique_diff": 1.0,
+    "no_diff": 1.0,
+    "multiple_diff": 0.0
+   },
+   "mean_latency_s": 0.5155555555555554
+  },
+  "ROUTE": {
+   "n": 12,
+   "accuracy": 1.0,
+   "format_valid_rate": 1.0,
+   "kind_accuracy": {
+    "applicable": 1.0,
+    "nonapplicable": 1.0
+   },
+   "mean_latency_s": 0.5575
+  },
+  "DELEGATE": {
+   "n": 12,
+   "first_action_valid_rate": 1.0,
+   "invoke_rate": 1.0,
+   "operand_exact_rate_invoked": 0.8333333333333334,
+   "final_accuracy": 0.5833333333333334,
+   "family_final_accuracy": {
+    "multiple_diff": 1.0,
+    "no_diff": 1.0,
+    "unique_diff": 0.375
+   },
+   "direct_answer_accuracy": null,
+   "invoked_final_accuracy": 0.5833333333333334
+  },
+  "EPIUTIL": {
+   "n": 12,
+   "accuracy": 0.5833333333333334,
+   "format_valid_rate": 1.0,
+   "family_accuracy": {
+    "need_unique": 0.0,
+    "need_multiple_equal": 1.0,
+    "need_multiple_utility": 0.0,
+    "resolved_still_diff": 0.5,
+    "consistent_nodisc": 1.0,
+    "resolved_nodisc": 1.0
+   },
+   "mean_latency_s": 0.5983333333333334
+  },
+  "VECTOR_DELIB": {
+   "n": 6,
+   "accuracy": 0.0,
+   "format_valid_rate": 0.0,
+   "row_accuracy_valid": null,
+   "mean_latency_s": 24.935000000000002
+  },
+  "AUTO_REFERENCE": {
+   "accuracy": 1.0,
+   "mechanism": "deterministic typed dispatch; architectural reference, not neural competence"
+  }
+ },
+ "wall_seconds": 261.4,
+ "n_generations": 120
+}
