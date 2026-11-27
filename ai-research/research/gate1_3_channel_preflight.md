@@ -637,3 +637,53 @@ In this artifact, `who` is the candidate label, `what` is the observed evidence,
 **Budget:** 72 planned generations (36 presentations × 2 generative conditions), hard cap 80 generations or 20 GPU minutes, whichever first. STRUCT outputs are capped at 192 new tokens; the deterministic reference artifact is approximately 176 tokens, so the cap is tight but adequate. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
 
 **Known limitations fixed in advance:** the input is already clean structured text, so “extraction” is closer to transcription than perception; the deterministic evaluator is given the rule semantics and does not test novel-rule induction; the `why` branch has no independent purpose beyond evidence-justified rule satisfaction; `who`/`where` are nearly trivial in this closed candidate-row domain; exact/near critical-pair permutation tests position/item preference but not label salience independently because labels remain positional; n=36 is still coarse; positive delegation results validate division of labor for decidable operations, not recursive self-improvement; and no learned non-generative decision head or external typed-decision service is tested here.
+
+
+## 19. HZN-OOI-02 preregistration — simplified operational artifact, v43 replication (written after the v41 schema pilot and before v43 execution)
+
+### v41 schema-pilot audit — not a completed HZN-OOI-01 result
+
+The first HZN-OOI-01 run was deliberately stopped early after **31 generations** because the artifact schema itself was systematically ambiguous. Twelve exact-tie presentations were complete, plus three near-tie STRUCT artifacts and one additional near-tie BASE response. This partial run is a schema pilot, not a completed preregistered experiment and not a verdict on the section-18 thresholds.
+
+Strict artifact validity was **0/15**. The dominant defect was the explicit `obs` column: the input renders present observations only as `ar`/`lc` values and does not literally say `obs=yes`, so the model variously omitted the column, copied `ar` into it, or wrote candidate/evidence prose into it. Two otherwise well-formed artifacts used exactly seven row fields — the same schema adopted below. Two artifacts truncated before summary/answer because verbose malformed rows consumed the output budget.
+
+Exploratory recovery of completed lines, clearly outside the strict preregistered scoring, showed:
+
+- answer line present: 13/15; summary line present: 13/15
+- recovered final-answer accuracy: 8/15 overall; exact-tie accuracy **6/12**, while paired BASE exact-tie accuracy was **0/12**
+- recovered summary-state accuracy: 11/13
+- recognition/inhibition dissociation persisted in 2 exact-tie presentations: `state=tie` but final answer selected a tied candidate
+- two additional exact-tie presentations incorrectly summarized the state as `unique`; two truncated before classification
+
+These numbers motivated a schema correction. They are not confirmatory evidence. They do, however, independently replicate the BASE exact-tie failure: **0/12 correct**, with the model always selecting a tied candidate.
+
+### Corrected instrument
+
+HZN-OOI-02 uses a fresh `ooi-v43` deterministic battery with the same construction distribution and fixed invariants: 24 scenarios expanded to 36 presentations; 12 exact tie, 12 near tie, 6 insufficient, and 6 unique-control presentations; 12 uses of each rule; 18 answer-present and 18 none-truth cases; 0/36 magnitude-truth agreement. The battery is reseeded rather than reused because the schema correction was informed by pilot outputs.
+
+The artifact schema is simplified. There is no redundant `obs` column:
+
+```text
+tiebreak=<ar or abs_lc>
+label|ar|lc|ar_pass|contrast_pass|qualifies|tb
+<one row per candidate, in input order>
+summary|qualifiers=<labels or none>|best_tb=<number or na>|winners=<labels or none>|state=<unique|tie|none_qualify>
+answer=<candidate letter or none>
+```
+
+Observation availability is now represented implicitly: numeric ar/lc means observations are available; `na` ar/lc with `na` pass/tie-break fields means missing. The prompt also states the exact output line count. The deterministic reference artifact is approximately 164 tokens; STRUCT generation is capped at 176 new tokens.
+
+### Carried-forward thresholds
+
+All metric definitions and thresholds from section 18 are carried forward unchanged, with only the schema references updated:
+
+1. STRUCT `format_valid_rate >= 0.90` and valid-artifact `raw_extraction_exact_rate >= 0.80`.
+2. STRUCT_DELEGATED exact-tie accuracy at least 11/12 and overall `repair_rate_neural_wrong >= 0.75`, unless STRUCT neural exact-tie accuracy is already at least 11/12.
+3. `damage_rate_neural_correct <= 0.10`; delegated answer-present accuracy must not fall more than 1/18 below neural answer-present accuracy.
+4. If the extraction gate passes, delegated near-tie accuracy at least 10/12.
+5. STRUCT overall accuracy must exceed BASE by at least +0.11 to support an endogenous operational-artifact benefit.
+6. BASE_TIE_GUARD exact-tie accuracy must be 12/12 as a sanity invariant.
+
+**Budget:** 72 planned generations, hard cap 80 generations or 20 GPU minutes. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
+
+**Additional limitation introduced by the correction:** because v43 was designed after inspecting v41 pilot outputs, it is not a pristine first-pass confirmatory battery. It is a preregistered replication with a repaired instrument. A positive result should therefore be treated as evidence for the corrected operational interface, not as independent evidence that the original v41 schema was adequate.

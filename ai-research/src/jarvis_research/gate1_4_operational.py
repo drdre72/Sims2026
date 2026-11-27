@@ -17,12 +17,12 @@ from jarvis_research.gate1_4_mirror import (
     answer_verdict, candidate_evaluation, normalize_answer)
 
 
-OOI_VERSION = 41
+OOI_VERSION = 43
 N_PER_FAMILY = 6
 OOI_FAMILIES = ("exact_tie", "near_tie", "insufficient", "unique_control")
 CONDITIONS = ("BASE", "STRUCT")
 RULE_SEQUENCE = ("conj_active", "conj_strong", "avoid_negative")
-STRUCT_HEADER = "label|obs|ar|lc|ar_pass|contrast_pass|qualifies|tb"
+STRUCT_HEADER = "label|ar|lc|ar_pass|contrast_pass|qualifies|tb"
 
 
 def scenario_seed(version, family, replicate):
@@ -233,17 +233,18 @@ def render_structured_task(task):
     represented by row extraction, when by the none state, how by threshold and
     tie-break fields, and why by the final evidence-justified decision.
     """
-    instructions = """Produce the operational orientation artifact before the final answer.
+    n_cand = len(task["candidates"])
+    instructions = f"""Produce the operational orientation artifact before the final answer.
 In this artifact, who is the candidate label, what is the observed evidence, where is the binding of evidence to rule fields, when is the none condition, how is the threshold and tie-break computation, and why is the evidence-justified final decision. Do not write this explanation.
 
-The output must contain exactly these lines:
-1. tiebreak=<ar or abs_lc>
-2. label|obs|ar|lc|ar_pass|contrast_pass|qualifies|tb
-3. one row for each candidate, in the order shown above, formatted as label|obs|ar|lc|ar_pass|contrast_pass|qualifies|tb
-4. summary|qualifiers=<comma-separated labels or none>|best_tb=<number or na>|winners=<comma-separated labels or none>|state=<unique, tie, or none_qualify>
-5. answer=<candidate letter or none>
+The output must contain exactly {n_cand + 4} lines for the {n_cand} candidates:
+- line 1: tiebreak=<ar or abs_lc>
+- line 2: label|ar|lc|ar_pass|contrast_pass|qualifies|tb
+- lines 3-{n_cand + 2}: one row for each candidate, in the order shown above, formatted as label|ar|lc|ar_pass|contrast_pass|qualifies|tb
+- line {n_cand + 3}: summary|qualifiers=<comma-separated labels or none>|best_tb=<number or na>|winners=<comma-separated labels or none>|state=<unique, tie, or none_qualify>
+- line {n_cand + 4}: answer=<candidate letter or none>
 
-Copy ar and lc exactly as shown. Use yes, no, or na exactly. contrast_pass means the rule's contrast or sign requirement. tb is the numeric tie-break value. Missing observations cannot qualify. No other text."""
+Copy ar and lc exactly as shown. Use yes or no for pass and qualification fields. If observations are missing, use na for ar, lc, both pass fields, and tb, with qualifies=no. Otherwise ar, lc, and tb must be numeric and the pass fields must be yes or no. contrast_pass means the rule's contrast or sign requirement. tb is the numeric tie-break value. Missing observations cannot qualify. No other text."""
     return render_task_body(task) + "\n\n" + instructions
 
 
@@ -305,27 +306,24 @@ def parse_structured_artifact(response, candidate_labels):
         for expected_label, line in zip(candidate_labels,
                                         lines[2:2 + len(candidate_labels)]):
             parts = line.split("|")
-            if len(parts) != 8 or parts[0] != expected_label:
+            if len(parts) != 7 or parts[0] != expected_label:
                 return {"parse_status": "invalid_format"}
-            obs_text = parts[1]
-            if obs_text not in ("yes", "no"):
+            ar = _parse_number(parts[1])
+            lc = _parse_number(parts[2])
+            ar_pass = _parse_yes_no_na(parts[3])
+            contrast_pass = _parse_yes_no_na(parts[4])
+            if parts[5] not in ("yes", "no"):
                 return {"parse_status": "invalid_format"}
-            obs = obs_text == "yes"
-            ar = _parse_number(parts[2])
-            lc = _parse_number(parts[3])
-            ar_pass = _parse_yes_no_na(parts[4])
-            contrast_pass = _parse_yes_no_na(parts[5])
-            if parts[6] not in ("yes", "no"):
+            qualifies = parts[5] == "yes"
+            tb = _parse_number(parts[6])
+            if (ar is None) != (lc is None):
                 return {"parse_status": "invalid_format"}
-            qualifies = parts[6] == "yes"
-            tb = _parse_number(parts[7])
+            obs = ar is not None
             if obs:
-                if any(x is None for x in (ar, lc, ar_pass,
-                                           contrast_pass, tb)):
+                if any(x is None for x in (ar_pass, contrast_pass, tb)):
                     return {"parse_status": "invalid_format"}
             else:
-                if any(x is not None for x in (ar, lc, ar_pass,
-                                               contrast_pass, tb)):
+                if any(x is not None for x in (ar_pass, contrast_pass, tb)):
                     return {"parse_status": "invalid_format"}
                 if qualifies:
                     return {"parse_status": "invalid_format"}
@@ -477,11 +475,11 @@ def render_reference_artifact(task):
     for c in task["candidates"]:
         ev = candidate_evaluation(task["rule_key"], c)
         if not c["obs_available"]:
-            lines.append(f"{c['label']}|no|na|na|na|na|no|na")
+            lines.append(f"{c['label']}|na|na|na|na|no|na")
             continue
         yn = lambda x: "yes" if x else "no"
         lines.append(
-            f"{c['label']}|yes|{c['ar']:.2f}|{c['lc']:.2f}|"
+            f"{c['label']}|{c['ar']:.2f}|{c['lc']:.2f}|"
             f"{yn(ev['ar_pass'])}|{yn(ev['contrast_pass'])}|"
             f"{yn(ev['qualifies'])}|{ev['tiebreak_value']:.2f}")
     mech = task["mechanics"]

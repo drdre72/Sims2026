@@ -1,4 +1,4 @@
-"""HZN-OOI-01 — operational orientation and exact-tie inhibition probe.
+"""HZN-OOI-02 — simplified operational orientation and exact-tie inhibition probe.
 
 24 deterministic scenarios expanded to 36 paired presentations x 2 generative
 conditions = 72 planned generations. STRUCT additionally yields a deterministic
@@ -10,7 +10,7 @@ sys.path.insert(0, r"C:\Users\Shadow\Documents\Sims2026\ai-research\src")
 from pathlib import Path
 
 AI_RESEARCH = Path(r"C:\Users\Shadow\Documents\Sims2026\ai-research")
-OUT = AI_RESEARCH / "results" / "gate1_4_operational_orientation.json"
+OUT = AI_RESEARCH / "results" / "gate1_4_operational_orientation_v43.json"
 
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -24,8 +24,8 @@ from jarvis_research.run_manifest import validate_resume_manifest
 
 MAX_GENERATIONS = 80
 MAX_WALL_SECONDS = 20 * 60
-STRUCT_MAX_NEW = 192
-HARNESS_VERSION = "operational-orientation-1"
+STRUCT_MAX_NEW = 176
+HARNESS_VERSION = "operational-orientation-2"
 SYSTEM = ("You are evaluating intervention candidates in a self-editing "
           "experiment. Apply the stated rule exactly. Follow the requested "
           "output format exactly — no reasoning, no extra text.")

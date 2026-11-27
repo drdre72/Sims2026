@@ -28,6 +28,8 @@ class TestOperationalBattery(unittest.TestCase):
             'conj_active': 12, 'conj_strong': 12, 'avoid_negative': 12}))
         self.assertEqual(sum(t['truth']['answer'] == 'none' for t in tasks), 18)
         self.assertEqual(sum(t['truth']['answer'] != 'none' for t in tasks), 18)
+        self.assertEqual(sum(t['truth']['answer'] == t['magnitude_answer']
+                             for t in tasks), 0)
         self.assertEqual(Counter(t['presentation'] for t in tasks), Counter({
             'order_a': 24, 'pair_swapped': 12}))
 
@@ -137,8 +139,8 @@ class TestOperationalRenderingAndParsing(unittest.TestCase):
         for bad in ('answer=none',
                     artifact + '\nextra',
                     artifact.replace('tiebreak=ar\n', '', 1),
-                    artifact.replace('label|obs|ar|lc|ar_pass|contrast_pass|qualifies|tb',
-                                     'label|obs|ar|lc', 1)):
+                    artifact.replace('label|ar|lc|ar_pass|contrast_pass|qualifies|tb',
+                                     'label|ar|lc', 1)):
             self.assertEqual(parse_structured_artifact(
                 bad, self.labels)['parse_status'], 'invalid_format')
 
@@ -153,7 +155,7 @@ class TestOperationalRenderingAndParsing(unittest.TestCase):
         bad = artifact.replace('A|yes|', 'A|yes|', 1)
         lines = bad.splitlines()
         parts = lines[2].split('|')
-        parts[2] = 'na'
+        parts[1] = 'na'
         lines[2] = '|'.join(parts)
         parsed = parse_structured_artifact('\n'.join(lines), self.labels)
         self.assertEqual(parsed['parse_status'], 'invalid_format')
