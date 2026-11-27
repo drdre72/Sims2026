@@ -1132,3 +1132,48 @@ The next floor test should isolate the minimal comparative primitive directly: g
 **Interpretation fixed in advance:** RAW failure implies deficiency in basic relational comparison or output following. RAW success plus EPI failure implies difficulty mapping epistemic language to the primitive. EPIEXPLICIT success would show that explicit operational definition can bridge that mapping; then the remaining question is whether the model can supply such definitions itself. Position capture and incorrect `none` use are measured.
 
 **Thresholds:** format validity ≥ .95 in every condition. Basic competence requires RAW unique-difference accuracy at least 10/12 and none-truth accuracy at least 10/12. Mapping competence requires EPI unique-difference accuracy at least 10/12 under the same control constraint. Lower performance motivates deterministic delegation or simpler interface decomposition. Budget: 72 planned generations, hard cap 80 or 12 GPU minutes. Frozen backbone; no training or intervention authority.
+
+
+## 35. HZN-EPI-03 results — the minimal comparative primitive is low-recall but high-precision (72 generations, ~40s GPU)
+
+Evidence: `evidence/gate1_6_compare_primitive_v1.json`. All 72 planned generations completed; format validity was **24/24 in every condition**.
+
+### Accuracy by framing
+
+| condition | overall | unique_diff | no_diff | multiple_diff | mean latency |
+|---|---:|---:|---:|---:|---:|
+| RAW | 12/24 = .500 | **4/12** | 6/6 | 2/6 | 0.55s |
+| EPI | 15/24 = .625 | **4/12** | 6/6 | 5/6 | 0.54s |
+| EPIEXPLICIT | 12/24 = .500 | **0/12** | 6/6 | 6/6 | 0.58s |
+
+Preregistered competence thresholds were not met. RAW and EPI each captured only 4/12 unique differences; EPIEXPLICIT captured none.
+
+### Response-shape analysis
+
+The more informative result is not simple random failure:
+
+| condition | rows emitted on unique_diff | emitted rows correct | `none` on unique_diff | rows emitted on multiple_diff | emitted rows actually differing |
+|---|---:|---:|---:|---:|---:|
+| RAW | 4/12 | **4/4** | 8/12 | 4/6 | **4/4** |
+| EPI | 4/12 | **4/4** | 8/12 | 1/6 | **1/1** |
+| EPIEXPLICIT | 0/12 | — | 12/12 | 0/6 | — |
+
+Thus the model is not merely guessing labels. When it emits a row, that row is almost always a genuinely differing row. The failure is low sensitivity: it often fails to detect the single existing difference and answers `none`. On multiple-difference controls, RAW sometimes detects one differing row but fails to enforce uniqueness; EPIEXPLICIT solves those controls by never emitting a row at all.
+
+### Interpretation
+
+1. **The bottleneck is upstream of epistemic curiosity.** Even the primitive “find the row where two binary columns differ” is unreliable.
+2. **This is a recall/precision asymmetry, not pure noise.** Emitted rows have perfect precision in this battery, but recall is only one-third in RAW/EPI and zero in EPIEXPLICIT.
+3. **Explicit semantics increase conservatism, not discrimination.** EPIEXPLICIT produces perfect no-difference and multiple-difference controls only because it universalizes `none`; it sacrifices all true-positive detection.
+4. **The epistemic framing is not the principal additional burden.** RAW and EPI have the same 4/12 unique-difference recall, so the deficiency appears in relational comparison/counting itself rather than primarily in mapping the word “distinguish.”
+5. **Finite comparison belongs in deterministic machinery.** A few lines of code can compute equality, difference count, uniqueness and position exactly. Requiring the neural system to perform this operation token-by-token creates an unnecessary bottleneck.
+
+### Revised epistemic bottleneck picture
+
+HZN-EPI-02 showed that even oracle prediction matrices did not induce reliable discriminating queries. HZN-EPI-03 shows that the required comparison primitive itself is low-recall. Therefore the failure is not best described as “the model lacks curiosity” in a motivational sense. It lacks a reliable operational comparator and a policy for invoking one. Curiosity must therefore be implemented as a coupled architecture:
+
+- neural generation/interpretation of hypotheses and evidence;
+- deterministic comparison over explicit finite alternatives;
+- purpose-sensitive valuation of whether obtaining the observation is worth its cost.
+
+This strengthens rather than weakens the delegation thesis: the missing capability is not a larger appetite for inquiry, but a reliable bridge from uncertainty representation to mechanically exact discrimination.
