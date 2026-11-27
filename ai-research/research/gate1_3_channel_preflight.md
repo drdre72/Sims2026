@@ -1409,3 +1409,160 @@ Architecture comparison floors:
 These are floor criteria for a minimal prototype, not proof of a production-ready cognitive bus.
 
 **Budget/safety.** Planned approximately 103–121 generations depending on invocation behavior; hard cap **130 generations or 20 GPU minutes**. Greedy decoding, frozen backbone, no training, no weight modification, no authority expansion, no external actions. Deterministic runtime references are executed locally and independently graded by harness tests. CPU tests must pass before GPU execution.
+
+## 39. HZN-EPI-05 results — structural binding is mechanically reliable; neural readout remains the fragile boundary (121 generations, 138.4s GPU)
+
+Evidence: `evidence/gate1_7_substrate_v1.json`.
+
+HZN-EPI-05 implemented and executed the first minimal typed cognitive substrate prototype. The deterministic runtime gates all passed. The neural comparison is more nuanced: structural binding eliminated result-consumption errors on this battery, but manual operand transcription remained imperfect; context-preserving neural readout remained unreliable; and hybrid interpretation split sharply between perfect epistemic-state consumption and severe matrix/output-status formatting failures.
+
+### Preregistered substrate implementation gates
+
+| gate | result | verdict |
+|---|---:|---|
+| AUTO_DISPATCH valid matrices | **18/18**, exactly 3 dispatch events/case | PASS |
+| provenance completeness | **1.0** | PASS |
+| unexpected/unnecessary dispatch | **0 cases / 0 extra events** | PASS |
+| malformed/incomplete/contradictory evidence | **6/6 correct typed states**, zero dispatches | PASS |
+| stale invalidation and refresh | C → stale → D, correct | PASS |
+| composition generalization (3/4/6/7 rows) | **4/4** | PASS |
+| epistemic mechanical state correctness | **12/12** | PASS |
+| rule consistency + discrimination runtime | **6/6** | PASS |
+
+This AUTO condition is an actual executed runtime measurement, not a declared ceiling. Mean in-process runtime was ~0.27 ms per matrix case. That number is descriptive rather than a rigorous microbenchmark, but the contrast with seconds of neural generation is large.
+
+### Matrix architecture comparison
+
+| arm | accuracy / result | interpretation |
+|---|---:|---|
+| NEURAL_DIRECT | **8/18 = .444** | direct operational composition remains poor |
+| TOOL_CONTEXT | **12/18 = .667** | context-preserving neural readout remains unreliable |
+| TOOL_FRESH diagnostic | **15/18 = .833** | standalone readout was better on this battery, not worse |
+| BOUND_INVOKE | **18/18** end-to-end; preservation **18/18** | binding eliminated retranscription corruption |
+| AUTO_DISPATCH | **18/18**, zero neural tokens | executed structured-input reference |
+| HYBRID strict | **8/18 = .444**, format 8/18 | strict operational failure from output syntax |
+| HYBRID relaxed exploratory | **18/18** | semantic target was correct once `target:none` was accepted as a separator variant |
+
+Direct family decomposition: unique-difference **4/8**, no-difference **3/5**, multiple-difference **1/5**. The multiple-difference cardinality failure persists in the neural-only arm.
+
+### Typed invocation: binding works, but operand copying is still a vulnerability
+
+The model invoked the comparator in **18/18** cases with valid first-action syntax. Exact operand rows were copied in **16/18**; row-level copy fidelity was **87/90 = .967**.
+
+Both operand-inexact cases were column-reversal cases. In `m02`, row C's true H1/H2 values `1/0` were copied as `0/1` — the same canonical copy error identified in the external audit. In `m14`, rows B and D were similarly reversed. Because the comparator only tests inequality, these reversals did not change the difference relation. Consequently:
+
+- comparator outputs were correct in all 18 cases;
+- structural binding preserved them in all 18 cases;
+- end-to-end BOUND_INVOKE accuracy was 18/18;
+- but strict joint **operand-exact and correct** performance was only **16/18**.
+
+The 18/18 result should therefore not be overread as perfect transcription. It demonstrates correct execution and preservation of the operands actually supplied. In a domain where exact bit polarity matters rather than merely inequality, these copy errors would matter. This is a strong argument for preserving structured operands in the runtime rather than asking the neural system to retranscribe them.
+
+### Context-preserving retranscription versus fresh readout
+
+TOOL_CONTEXT and TOOL_FRESH had complementary rather than overlapping failures:
+
+| outcome pairing | count |
+|---|---:|
+| both correct | 9 |
+| context correct, fresh wrong | 3 |
+| context wrong, fresh correct | 6 |
+| both wrong | 0 |
+
+Context failures were mostly negative-cardinality failures: in five cases the comparator returned `unique=none`, yet the continuing-context model emitted a row label. One unique case emitted the wrong label. Fresh failures were different: two wrong/absent unique labels and one row emitted instead of `none`.
+
+This does **not** establish that fresh context is inherently better; the sample is small and the error types differ. It does establish the narrower and architecturally important point:
+
+> Preserving the original context does not make neural retranscription of deterministic output reliable.
+
+The original matrix may compete with or contaminate the tool result in context, but this experiment does not causally prove that mechanism. Regardless of mechanism, deterministic results should not need to survive neural copying to become control state.
+
+### HYBRID matrix interpretation: strict syntax failure, exploratory semantic success
+
+Strict HYBRID accuracy was only **8/18**, but the failure pattern was unusually clean:
+
+- all 8 unique-difference cases produced correct strict outputs such as `target=A`;
+- all 10 negative cases produced `target:none` rather than the required `target=none`.
+
+Thus strict format validity was also 8/18. Exploratory relaxed scoring that accepts only the `:`/`=` separator variant gives **18/18**. This closely parallels EPI-04's omitted `flags=` prefix: latent/state-guided content can be correct while the operational output contract fails. The relaxed result is not the preregistered score, but it prevents a mistaken conclusion that the model contradicted the bound values in those cases.
+
+The preregistered state-consistency metric was 8/8 among strictly valid responses, but that statistic is selectively restricted to the unique cases and should not be treated as strong evidence.
+
+### Robustness and stale-state interpretation
+
+The automatic substrate handled malformed evidence exactly as designed: **6/6** correct typed states with zero primitive dispatches. HYBRID robustness was **0/6 strict**, and the stale hybrid reference was also incorrect.
+
+Exploratory separator-relaxed analysis gives a more informative decomposition:
+
+- malformed invalid/type cases and contradictory duplicate labels: 3/6 semantically correct `status:invalid` or `status:ambiguous` outputs, despite using `target:status...` syntax;
+- incomplete/missing evidence: the model answered `none` or concrete row labels rather than `status:unknown`;
+- stale state: the model answered the stale cached value `C` rather than `status:stale`.
+
+Thus even after ignoring output-separator syntax, the neural interpretation layer did not reliably respect unknown or stale epistemic status. This is an important negative result: structural invalidation exists in the substrate, but the model does not yet consistently act on it when asked to interpret state.
+
+### Epistemic utility: the clearest hybrid success
+
+NEURAL_DIRECT epistemic accuracy was **6/12**:
+
+| family | direct accuracy |
+|---|---:|
+| need_unique | 0/2 |
+| need_multiple_equal | 0/2 |
+| need_multiple_utility | 0/2 |
+| resolved_still_diff | 2/2 |
+| consistent_nodisc | 2/2 |
+| resolved_nodisc | 2/2 |
+
+The neural-only system again showed restraint without useful investigation: perfect controls, zero correct need-query decisions.
+
+AUTO_DISPATCH produced the correct mechanical state in **12/12** cases: unique cheapest discriminator where one existed, explicit ambiguity for equal-cost ties, and `no_query` for already-resolved or non-discriminating cases.
+
+EPISTEMIC_HYBRID was **12/12**, including:
+
+- correct unique discriminators;
+- valid tied candidates in both equal-cost ambiguous cases;
+- correct lowest-cost discriminators in asymmetric-cost cases;
+- correct restraint in all control cases.
+
+This is a real interface success, but its meaning must be bounded. The typed snapshot already contained the deterministic choice or candidate set. The result demonstrates reliable consumption of a simple structured epistemic state under this output format; it does **not** demonstrate autonomous hypothesis generation, autonomous utility formation, or open-ended curiosity.
+
+### Neural cost and elimination
+
+Approximate measured totals over the 18 matrix cases:
+
+| condition | output tokens | generation latency |
+|---|---:|---:|
+| NEURAL_DIRECT | 99 | 10.04s |
+| HYBRID matrix | 91 | 9.63s |
+| BOUND_INVOKE first invocation only | 673 | 60.46s |
+| TOOL_CONTEXT first + continuation | 770 | 70.11s |
+| AUTO_DISPATCH | 0 | ~milliseconds total in-process runtime |
+
+Structural binding saved the second generation: **97 output tokens and ~9.65s** across 18 cases relative to context-preserving retranscription. More importantly, it removed the opportunity for readout corruption. Automatic dispatch eliminated the much larger invocation-copying cost as well. Manual typed invocation is expensive precisely because the neural system is asked to serialize operands that were already structured.
+
+Epistemic direct and hybrid costs were similar (74 tokens/6.94s direct versus 78 tokens/7.65s hybrid), because both required only short final choices.
+
+### Preregistered floor verdicts
+
+| criterion | verdict |
+|---|---|
+| substrate implementation gates | **PASS all** |
+| BOUND_INVOKE result preservation 1.0 | **PASS** |
+| HYBRID valid-matrix strict ≥15/18 | **FAIL** (8/18; relaxed exploratory 18/18) |
+| HYBRID robustness ≥5/6 + stale correct | **FAIL** (0/6 strict; stale wrong) |
+| EPISTEMIC_HYBRID strong ≥10/12 | **PASS** (12/12) |
+| AUTO/BOUND neural token reduction | **PASS descriptively** |
+
+### Revised architectural interpretation
+
+HZN-EPI-05 supports a precise architectural claim:
+
+> Finite mechanical operations can be executed, versioned, provenance-tracked, invalidated and structurally bound reliably at negligible computational cost. The fragile boundary is the neural transcription interface — both when copying operands into machinery and when copying results back out.
+
+The experiment also shows why the substrate must preserve structured objects end-to-end. Manual typed invocation is not enough: even when invocation syntax succeeds, operand polarity can be silently reversed. Conversely, automatic dispatch is only useful for systems whose evidence is already typed; it does not solve interpretation of genuinely unstructured evidence.
+
+The strongest open problem is no longer “can the model compare?” or even “can it invoke a comparator?” It is:
+
+> How do neural interpretation layers consume typed state — including unknown, ambiguous, stale and invalidated states — without either ignoring it or reintroducing transcription authority over mechanical facts?
+
+That is the next architectural question raised by Horizon.
