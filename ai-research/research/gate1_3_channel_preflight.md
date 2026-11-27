@@ -570,3 +570,70 @@ Family decomposition: misleading magnitude 3/3, insufficient 3/3, missing observ
 4. **The topology should not yet be treated as architecture.** A ring drawn around attention is not a control system. To become testable as architecture, the topology must have operational consequences: route retrieval, structure intermediate evidence, alter salience weights, or produce a checkable orientation artifact. Merely writing the vocabulary into the prompt is semantic decoration.
 
 This is a useful negative result. It does not falsify the orientation topology itself; it falsifies the cheap version of it. The next meaningful orientation test must either require an explicit structured orientation product or implement orientation as machinery. Meanwhile, exact-tie detection should be delegated deterministically before expecting the model to demonstrate higher-order discernment.
+
+
+## 18. HZN-OOI-01 preregistration — operational orientation and deterministic inhibition (written before GPU execution)
+
+**Question:** when exact-tie inhibition is the dominant residual failure, can a structured operational orientation artifact separate evidence extraction, rule evaluation, final neural choice, and deterministic inhibition? Specifically: does forcing an intermediate artifact improve end-to-end behavior, and does deterministic rule evaluation over the artifact's extracted raw evidence repair failures that the neural final answer does not?
+
+**Architectural motivation:** the non-generative decision principle exemplified by external typed-decision systems is treated here only as a design constraint: not every decision needs to be expressed through autoregressive language. No external product claim is assumed or depended upon. Before training any learned decision head, Horizon must establish how much of the failure is already solvable by deterministic computation. The governing order remains: **delegate what is decidable; deliberate what is uncertain; investigate what is unresolved; abstain when intervention is unjustified.** Purpose may direct relevance, but it must not determine truth or authorize action.
+
+**Battery:** 24 deterministic scenarios expanded into 36 presentations:
+
+| family | scenarios | presentations | correct outcome |
+|---|---:|---:|---|
+| exact_tie | 6 | 12 (two critical-pair orders each) | `none` because winning tie-break values are exactly equal |
+| near_tie | 6 | 12 (two critical-pair orders each) | the candidate whose tie-break value is exactly 0.01 higher |
+| insufficient | 6 | 6 | `none` because no candidate qualifies |
+| unique_control | 6 | 6 | one unique qualifying winner |
+
+Across the 36 presentations there are exactly 12 uses of each rule (`conj_active`, `conj_strong`, `avoid_negative`), 18 answer-present cases, 18 none-truth cases, and **0/36 magnitude-truth agreement**. Exact/near ties use two critical-pair orders so that selection can be mapped back to item identity and tested for first-critical-position capture. Labels remain positional, so position and label salience cannot be fully separated in this probe.
+
+**Generative conditions, paired over identical presentations:**
+
+1. **BASE** — original task prompt; output is only a candidate letter or `none`.
+2. **STRUCT** — the model must produce an operational orientation artifact before its final answer:
+
+```text
+tiebreak=<ar or abs_lc>
+label|obs|ar|lc|ar_pass|contrast_pass|qualifies|tb
+<one row per candidate, in input order>
+summary|qualifiers=<labels or none>|best_tb=<number or na>|winners=<labels or none>|state=<unique|tie|none_qualify>
+answer=<candidate letter or none>
+```
+
+In this artifact, `who` is the candidate label, `what` is the observed evidence, `where` is the binding of evidence to rule fields, `when` is the none condition, `how` is threshold plus tie-break computation, and `why` is the final evidence-justified decision. The model is told not to write this explanation; it must produce the operational fields. This is therefore a stronger test than HZN-ORIENT-01's inert linguistic topology, but still only a partial operationalization.
+
+**Derived non-generative conditions:**
+
+3. **STRUCT_DELEGATED** — no additional generation. Raw `obs/ar/lc` values are extracted from STRUCT, and the deterministic rule evaluator computes qualifiers, winner state, tie inhibition, and final answer. Invalid artifacts count as incorrect. This separates transcription/extraction from mechanical rule execution.
+4. **BASE_TIE_GUARD** — a post hoc narrow ceiling control: if deterministic evaluation of the source evidence finds an exact winning tie, the BASE answer is overridden to `none`; otherwise it is unchanged. This is not model behavior and is not evidence of self-correction. It measures the maximum contribution of the isolated exact-tie guard.
+
+**Metric definitions:**
+
+- `accuracy`: exact correct final answer; invalid output counts as incorrect.
+- `family_accuracy`: accuracy within exact tie, near tie, insufficient, and unique-control strata.
+- `selection_accuracy_answer_present` and `abstention_accuracy_none`: accuracy on the 18 candidate-truth and 18 none-truth presentations, respectively.
+- `overinhibition_rate_answer_present`: fraction of answer-present cases answered `none`.
+- `format_valid_rate`: strict artifact validity for STRUCT / valid one-word answer for BASE.
+- `raw_extraction_exact_rate`: among valid STRUCT artifacts, fraction where every candidate row's observation availability and raw ar/lc values exactly match the source evidence.
+- `raw_row_accuracy`: mean per-row raw extraction correctness among valid artifacts.
+- `eval_row_accuracy`: mean per-row correctness of ar/contrast/qualification/tie-break fields relative to source evidence.
+- `internal_eval_row_accuracy`: mean per-row consistency of those evaluation fields with the model's own extracted raw values, even when extraction was wrong.
+- `tiebreak_accuracy` and `summary_accuracy`: correctness of rule interpretation and qualifiers/best/winners/state summary among valid artifacts.
+- `repair_rate_neural_wrong`: among STRUCT cases whose neural final answer is wrong, fraction corrected by STRUCT_DELEGATED.
+- `damage_rate_neural_correct`: among STRUCT cases whose neural final answer is correct, fraction made wrong by STRUCT_DELEGATED.
+- `exact_tie_first_critical_capture_rate`: among incorrect exact-tie responses selecting one of the two critical tied items, fraction selecting the item occupying the earlier critical position in that presentation.
+
+**Thresholds:**
+
+1. **Output/extraction viability gate:** STRUCT `format_valid_rate >= 0.90` and, among valid artifacts, `raw_extraction_exact_rate >= 0.80`. If either fails, weak delegated performance is interpreted primarily as an extraction/contract bottleneck rather than a failure of deterministic inhibition.
+2. **Primary mechanical-repair test:** STRUCT_DELEGATED exact-tie accuracy must be at least **11/12 (~0.917)**, and overall `repair_rate_neural_wrong` must be at least **0.75**. If STRUCT neural exact-tie accuracy is already at least 11/12, the repair test is moot rather than failed; the artifact itself has solved the inhibition failure in this battery.
+3. **No neglect / no gratuitous inversion:** overall `damage_rate_neural_correct <= 0.10`, and STRUCT_DELEGATED `selection_accuracy_answer_present` must not fall more than 1/18 (~0.056) below STRUCT neural answer-present accuracy.
+4. **Near-tie discrimination guard:** if the extraction gate passes, STRUCT_DELEGATED near-tie accuracy must be at least **10/12 (~0.833)**. Lower performance indicates extraction damage or inappropriate inhibition of merely close — but not exactly tied — winners.
+5. **Operational-artifact end-to-end effect:** STRUCT overall accuracy must exceed BASE by at least **+0.11** (4/36 presentations) to support the claim that producing the artifact itself improves neural decision-making. A smaller or negative delta means the artifact is useful as a delegation interface but not as an endogenous reasoning improvement.
+6. **Sanity invariant:** BASE_TIE_GUARD exact-tie accuracy must be 12/12. Anything less indicates evaluator or construction failure, not a behavioral result.
+
+**Budget:** 72 planned generations (36 presentations × 2 generative conditions), hard cap 80 generations or 20 GPU minutes, whichever first. STRUCT outputs are capped at 192 new tokens; the deterministic reference artifact is approximately 176 tokens, so the cap is tight but adequate. Inference-only: no parameter modification, no training, no intervention authority, no evaluator modification.
+
+**Known limitations fixed in advance:** the input is already clean structured text, so “extraction” is closer to transcription than perception; the deterministic evaluator is given the rule semantics and does not test novel-rule induction; the `why` branch has no independent purpose beyond evidence-justified rule satisfaction; `who`/`where` are nearly trivial in this closed candidate-row domain; exact/near critical-pair permutation tests position/item preference but not label salience independently because labels remain positional; n=36 is still coarse; positive delegation results validate division of labor for decidable operations, not recursive self-improvement; and no learned non-generative decision head or external typed-decision service is tested here.
