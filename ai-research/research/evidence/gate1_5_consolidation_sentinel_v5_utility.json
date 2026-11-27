@@ -1,0 +1,1633 @@
+{
+ "model": "Qwen/Qwen3.5-4B",
+ "harness": "ooi05-utility-sentinel-1",
+ "manifest": {
+  "model_revision": "851bf6e806efd8d0a36b00ddf55e13ccb7b8cd0a",
+  "harness_version": "ooi05-utility-sentinel-1",
+  "consolidation_version": 4,
+  "feedback_conditions": [
+   "F2",
+   "F3"
+  ],
+  "n_tasks": 9,
+  "max_turns_per_task": 6,
+  "max_new": 128,
+  "campaign_sha256": "a272a200fa8e06b1f93ff3d433eae2eeb39f49ee41ee8452573bbed3d2c0881e"
+ },
+ "runs": {
+  "F2": {
+   "status": "complete",
+   "task_index": 9,
+   "snapshot": {
+    "past": {
+     "events": [
+      {
+       "task_id": "t01",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "none",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t02",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "D",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t03",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t04",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "none",
+       "correct": false,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t05",
+       "phase": "control",
+       "problem_type": "one_shot",
+       "rule_key": "positive_low_contrast",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "B",
+       "correct": true,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t06",
+       "phase": "control",
+       "problem_type": "ambiguous_rule",
+       "rule_key": null,
+       "method": "deliberate",
+       "answer": "D",
+       "truth": "ABSTAIN",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t07",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t08",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "none",
+       "truth": "none",
+       "correct": true,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t09",
+       "phase": "resolved",
+       "problem_type": "already_resolved",
+       "rule_key": "avoid_negative",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "sealed"
+      }
+     ],
+     "procedures": {
+      "p_good0": {
+       "procedure_id": "p_good0",
+       "rule_key": "avoid_negative",
+       "ast": {
+        "type": "selection_procedure",
+        "version": 1,
+        "filters": [
+         {
+          "type": "filter",
+          "field": "ar",
+          "op": ">=",
+          "value": 0.3
+         },
+         {
+          "type": "filter",
+          "field": "lc",
+          "op": ">=",
+          "value": 0.0
+         }
+        ],
+        "select": {
+         "type": "select",
+         "mode": "max",
+         "field": "abs(lc)"
+        },
+        "tie": "none",
+        "missing": "exclude"
+       },
+       "status": "retained",
+       "verification": "passed",
+       "provenance": "preexisting_verified"
+      },
+      "p_legacy0": {
+       "procedure_id": "p_legacy0",
+       "rule_key": "conj_active",
+       "ast": {
+        "type": "selection_procedure",
+        "version": 1,
+        "filters": [
+         {
+          "type": "filter",
+          "field": "ar",
+          "op": ">=",
+          "value": 0.5
+         },
+         {
+          "type": "filter",
+          "field": "abs(lc)",
+          "op": ">=",
+          "value": 0.3
+         }
+        ],
+        "select": {
+         "type": "select",
+         "mode": "max",
+         "field": "ar"
+        },
+        "tie": "first",
+        "missing": "exclude"
+       },
+       "status": "retained",
+       "verification": "legacy_unverified",
+       "provenance": "legacy_unverified_incorrect_tie_policy"
+      }
+     }
+    },
+    "future": {
+     "candidate_procedures": {},
+     "questions": []
+    },
+    "present": {
+     "task": {
+      "episode_id": "t09",
+      "phase": "resolved",
+      "partition": "sealed",
+      "problem_type": "already_resolved",
+      "family": "custom_unique",
+      "rule_key": "avoid_negative",
+      "candidates": [
+       {
+        "ar": 0.8,
+        "lc": 0.7,
+        "label": "A",
+        "obs_available": true
+       },
+       {
+        "ar": 0.7,
+        "lc": 0.4,
+        "label": "B",
+        "obs_available": true
+       },
+       {
+        "ar": 0.9,
+        "lc": -0.5,
+        "label": "C",
+        "obs_available": true
+       },
+       {
+        "ar": 0.2,
+        "lc": 1.2,
+        "label": "D",
+        "obs_available": true
+       },
+       {
+        "ar": 0.6,
+        "lc": 0.1,
+        "label": "E",
+        "obs_available": true
+       }
+      ],
+      "truth": "A",
+      "rule_text": "Select the candidate with the largest |lc| among those whose lc is NOT negative (lc >= 0) and whose ar is at least 0.30. If none qualify, answer none.",
+      "correct_behavior": "recall_and_reuse"
+     },
+     "turn": 1,
+     "last_feedback": "outcome correct"
+    },
+    "completed": [
+     {
+      "task_id": "t01",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "none",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t02",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "D",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t03",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t04",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "none",
+      "correct": false,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t05",
+      "phase": "control",
+      "problem_type": "one_shot",
+      "rule_key": "positive_low_contrast",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "B",
+      "correct": true,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t06",
+      "phase": "control",
+      "problem_type": "ambiguous_rule",
+      "rule_key": null,
+      "method": "deliberate",
+      "answer": "D",
+      "truth": "ABSTAIN",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t07",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t08",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "none",
+      "truth": "none",
+      "correct": true,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t09",
+      "phase": "resolved",
+      "problem_type": "already_resolved",
+      "rule_key": "avoid_negative",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "sealed"
+     }
+    ],
+    "action_log": [
+     {
+      "task_id": "t01",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=none",
+      "cost": 20,
+      "cumulative_cost": 20,
+      "input_tokens": 617,
+      "output_tokens": 11,
+      "latency_s": 1.48,
+      "prompt_sha256": "ddbd60e16c5401dfb0daefa5dc66a54ee7a1cc29fb9214c78341d5e203d8426a"
+     },
+     {
+      "task_id": "t02",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=D",
+      "cost": 20,
+      "cumulative_cost": 40,
+      "input_tokens": 631,
+      "output_tokens": 11,
+      "latency_s": 1.05,
+      "prompt_sha256": "0e9c0ece50453e8aa8a2e490c6fce1951284817054fe1e33d1b1889bc1df9be1"
+     },
+     {
+      "task_id": "t03",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct; expected=A",
+      "cost": 20,
+      "cumulative_cost": 60,
+      "input_tokens": 643,
+      "output_tokens": 11,
+      "latency_s": 1.18,
+      "prompt_sha256": "46d271f235f097d90f58d5a605c6aa77d9d0273e234432f44fee99cf6ba34ec8"
+     },
+     {
+      "task_id": "t04",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect",
+      "cost": 20,
+      "cumulative_cost": 80,
+      "input_tokens": 655,
+      "output_tokens": 11,
+      "latency_s": 1.16,
+      "prompt_sha256": "a068ac58557e29d0121683c57e1899c805468e4889e561412c34db30393651f3"
+     },
+     {
+      "task_id": "t05",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome correct; expected=B",
+      "cost": 20,
+      "cumulative_cost": 100,
+      "input_tokens": 654,
+      "output_tokens": 11,
+      "latency_s": 1.06,
+      "prompt_sha256": "40797f08c1129aea5ab66466a63aa3fdeeef881a27d66ea861d959461c76ac83"
+     },
+     {
+      "task_id": "t06",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=D\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "D"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "D",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=ABSTAIN",
+      "cost": 20,
+      "cumulative_cost": 120,
+      "input_tokens": 633,
+      "output_tokens": 11,
+      "latency_s": 1.21,
+      "prompt_sha256": "b7b9af0a3085093faf1dcdc3a6a4860fb88139ffb96a60bc5a5997901e79c780"
+     },
+     {
+      "task_id": "t07",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 140,
+      "input_tokens": 668,
+      "output_tokens": 11,
+      "latency_s": 1.05,
+      "prompt_sha256": "4fa56bf9eac6361a1160c94adb5002d592f172c7f1cffc21c0e1e689929eb26e"
+     },
+     {
+      "task_id": "t08",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=none\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "none"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "none",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 160,
+      "input_tokens": 665,
+      "output_tokens": 12,
+      "latency_s": 1.17,
+      "prompt_sha256": "893e04bee594c3aabd4f81f13dcf7d28a5bf6edad4155f768205678a813cce92"
+     },
+     {
+      "task_id": "t09",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 180,
+      "input_tokens": 646,
+      "output_tokens": 11,
+      "latency_s": 1.07,
+      "prompt_sha256": "d38e14f8354297b396197cd49a70290b045602dc43b48ecb681fe5652c5f639e"
+     }
+    ],
+    "next_pid": 1,
+    "cost_total": 180,
+    "cost_by_action": {
+     "deliberate": 180
+    }
+   },
+   "generations": [
+    {
+     "task_id": "t01",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=none",
+     "cost": 20,
+     "cumulative_cost": 20,
+     "input_tokens": 617,
+     "output_tokens": 11,
+     "latency_s": 1.48,
+     "prompt_sha256": "ddbd60e16c5401dfb0daefa5dc66a54ee7a1cc29fb9214c78341d5e203d8426a"
+    },
+    {
+     "task_id": "t02",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=D",
+     "cost": 20,
+     "cumulative_cost": 40,
+     "input_tokens": 631,
+     "output_tokens": 11,
+     "latency_s": 1.05,
+     "prompt_sha256": "0e9c0ece50453e8aa8a2e490c6fce1951284817054fe1e33d1b1889bc1df9be1"
+    },
+    {
+     "task_id": "t03",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct; expected=A",
+     "cost": 20,
+     "cumulative_cost": 60,
+     "input_tokens": 643,
+     "output_tokens": 11,
+     "latency_s": 1.18,
+     "prompt_sha256": "46d271f235f097d90f58d5a605c6aa77d9d0273e234432f44fee99cf6ba34ec8"
+    },
+    {
+     "task_id": "t04",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect",
+     "cost": 20,
+     "cumulative_cost": 80,
+     "input_tokens": 655,
+     "output_tokens": 11,
+     "latency_s": 1.16,
+     "prompt_sha256": "a068ac58557e29d0121683c57e1899c805468e4889e561412c34db30393651f3"
+    },
+    {
+     "task_id": "t05",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome correct; expected=B",
+     "cost": 20,
+     "cumulative_cost": 100,
+     "input_tokens": 654,
+     "output_tokens": 11,
+     "latency_s": 1.06,
+     "prompt_sha256": "40797f08c1129aea5ab66466a63aa3fdeeef881a27d66ea861d959461c76ac83"
+    },
+    {
+     "task_id": "t06",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=D\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "D"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "D",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=ABSTAIN",
+     "cost": 20,
+     "cumulative_cost": 120,
+     "input_tokens": 633,
+     "output_tokens": 11,
+     "latency_s": 1.21,
+     "prompt_sha256": "b7b9af0a3085093faf1dcdc3a6a4860fb88139ffb96a60bc5a5997901e79c780"
+    },
+    {
+     "task_id": "t07",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 140,
+     "input_tokens": 668,
+     "output_tokens": 11,
+     "latency_s": 1.05,
+     "prompt_sha256": "4fa56bf9eac6361a1160c94adb5002d592f172c7f1cffc21c0e1e689929eb26e"
+    },
+    {
+     "task_id": "t08",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=none\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "none"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "none",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 160,
+     "input_tokens": 665,
+     "output_tokens": 12,
+     "latency_s": 1.17,
+     "prompt_sha256": "893e04bee594c3aabd4f81f13dcf7d28a5bf6edad4155f768205678a813cce92"
+    },
+    {
+     "task_id": "t09",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 180,
+     "input_tokens": 646,
+     "output_tokens": 11,
+     "latency_s": 1.07,
+     "prompt_sha256": "d38e14f8354297b396197cd49a70290b045602dc43b48ecb681fe5652c5f639e"
+    }
+   ],
+   "summary": {
+    "n_tasks": 9,
+    "final_accuracy": 0.5555555555555556,
+    "valid_action_rate": 1.0,
+    "n_actions": 9,
+    "mean_actions_per_task": 1.0,
+    "n_construct": 0,
+    "n_verify": 0,
+    "n_retain": 0,
+    "n_apply": 0,
+    "n_successful_autonomous_reuse": 0,
+    "accuracy_by_phase": {
+     "control": 0.5,
+     "practice": 0.3333333333333333,
+     "resolved": 1.0,
+     "reuse": 0.6666666666666666
+    },
+    "n_control_construction": 0,
+    "n_legacy_procedure_use": 0,
+    "mean_input_tokens": 645.7777777777778,
+    "mean_output_tokens": 11.11111111111111,
+    "mean_latency_s": 1.1588888888888889,
+    "total_input_tokens": 5812,
+    "total_output_tokens": 100,
+    "n_generations": 9
+   },
+   "active_task": false
+  },
+  "F3": {
+   "status": "complete",
+   "task_index": 9,
+   "snapshot": {
+    "past": {
+     "events": [
+      {
+       "task_id": "t01",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "none",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t02",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "D",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t03",
+       "phase": "practice",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t04",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "none",
+       "correct": false,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t05",
+       "phase": "control",
+       "problem_type": "one_shot",
+       "rule_key": "positive_low_contrast",
+       "method": "deliberate",
+       "answer": "B",
+       "truth": "B",
+       "correct": true,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t06",
+       "phase": "control",
+       "problem_type": "ambiguous_rule",
+       "rule_key": null,
+       "method": "deliberate",
+       "answer": "D",
+       "truth": "ABSTAIN",
+       "correct": false,
+       "partition": "practice"
+      },
+      {
+       "task_id": "t07",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t08",
+       "phase": "reuse",
+       "problem_type": "recurrent_mechanical",
+       "rule_key": "conj_active",
+       "method": "deliberate",
+       "answer": "none",
+       "truth": "none",
+       "correct": true,
+       "partition": "sealed"
+      },
+      {
+       "task_id": "t09",
+       "phase": "resolved",
+       "problem_type": "already_resolved",
+       "rule_key": "avoid_negative",
+       "method": "deliberate",
+       "answer": "A",
+       "truth": "A",
+       "correct": true,
+       "partition": "sealed"
+      }
+     ],
+     "procedures": {
+      "p_good0": {
+       "procedure_id": "p_good0",
+       "rule_key": "avoid_negative",
+       "ast": {
+        "type": "selection_procedure",
+        "version": 1,
+        "filters": [
+         {
+          "type": "filter",
+          "field": "ar",
+          "op": ">=",
+          "value": 0.3
+         },
+         {
+          "type": "filter",
+          "field": "lc",
+          "op": ">=",
+          "value": 0.0
+         }
+        ],
+        "select": {
+         "type": "select",
+         "mode": "max",
+         "field": "abs(lc)"
+        },
+        "tie": "none",
+        "missing": "exclude"
+       },
+       "status": "retained",
+       "verification": "passed",
+       "provenance": "preexisting_verified"
+      },
+      "p_legacy0": {
+       "procedure_id": "p_legacy0",
+       "rule_key": "conj_active",
+       "ast": {
+        "type": "selection_procedure",
+        "version": 1,
+        "filters": [
+         {
+          "type": "filter",
+          "field": "ar",
+          "op": ">=",
+          "value": 0.5
+         },
+         {
+          "type": "filter",
+          "field": "abs(lc)",
+          "op": ">=",
+          "value": 0.3
+         }
+        ],
+        "select": {
+         "type": "select",
+         "mode": "max",
+         "field": "ar"
+        },
+        "tie": "first",
+        "missing": "exclude"
+       },
+       "status": "retained",
+       "verification": "legacy_unverified",
+       "provenance": "legacy_unverified_incorrect_tie_policy"
+      }
+     }
+    },
+    "future": {
+     "candidate_procedures": {},
+     "questions": []
+    },
+    "present": {
+     "task": {
+      "episode_id": "t09",
+      "phase": "resolved",
+      "partition": "sealed",
+      "problem_type": "already_resolved",
+      "family": "custom_unique",
+      "rule_key": "avoid_negative",
+      "candidates": [
+       {
+        "ar": 0.8,
+        "lc": 0.7,
+        "label": "A",
+        "obs_available": true
+       },
+       {
+        "ar": 0.7,
+        "lc": 0.4,
+        "label": "B",
+        "obs_available": true
+       },
+       {
+        "ar": 0.9,
+        "lc": -0.5,
+        "label": "C",
+        "obs_available": true
+       },
+       {
+        "ar": 0.2,
+        "lc": 1.2,
+        "label": "D",
+        "obs_available": true
+       },
+       {
+        "ar": 0.6,
+        "lc": 0.1,
+        "label": "E",
+        "obs_available": true
+       }
+      ],
+      "truth": "A",
+      "rule_text": "Select the candidate with the largest |lc| among those whose lc is NOT negative (lc >= 0) and whose ar is at least 0.30. If none qualify, answer none.",
+      "correct_behavior": "recall_and_reuse"
+     },
+     "turn": 1,
+     "last_feedback": "outcome correct"
+    },
+    "completed": [
+     {
+      "task_id": "t01",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "none",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t02",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "D",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t03",
+      "phase": "practice",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t04",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "none",
+      "correct": false,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t05",
+      "phase": "control",
+      "problem_type": "one_shot",
+      "rule_key": "positive_low_contrast",
+      "method": "deliberate",
+      "answer": "B",
+      "truth": "B",
+      "correct": true,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t06",
+      "phase": "control",
+      "problem_type": "ambiguous_rule",
+      "rule_key": null,
+      "method": "deliberate",
+      "answer": "D",
+      "truth": "ABSTAIN",
+      "correct": false,
+      "partition": "practice"
+     },
+     {
+      "task_id": "t07",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t08",
+      "phase": "reuse",
+      "problem_type": "recurrent_mechanical",
+      "rule_key": "conj_active",
+      "method": "deliberate",
+      "answer": "none",
+      "truth": "none",
+      "correct": true,
+      "partition": "sealed"
+     },
+     {
+      "task_id": "t09",
+      "phase": "resolved",
+      "problem_type": "already_resolved",
+      "rule_key": "avoid_negative",
+      "method": "deliberate",
+      "answer": "A",
+      "truth": "A",
+      "correct": true,
+      "partition": "sealed"
+     }
+    ],
+    "action_log": [
+     {
+      "task_id": "t01",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=none; diagnostic=exact tie requires none",
+      "cost": 20,
+      "cumulative_cost": 20,
+      "input_tokens": 617,
+      "output_tokens": 11,
+      "latency_s": 1.09,
+      "prompt_sha256": "ddbd60e16c5401dfb0daefa5dc66a54ee7a1cc29fb9214c78341d5e203d8426a"
+     },
+     {
+      "task_id": "t02",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=D; diagnostic=rule application mismatch",
+      "cost": 20,
+      "cumulative_cost": 40,
+      "input_tokens": 631,
+      "output_tokens": 11,
+      "latency_s": 1.04,
+      "prompt_sha256": "0e9c0ece50453e8aa8a2e490c6fce1951284817054fe1e33d1b1889bc1df9be1"
+     },
+     {
+      "task_id": "t03",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct; expected=A",
+      "cost": 20,
+      "cumulative_cost": 60,
+      "input_tokens": 643,
+      "output_tokens": 11,
+      "latency_s": 1.1,
+      "prompt_sha256": "46d271f235f097d90f58d5a605c6aa77d9d0273e234432f44fee99cf6ba34ec8"
+     },
+     {
+      "task_id": "t04",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; diagnostic=exact tie requires none",
+      "cost": 20,
+      "cumulative_cost": 80,
+      "input_tokens": 655,
+      "output_tokens": 11,
+      "latency_s": 1.14,
+      "prompt_sha256": "a068ac58557e29d0121683c57e1899c805468e4889e561412c34db30393651f3"
+     },
+     {
+      "task_id": "t05",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=B\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "B"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "B",
+      "method": "deliberate",
+      "feedback": "outcome correct; expected=B",
+      "cost": 20,
+      "cumulative_cost": 100,
+      "input_tokens": 654,
+      "output_tokens": 11,
+      "latency_s": 1.04,
+      "prompt_sha256": "40797f08c1129aea5ab66466a63aa3fdeeef881a27d66ea861d959461c76ac83"
+     },
+     {
+      "task_id": "t06",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=D\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "D"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": false,
+      "answer": "D",
+      "method": "deliberate",
+      "feedback": "outcome incorrect; expected=ABSTAIN; diagnostic=rule underspecified",
+      "cost": 20,
+      "cumulative_cost": 120,
+      "input_tokens": 633,
+      "output_tokens": 11,
+      "latency_s": 1.04,
+      "prompt_sha256": "b7b9af0a3085093faf1dcdc3a6a4860fb88139ffb96a60bc5a5997901e79c780"
+     },
+     {
+      "task_id": "t07",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 140,
+      "input_tokens": 668,
+      "output_tokens": 11,
+      "latency_s": 1.06,
+      "prompt_sha256": "4fa56bf9eac6361a1160c94adb5002d592f172c7f1cffc21c0e1e689929eb26e"
+     },
+     {
+      "task_id": "t08",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=none\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "none"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "none",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 160,
+      "input_tokens": 665,
+      "output_tokens": 12,
+      "latency_s": 1.21,
+      "prompt_sha256": "893e04bee594c3aabd4f81f13dcf7d28a5bf6edad4155f768205678a813cce92"
+     },
+     {
+      "task_id": "t09",
+      "turn": 1,
+      "response": "action=deliberate\nanswer=A\n",
+      "parsed": {
+       "parse_status": "valid",
+       "action": "deliberate",
+       "answer": "A"
+      },
+      "completed": true,
+      "valid": true,
+      "correct": true,
+      "answer": "A",
+      "method": "deliberate",
+      "feedback": "outcome correct",
+      "cost": 20,
+      "cumulative_cost": 180,
+      "input_tokens": 646,
+      "output_tokens": 11,
+      "latency_s": 1.09,
+      "prompt_sha256": "d38e14f8354297b396197cd49a70290b045602dc43b48ecb681fe5652c5f639e"
+     }
+    ],
+    "next_pid": 1,
+    "cost_total": 180,
+    "cost_by_action": {
+     "deliberate": 180
+    }
+   },
+   "generations": [
+    {
+     "task_id": "t01",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=none; diagnostic=exact tie requires none",
+     "cost": 20,
+     "cumulative_cost": 20,
+     "input_tokens": 617,
+     "output_tokens": 11,
+     "latency_s": 1.09,
+     "prompt_sha256": "ddbd60e16c5401dfb0daefa5dc66a54ee7a1cc29fb9214c78341d5e203d8426a"
+    },
+    {
+     "task_id": "t02",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=D; diagnostic=rule application mismatch",
+     "cost": 20,
+     "cumulative_cost": 40,
+     "input_tokens": 631,
+     "output_tokens": 11,
+     "latency_s": 1.04,
+     "prompt_sha256": "0e9c0ece50453e8aa8a2e490c6fce1951284817054fe1e33d1b1889bc1df9be1"
+    },
+    {
+     "task_id": "t03",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct; expected=A",
+     "cost": 20,
+     "cumulative_cost": 60,
+     "input_tokens": 643,
+     "output_tokens": 11,
+     "latency_s": 1.1,
+     "prompt_sha256": "46d271f235f097d90f58d5a605c6aa77d9d0273e234432f44fee99cf6ba34ec8"
+    },
+    {
+     "task_id": "t04",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; diagnostic=exact tie requires none",
+     "cost": 20,
+     "cumulative_cost": 80,
+     "input_tokens": 655,
+     "output_tokens": 11,
+     "latency_s": 1.14,
+     "prompt_sha256": "a068ac58557e29d0121683c57e1899c805468e4889e561412c34db30393651f3"
+    },
+    {
+     "task_id": "t05",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=B\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "B"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "B",
+     "method": "deliberate",
+     "feedback": "outcome correct; expected=B",
+     "cost": 20,
+     "cumulative_cost": 100,
+     "input_tokens": 654,
+     "output_tokens": 11,
+     "latency_s": 1.04,
+     "prompt_sha256": "40797f08c1129aea5ab66466a63aa3fdeeef881a27d66ea861d959461c76ac83"
+    },
+    {
+     "task_id": "t06",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=D\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "D"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": false,
+     "answer": "D",
+     "method": "deliberate",
+     "feedback": "outcome incorrect; expected=ABSTAIN; diagnostic=rule underspecified",
+     "cost": 20,
+     "cumulative_cost": 120,
+     "input_tokens": 633,
+     "output_tokens": 11,
+     "latency_s": 1.04,
+     "prompt_sha256": "b7b9af0a3085093faf1dcdc3a6a4860fb88139ffb96a60bc5a5997901e79c780"
+    },
+    {
+     "task_id": "t07",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 140,
+     "input_tokens": 668,
+     "output_tokens": 11,
+     "latency_s": 1.06,
+     "prompt_sha256": "4fa56bf9eac6361a1160c94adb5002d592f172c7f1cffc21c0e1e689929eb26e"
+    },
+    {
+     "task_id": "t08",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=none\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "none"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "none",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 160,
+     "input_tokens": 665,
+     "output_tokens": 12,
+     "latency_s": 1.21,
+     "prompt_sha256": "893e04bee594c3aabd4f81f13dcf7d28a5bf6edad4155f768205678a813cce92"
+    },
+    {
+     "task_id": "t09",
+     "turn": 1,
+     "response": "action=deliberate\nanswer=A\n",
+     "parsed": {
+      "parse_status": "valid",
+      "action": "deliberate",
+      "answer": "A"
+     },
+     "completed": true,
+     "valid": true,
+     "correct": true,
+     "answer": "A",
+     "method": "deliberate",
+     "feedback": "outcome correct",
+     "cost": 20,
+     "cumulative_cost": 180,
+     "input_tokens": 646,
+     "output_tokens": 11,
+     "latency_s": 1.09,
+     "prompt_sha256": "d38e14f8354297b396197cd49a70290b045602dc43b48ecb681fe5652c5f639e"
+    }
+   ],
+   "summary": {
+    "n_tasks": 9,
+    "final_accuracy": 0.5555555555555556,
+    "valid_action_rate": 1.0,
+    "n_actions": 9,
+    "mean_actions_per_task": 1.0,
+    "n_construct": 0,
+    "n_verify": 0,
+    "n_retain": 0,
+    "n_apply": 0,
+    "n_successful_autonomous_reuse": 0,
+    "accuracy_by_phase": {
+     "control": 0.5,
+     "practice": 0.3333333333333333,
+     "resolved": 1.0,
+     "reuse": 0.6666666666666666
+    },
+    "n_control_construction": 0,
+    "n_legacy_procedure_use": 0,
+    "mean_input_tokens": 645.7777777777778,
+    "mean_output_tokens": 11.11111111111111,
+    "mean_latency_s": 1.0899999999999999,
+    "total_input_tokens": 5812,
+    "total_output_tokens": 100,
+    "n_generations": 9
+   },
+   "active_task": false
+  }
+ },
+ "oracle_reference": {
+  "n_tasks": 9,
+  "final_accuracy": 1.0,
+  "valid_action_rate": 1.0,
+  "n_actions": 12,
+  "mean_actions_per_task": 1.3333333333333333,
+  "n_construct": 1,
+  "n_verify": 1,
+  "n_retain": 1,
+  "n_apply": 7,
+  "n_successful_autonomous_reuse": 4,
+  "accuracy_by_phase": {
+   "control": 1.0,
+   "practice": 1.0,
+   "resolved": 1.0,
+   "reuse": 1.0
+  },
+  "n_control_construction": 0,
+  "n_legacy_procedure_use": 0
+ },
+ "summary": {
+  "F2": {
+   "n_tasks": 9,
+   "final_accuracy": 0.5555555555555556,
+   "valid_action_rate": 1.0,
+   "n_actions": 9,
+   "mean_actions_per_task": 1.0,
+   "n_construct": 0,
+   "n_verify": 0,
+   "n_retain": 0,
+   "n_apply": 0,
+   "n_successful_autonomous_reuse": 0,
+   "accuracy_by_phase": {
+    "control": 0.5,
+    "practice": 0.3333333333333333,
+    "resolved": 1.0,
+    "reuse": 0.6666666666666666
+   },
+   "n_control_construction": 0,
+   "n_legacy_procedure_use": 0,
+   "mean_input_tokens": 645.7777777777778,
+   "mean_output_tokens": 11.11111111111111,
+   "mean_latency_s": 1.1588888888888889,
+   "total_input_tokens": 5812,
+   "total_output_tokens": 100,
+   "n_generations": 9
+  },
+  "F3": {
+   "n_tasks": 9,
+   "final_accuracy": 0.5555555555555556,
+   "valid_action_rate": 1.0,
+   "n_actions": 9,
+   "mean_actions_per_task": 1.0,
+   "n_construct": 0,
+   "n_verify": 0,
+   "n_retain": 0,
+   "n_apply": 0,
+   "n_successful_autonomous_reuse": 0,
+   "accuracy_by_phase": {
+    "control": 0.5,
+    "practice": 0.3333333333333333,
+    "resolved": 1.0,
+    "reuse": 0.6666666666666666
+   },
+   "n_control_construction": 0,
+   "n_legacy_procedure_use": 0,
+   "mean_input_tokens": 645.7777777777778,
+   "mean_output_tokens": 11.11111111111111,
+   "mean_latency_s": 1.0899999999999999,
+   "total_input_tokens": 5812,
+   "total_output_tokens": 100,
+   "n_generations": 9
+  },
+  "oracle_reference": {
+   "n_tasks": 9,
+   "final_accuracy": 1.0,
+   "valid_action_rate": 1.0,
+   "n_actions": 12,
+   "mean_actions_per_task": 1.3333333333333333,
+   "n_construct": 1,
+   "n_verify": 1,
+   "n_retain": 1,
+   "n_apply": 7,
+   "n_successful_autonomous_reuse": 4,
+   "accuracy_by_phase": {
+    "control": 1.0,
+    "practice": 1.0,
+    "resolved": 1.0,
+    "reuse": 1.0
+   },
+   "n_control_construction": 0,
+   "n_legacy_procedure_use": 0
+  }
+ },
+ "wall_seconds": 20.4,
+ "n_model_generations": 18
+}

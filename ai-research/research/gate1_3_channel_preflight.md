@@ -935,3 +935,22 @@ Accounting costs are fixed environment units: observe/recall 2, deliberate 20, c
 **Outcomes:** primary behavioral signal is at least one unprompted construct → verify → retain sequence followed by correct model-selected apply on a sealed reuse task. Secondary outcomes: final accuracy, valid action rate, autonomous retrieval of preexisting procedures, legacy misuse, control/ambiguous restraint, action-count and accounting-cost differences, feedback sensitivity, tokens/latency. Protocol viability remains ≥ .70 valid actions in at least one arm. Oracle reference must retain 9/9 and lower accounting cost than repeated direct deliberation in CPU validation.
 
 **Interpretation fixed in advance:** successful use shows recognition within a prepared utility landscape, not unaided invention of consolidation. Failure despite visible recurrence/cost pressure is stronger evidence that the model lacks the relevant metacognitive adaptation or cannot express it through this interface. Budget: maximum 110 generations or 20 GPU minutes, 128 new tokens per response; frozen backbone, no arbitrary code execution or authority modification.
+
+
+## 26. HZN-OOI-05 results — visible cost/recurrence pressure still insufficient (18 generations, 20s GPU)
+
+Evidence: `evidence/gate1_5_consolidation_sentinel_v5_utility.json`. Both utility-ledger arms completed all nine tasks.
+
+| condition | accuracy | valid actions | deliberate | construct | verify | retain | apply | autonomous reuse |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| F2 + cost/recurrence ledger | 5/9 | 9/9 | 9/9 | 0 | 0 | 0 | 0 | 0 |
+| F3 + cost/recurrence ledger | 5/9 | 9/9 | 9/9 | 0 | 0 | 0 | 0 | 0 |
+| oracle reference | 9/9 | 12/12 | 2 | 1 | 1 | 1 | 7 | 4 |
+
+The model again used immediate deliberation for every task, with identical answers in both arms. It did not use the visible recurrence statistics, cumulative cost ledger, correct retained procedure, incorrect legacy procedure, investigation, construction, verification, retention, or abstention pathway.
+
+**Interpretation:** passive utility visibility was still insufficient. Even when the environment exposed repeated rule recurrence and a cost structure under which construct/verify/retain/apply was cheaper over the campaign, the 4B model continued treating each task as isolated. This strengthens the recognition bottleneck: the difficulty is not merely the absence of machinery or hidden cost information.
+
+**Instrument limitation discovered:** F3 diagnostic text was present in immediate task-completion feedback but was not preserved in the compact PAST outcome rendering after the next task began. Therefore v5 validly tests persistent cost/recurrence visibility, but does **not** validly isolate persistent diagnostic feedback; F3 effectively collapsed toward F2 across tasks. A v6 instrument must store feedback text in the past event and render diagnostics persistently before making claims about diagnostic feedback.
+
+**Next implication:** the next experiment should not merely add more passive information. It should test whether the model can compare alternative strategies when feedback explicitly persists, and whether requiring a brief pre-action commitment/plan changes capability use without revealing the consolidation objective.
