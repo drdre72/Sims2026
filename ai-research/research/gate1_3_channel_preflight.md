@@ -999,3 +999,22 @@ Every operative response remained immediate `deliberate`. Persistent exact-tie d
 The oracle reference remains 9/9 within budget, so the environment is solvable. The post-campaign assay itself was invalid as implemented because it asked for reflection without supplying the campaign transcript; all four responses correctly complained that no campaign data was provided. This is an instrument limitation, not evidence about reflection. A future assay must include the outcome history.
 
 **Interpretation:** necessity alone did not produce strategy discovery. The missing capability appears to be second-order continuity: recognizing the sequence of tasks as a single object of deliberation. Before further expansion, the next probe should isolate epistemic information-seeking and campaign-level representation more directly.
+
+
+## 30. HZN-EPI-01 preregistration — discriminating-query selection, v1 (written before GPU execution)
+
+**Question:** when two explicit rules both fit all observed evidence, can the model select the additional observation that distinguishes them? This isolates epistemic information-seeking before procedure construction or delegation: does Jarvis know what it needs to know?
+
+**Battery:** 24 deterministic tasks. Each presents two symbolic numeric rules, four labeled observations, and five possible unlabeled query cases.
+
+- 8 `need_query`: both rules fit all observations, exactly one offered query yields different predictions; correct choice is that query.
+- 8 `already_resolved`: the observations already falsify one rule; correct choice is `no_query`.
+- 8 `query_irrelevant`: both rules fit all observations but all offered queries yield identical predictions; correct choice is `no_query`.
+
+Rules, observations, query labels, and ordering are deterministic. Query labels are randomized. The model outputs only `choice=<Q1-Q5 or no_query>`.
+
+**Conditions:** NOCOST gives no explicit resource price; COST states that a query costs 5 resource units while `no_query` costs 0. COST is not assumed to improve accuracy; it tests sensitivity to unnecessary-query cost.
+
+**Primary metrics:** discriminating-query accuracy on `need_query`; no-query accuracy on controls; overall accuracy; unnecessary query rate; missed query rate; format validity; query-label position distribution; cost-condition differences; tokens/latency.
+
+**Thresholds:** floor viability is format validity ≥ .90. Positive epistemic signal requires `need_query` accuracy at least **6/8** without control no-query accuracy below **10/16** overall. Indiscriminate querying or position capture does not count as success. The probe does not test rule induction, active experimentation in nature, or autonomous delegation; it tests only comparative prediction under explicit competing rules. Budget: 48 planned generations, hard cap 56 or 10 GPU minutes. Frozen backbone, no training or intervention authority.
