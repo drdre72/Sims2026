@@ -283,3 +283,39 @@ class TestInvariants(unittest.TestCase):
 
 if __name__=='__main__':
     unittest.main()
+
+class TestStatusAtTickReplay(unittest.TestCase):
+    """HZN-SIM-00.5 regression: retrieve(at_tick=...) must report the chain
+    head's status as of the replay tick, never the end-state status. The
+    preflight caught three defects where post-hoc refutations/support were
+    visible at ticks where the question was still open."""
+
+    def test_status_at_tick_replays_chain_history(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','open question','ckpt-base','coherent_dense_edit',
+            initial_status=TESTING,availability_tick=10)
+        mem.add_interpretation('H1',REFUTED_CONDITIONAL,'refuted later','evidence',
+            availability_tick=30)
+        self.assertEqual(mem.status_at_tick('H1',20),TESTING)
+        self.assertEqual(mem.status_at_tick('H1',40),REFUTED_CONDITIONAL)
+        self.assertEqual(mem.hypothesis_status('H1'),REFUTED_CONDITIONAL)
+
+    def test_retrieve_reports_at_tick_status_not_end_state(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','open question','ckpt-base','coherent_dense_edit',
+            initial_status=TESTING,availability_tick=10)
+        mem.add_interpretation('H1',REFUTED_CONDITIONAL,'refuted later','evidence',
+            availability_tick=30)
+        self.assertEqual(mem.retrieve(ontology_category='coherent_dense_edit',
+            at_tick=20)[0]['status'],TESTING)
+        self.assertEqual(mem.retrieve(ontology_category='coherent_dense_edit',
+            at_tick=40)[0]['status'],REFUTED_CONDITIONAL)
+        self.assertEqual(mem.retrieve(ontology_category='coherent_dense_edit')[0]['status'],
+            REFUTED_CONDITIONAL)
+
+    def test_status_at_tick_none_before_first_interpretation(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','later','ckpt-base','coherent_dense_edit',
+            initial_status=TESTING,availability_tick=10)
+        self.assertIsNone(mem.status_at_tick('H1',5))
+        self.assertEqual(mem.status_at_tick('H1',10),TESTING)

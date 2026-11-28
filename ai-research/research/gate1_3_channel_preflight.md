@@ -1756,3 +1756,14 @@ Synthetic transfer probes on the final corpus state: model replacement invalidat
 ### Honest boundary
 
 This is a structural-connectivity measurement on a small single-authored curated graph (13 hypotheses), not an unbiased discoverability test, and it says nothing about neural consumption. The verdict's real content: retrieval does not miss what the documents name — but it finds it by sweeping broadly, and the vocabulary gap is real.
+
+### Fix and full re-run (per frozen spec section 7)
+
+Two substrate defects fixed in `sim_memory.py`, both in the replay-fidelity family the preflight was built to catch:
+
+1. **At-tick status reconstruction.** `retrieve(at_tick=…)` now reports each candidate's chain-head status *as of the replay tick* via the new `status_at_tick()` — dependency checks still run against the current (non-tick-versioned) registry, a documented approximation. Before the fix, all three catches above were live: a tick-20 view reported the self-edit hypothesis as already refuted, a tick-90 view reported the contract hypothesis's post-hoc refutation during the decision that preregistered it, and a tick-83 view reported the bus entry as supported before the fix landed.
+2. **Initial-interpretation availability inheritance.** Found while writing the regression test: `propose_hypothesis(availability_tick=T)` gave the hypothesis logical availability T but its first interpretation the internal op-counter tick — interpretation chronology tracked construction order, not declared chronology. Harmless in this corpus only because construction order roughly tracks chronology. Initial interpretations now inherit the declared availability tick. The corpus evidence digest is unchanged (`09f3423b…`) because the snapshot records interpretation chains as ID lists; interpretation availability is substrate state, not snapshot content — itself recorded here as an evidence-completeness gap: the snapshot cannot reconstruct chain chronology.
+
+Regression tests added (`TestStatusAtTickReplay`, plus preflight-level detector tests). Full suite 280/280. Re-run produces identical metrics — verdict **SUPPORTED_WITH_PRECISION_WARNING**, landmark recall 6/7, full-hit 4/5, structural ≥ random and recency on 4/5, zero temporal leakage, miss `vocabulary_mismatch` (m02 at DP-3) — with **zero** status-fidelity catches (new digest `9f3361fb…`). Both result sets preserved: the first run with three catches at `1115e95`, the clean re-run in this commit.
+
+The status-fidelity check now compares retrieval-reported status against an independent chain walk, so a regression back to end-state reporting would flag the same three cases again.

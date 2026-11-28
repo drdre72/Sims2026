@@ -129,14 +129,7 @@
         "size": 1
       },
       "n_visible": 5,
-      "status_mismatches": [
-        {
-          "at_tick_status": "testing",
-          "dp_tick": 20,
-          "end_state_status": "refuted_conditional",
-          "hypothesis_id": "H-G05-SELFEDIT-MECHANISM"
-        }
-      ],
+      "status_mismatches": [],
       "tick": 20
     },
     {
@@ -289,14 +282,7 @@
         "size": 1
       },
       "n_visible": 11,
-      "status_mismatches": [
-        {
-          "at_tick_status": "testing",
-          "dp_tick": 90,
-          "end_state_status": "refuted_conditional",
-          "hypothesis_id": "H-EPI06-CONTRACT-REPAIR"
-        }
-      ],
+      "status_mismatches": [],
       "tick": 90
     },
     {
@@ -328,14 +314,7 @@
         "size": 1
       },
       "n_visible": 10,
-      "status_mismatches": [
-        {
-          "at_tick_status": "refuted_conditional",
-          "dp_tick": 83,
-          "end_state_status": "supported",
-          "hypothesis_id": "H-BUS-STALE-PRECEDENCE"
-        }
-      ],
+      "status_mismatches": [],
       "tick": 83
     },
     {
@@ -483,7 +462,7 @@
     }
   ],
   "decision_points_path": "C:\\Users\\Shadow\\Documents\\Sims2026\\ai-research\\research\\evidence\\sim_00_5_decision_points_v1.json",
-  "digest": "e5e56ea62fc795a7d9c3a48b78790459fad1aedf75da902a1ce1df50597e9942",
+  "digest": "9f3361fb857bab19bf55e56de181433b2606a54da6dcb71bf8ac39f26a64d2bb",
   "leakage": {
     "arm_L_future_counts": {
       "DP-1": 5,

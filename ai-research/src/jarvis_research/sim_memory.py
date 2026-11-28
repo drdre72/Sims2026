@@ -500,7 +500,8 @@ class SimMemory:
         self.add_interpretation(hypothesis_id, initial_status,
                                 statement or "initial proposal",
                                 initial_rationale, depends_on=depends_on,
-                                retrospective=retrospective, provenance=provenance)
+                                retrospective=retrospective, provenance=provenance,
+                                availability_tick=availability_tick)
         return self._hypotheses[hypothesis_id]
 
     def _store_hypothesis(self, hyp):
@@ -653,6 +654,22 @@ class SimMemory:
             return PROPOSED
         return self.effective_status(iid)
 
+    def status_at_tick(self, hypothesis_id, tick):
+        """Chain-head status as of a replay tick: interpretation revision
+        history is replayed, not just availability. Dependency-version checks
+        still run against the current registry (not tick-versioned) — a
+        documented approximation. Returns None when no interpretation was
+        available at the tick."""
+        hyp = self._hypotheses[hypothesis_id]
+        head = None
+        for iid in hyp.interpretations:
+            interp = self.interpretation(iid)
+            if interp is not None and interp.availability_tick <= tick:
+                head = interp
+        if head is None:
+            return None
+        return self.effective_status(head)
+
     # -- reconsideration -------------------------------------------------------
     def reevaluate(self, event):
         """event: dict with kind. Supported kinds:
@@ -755,7 +772,9 @@ class SimMemory:
                         measurements.append(mid)
             out.append({"hypothesis_id": hyp.hypothesis_id, "match_keys": tuple(keys),
                         "ontology_category": hyp.ontology_category,
-                        "status": self.hypothesis_status(hyp.hypothesis_id),
+                        "status": (self.status_at_tick(hyp.hypothesis_id, at_tick)
+                                   if at_tick is not None
+                                   else self.hypothesis_status(hyp.hypothesis_id)),
                         "measurements": tuple(measurements),
                         "candidate_not_equivalent": True})
         return tuple(out)

@@ -96,7 +96,8 @@ def visible_hypotheses(mem, tick):
 def frame_retrieve(mem, frame, at_tick, clearance="evolve"):
     """OR-union over per-key retrieve() calls — retrieve() takes a single
     ontology_category, so multi-category frames are unions of single-key queries.
-    Multiple keys never conjoin (frozen frame semantics)."""
+    Multiple keys never conjoin (frozen frame semantics). Carries each
+    candidate's retrieval-reported status for the status-fidelity check."""
     out = {}
     for key in frame:
         if "ontology_category" in key:
@@ -107,9 +108,10 @@ def frame_retrieve(mem, frame, at_tick, clearance="evolve"):
                                    clearance=clearance, at_tick=at_tick)
         for row in results:
             hid = row["hypothesis_id"]
-            merged = out.setdefault(hid, set())
-            merged.update(row["match_keys"])
-    return {hid: sorted(keys) for hid, keys in sorted(out.items())}
+            entry = out.setdefault(hid, {"match_keys": set(), "status": row["status"]})
+            entry["match_keys"].update(row["match_keys"])
+    return {hid: {"match_keys": sorted(v["match_keys"]), "status": v["status"]}
+            for hid, v in sorted(out.items())}
 
 
 def classify_miss(mem, dp, frame, landmark_id, visible_ids):
@@ -180,22 +182,23 @@ def run_arm_Y(visible_hyps, required, k):
 # ---------------------------------------------------------------------------
 # Status fidelity (bug detector)
 # ---------------------------------------------------------------------------
-def status_fidelity(mem, dp, candidate_ids):
-    """End-state hypothesis_status vs the at-tick chain head's intrinsic status.
-    Replay filters availability, not interpretation-chain history: a mismatch
-    means the at-tick view carries a post-hoc status."""
+def status_fidelity(mem, dp, frame_result):
+    """The retrieval-reported status vs an independent reconstruction of the
+    chain head as of the tick. Catches replay reporting post-hoc status:
+    before the substrate fix this flagged three real defects; a regression
+    back to end-state status would flag them again."""
     mismatches = []
-    for hid in candidate_ids:
+    for hid, entry in frame_result.items():
         hyp = mem.hypothesis(hid)
         at_tick = None
         for iid in hyp.interpretations:
             interp = mem.interpretation(iid)
             if interp is not None and interp.availability_tick <= dp["tick"]:
                 at_tick = interp.status
-        end_state = mem.hypothesis_status(hid)
-        if at_tick is not None and at_tick != end_state:
+        if at_tick is not None and entry["status"] != at_tick:
             mismatches.append({"hypothesis_id": hid, "dp_tick": dp["tick"],
-                               "at_tick_status": at_tick, "end_state_status": end_state})
+                               "at_tick_status": at_tick,
+                               "reported_status": entry["status"]})
     return mismatches
 
 
@@ -291,8 +294,10 @@ def run_preflight(decision_points_path=DECISION_POINTS_PATH):
         visible_ids = [h.hypothesis_id for h in visible]
         row = {"dp_id": dp["dp_id"], "tick": tick, "control": dp["control"],
                "n_visible": len(visible_ids)}
+        frame_results = {}
         for level in ("frame_minimal", "frame_full"):
             candidates = frame_retrieve(mem, dp[level], at_tick=tick)
+            frame_results[level] = candidates
             at_tick_violations += sum(
                 1 for hid in candidates if mem.hypothesis(hid).availability_tick > tick)
             required = dp["required_landmarks"]
@@ -319,7 +324,7 @@ def run_preflight(decision_points_path=DECISION_POINTS_PATH):
                     1 for lm in related if lm in candidates),
             }
         full = row["frame_full"]
-        row["status_mismatches"] = status_fidelity(mem, dp, full["candidates"])
+        row["status_mismatches"] = status_fidelity(mem, dp, frame_results["frame_full"])
         if not dp["control"]:
             surfaced_required += len([lm for lm in dp["required_landmarks"]
                                       if lm in full["candidates"]])

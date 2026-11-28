@@ -210,15 +210,25 @@ class TestPreflightRun(unittest.TestCase):
         self.assertGreater(counts["DP-1"],0)
         self.assertEqual(counts["DP-5"],0)
 
-    def test_status_fidelity_expected_catches(self):
-        """The bug detector: replay filters availability, not chain history."""
-        expected={("DP-1","H-G05-SELFEDIT-MECHANISM"),
-                  ("DP-3","H-EPI06-CONTRACT-REPAIR"),
-                  ("DP-4","H-BUS-STALE-PRECEDENCE")}
-        seen={(r["dp_id"],m["hypothesis_id"])
-              for r in self.result["decision_points"]
-              for m in r["status_mismatches"]}
-        self.assertEqual(seen,expected)
+    def test_status_fidelity_clean_after_substrate_fix(self):
+        """After the at-tick status fix, retrieval-reported status matches the
+        chain head as of each tick across the whole battery."""
+        for r in self.result["decision_points"]:
+            self.assertEqual(r["status_mismatches"],[])
+
+    def test_status_fidelity_detector_still_functional(self):
+        """The detector must fire on a post-hoc status report: feed it the
+        end-state status at a tick where the question was open."""
+        from jarvis_research.sim_replay import status_fidelity
+        from jarvis_research.sim_memory import TESTING
+        mem=build_gold_corpus()
+        data={d["dp_id"]:d for d in load_decision_points()["decision_points"]}
+        fake={"H-G05-SELFEDIT-MECHANISM":{"match_keys":[],
+               "status":mem.hypothesis_status("H-G05-SELFEDIT-MECHANISM")}}
+        m=status_fidelity(mem,data["DP-1"],fake)
+        self.assertEqual(len(m),1)
+        self.assertEqual(m[0]["at_tick_status"],TESTING)
+        self.assertEqual(m[0]["reported_status"],"refuted_conditional")
 
     def test_expected_battery_outcome(self):
         m=self.result["metrics"]
