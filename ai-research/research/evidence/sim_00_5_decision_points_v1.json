@@ -1,0 +1,146 @@
+{
+  "preflight": "HZN-SIM-00.5",
+  "version": 1,
+  "frozen_before_any_retrieval_run": true,
+  "spec": "research/hzn_sim_00_5_replay_preflight.md",
+  "corpus_builder": "jarvis_research.sim_corpus.build_gold_corpus",
+  "seed": 20261128,
+  "clearance": "evolve",
+  "frame_semantics": "OR-union over keys, as implemented by SimMemory.retrieve(); multiple keys never conjoin",
+  "subject_rule": "a hypothesis that is the subject of the decision is never scored as a landmark",
+  "decision_points": [
+    {
+      "dp_id": "DP-1",
+      "tick": 20,
+      "decision": "Phase B self-edit runs designed to resolve the Phase A open selection hypothesis",
+      "source_docs": ["research/gate0_5_phaseb_selfedit.md", "research/gate0_5_taxonomy.md"],
+      "frame_minimal": {"ontology_category": "self_edit_avoidance"},
+      "frame_full": [
+        {"ontology_category": "self_edit_avoidance"},
+        {"dep_type": "model_checkpoint"}
+      ],
+      "required_landmarks": ["H-G05-SELFEDIT-MECHANISM"],
+      "related_unscored": ["H-G05-COHERENT-LETHAL", "H-G05-DEPTH-GRADIENT"],
+      "control": false,
+      "justification": {
+        "frame": "the Phase A closing hypothesis is the documented open question the campaign was mounted to resolve; the phaseb doc concerns this model",
+        "H-G05-SELFEDIT-MECHANISM": "Phase B was mounted precisely to resolve this TESTING hypothesis; its Phase A expectation is documented as contemporaneous"
+      }
+    },
+    {
+      "dp_id": "DP-2",
+      "tick": 30,
+      "decision": "gate1_2 observation-channel campaign designed against the flagged safe-null risk",
+      "source_docs": ["research/gate1_2_campaign_report.md", "research/gate0_5_taxonomy.md"],
+      "frame_minimal": {"ontology_category": "safe_null_surface"},
+      "frame_full": [
+        {"ontology_category": "safe_null_surface"},
+        {"ontology_category": "input_boundary_fragility"},
+        {"dep_type": "model_checkpoint"}
+      ],
+      "required_landmarks": ["H-G05-SAFE-NULL"],
+      "related_unscored": ["H-G05-DEPTH-GRADIENT", "H-G05-COHERENT-LETHAL"],
+      "control": false,
+      "justification": {
+        "frame": "the taxonomy document itself flags safe-null as the real Gate 1 risk; the campaign is constrained by the documented fragility surface on this model",
+        "H-G05-SAFE-NULL": "the campaign's documented motivation: safety evidence existed, leverage evidence did not"
+      }
+    },
+    {
+      "dp_id": "DP-3",
+      "tick": 90,
+      "decision": "EPI-06 battery design reusing the EPI-05 battery, its stale-invalidation case, and the harness",
+      "source_docs": ["research/hzn_epi_06_consumption_prereg.md"],
+      "frame_minimal": {"ontology_category": "invalidation_semantics"},
+      "frame_full": [
+        {"ontology_category": "invalidation_semantics"},
+        {"ontology_category": "transcription_failure"},
+        {"dep_type": "harness"}
+      ],
+      "required_landmarks": ["H-EPI05-BINDING", "H-BUS-STALE-PRECEDENCE", "H-EPI05-M02"],
+      "related_unscored": [],
+      "control": false,
+      "justification": {
+        "frame": "prereg section 3 reuses the EPI-05 typed-state battery (harness), and section 1 names neural retranscription fragility and the stale invalidation case",
+        "H-EPI05-BINDING": "prereg section 1 is built on EPI-05's binding-vs-readout split; the battery reuses that machinery",
+        "H-BUS-STALE-PRECEDENCE": "prereg section 3 explicitly reuses 'the same stale invalidation case', which exists because of the tie bug and its fix",
+        "H-EPI05-M02": "prereg section 1 names neural retranscription as the fragile boundary; m02 is the recorded transcription-failure landmark"
+      }
+    },
+    {
+      "dp_id": "DP-4",
+      "tick": 83,
+      "decision": "tie-bug fix design (dependency-precedence fix, efc14c0) — novel semantics bug",
+      "source_docs": ["commit efc14c0", "research/hzn_epi_06_consumption_prereg.md section 7"],
+      "frame_minimal": {"ontology_category": "invalidation_semantics"},
+      "frame_full": [
+        {"ontology_category": "invalidation_semantics"},
+        {"dep_type": "harness"}
+      ],
+      "required_landmarks": [],
+      "related_unscored": [],
+      "control": true,
+      "justification": {
+        "frame": "the fix concerns bus invalidation semantics on the harness",
+        "control": "no prior landmark demonstrably bore on this genuinely novel bug; the subject H-BUS-STALE-PRECEDENCE is excluded from scoring by the subject rule"
+      }
+    },
+    {
+      "dp_id": "DP-5",
+      "tick": 99,
+      "decision": "HZN-SIM-00 substrate design motivated by the policy-boundary collapse finding",
+      "source_docs": ["research/hzn_sim_01_design.md"],
+      "frame_minimal": {"ontology_category": "policy_boundary_confusion"},
+      "frame_full": [
+        {"ontology_category": "policy_boundary_confusion"},
+        {"ontology_category": "structural_binding_success"},
+        {"dep_type": "model_checkpoint"}
+      ],
+      "required_landmarks": ["H-EPI06-POLICY-BOUNDARY"],
+      "related_unscored": ["H-EPI06-MECH-RENDER", "H-EPI05-BINDING"],
+      "control": false,
+      "justification": {
+        "frame": "the design document names the none/unknown/invalid/insufficient/abstain collapse as the motivation for mechanical grounding, and the mechanical-render reference on this model",
+        "H-EPI06-POLICY-BOUNDARY": "the abstain pair is the design document's central citation for mechanical over neural grounding"
+      }
+    },
+    {
+      "dp_id": "DP-6",
+      "tick": 94,
+      "decision": "EPI-06 H1-failure interpretation: seven residual none-collapses diagnosed as epistemic distinction failure",
+      "source_docs": ["corpus interpretation H-EPI06-CONTRACT-REPAIR v2 @ tick 94"],
+      "frame_minimal": {"ontology_category": "policy_boundary_confusion"},
+      "frame_full": [
+        {"ontology_category": "policy_boundary_confusion"},
+        {"dep_type": "model_checkpoint"}
+      ],
+      "required_landmarks": ["H-EPI05-M02"],
+      "related_unscored": [],
+      "control": false,
+      "justification": {
+        "frame": "the interpretation text names the none-collapse distinction failure; the diagnosis concerns this model's readout behavior",
+        "H-EPI05-M02": "m02's recorded trace is a wrong-none emission by the same model under readout — the closest prior evidence to a none-collapse failure mode"
+      }
+    }
+  ],
+  "cascade_probes": {
+    "historical": [
+      {"probe_id": "H1", "kind": "interpretation_chain_revision", "description": "bus chain revision ticks 82/84 — affected hypotheses via DEP_INTERPRETATION propagation"},
+      {"probe_id": "H2", "kind": "ontology_revision", "description": "ontology v0.2 revision during corpus build — affected hypotheses via DEP_ONTOLOGY propagation"}
+    ],
+    "synthetic": [
+      {"probe_id": "P1", "kind": "model_replacement", "description": "registry.replace model_checkpoint entity — applicability_unknown count"},
+      {"probe_id": "P2", "kind": "harness_bump", "description": "registry.bump harness — stale count"},
+      {"probe_id": "P3", "kind": "eval_bump", "description": "registry.bump eval_suite — stale count"},
+      {"probe_id": "P4", "kind": "confound_registration", "target": "epi06-h1-nonnormal", "description": "confound registration on a measurement — stale count via DEP_MEASUREMENT"},
+      {"probe_id": "P5", "kind": "ontology_bump", "description": "ontology bump v3 — stale count via DEP_ONTOLOGY"}
+    ]
+  },
+  "binding_thresholds": {
+    "landmark_recall_pass": "5/7",
+    "full_hit_dps_pass": "3/5",
+    "precision_warning_mean_candidate_fraction": 0.5,
+    "leakage_invariant": "zero entries with availability_tick > dp.tick in any at_tick run",
+    "leakage_validity": "arm L must include future-only evidence for at least one DP"
+  }
+}
