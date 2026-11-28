@@ -1,0 +1,103 @@
+{
+  "ledger": "qa-correction-loop",
+  "version": 1,
+  "purpose": "Instrumentation of the external corrective feedback loop developing Horizon, per the 2026-11-28 reviewer suggestion: the engineering process is itself an experimental subject and a reference architecture for Horizon's internal improvement process. Append-only; every future correction event adds an entry.",
+  "field_notes": {
+    "detector": "mechanism that surfaced the defect",
+    "latency_minutes": "detection-to-fix; detection timestamped by the detecting commit when one exists, otherwise approximated by the fix commit (noted per event)",
+    "regression_test": "whether a deterministic test now fails if the defect reappears"
+  },
+  "events": [
+    {
+      "id": "QA-001",
+      "defect": "Stale precedence for ambiguous derived states: intrinsic ambiguous outranked dependency invalidation; an old Q1/Q3 tie stayed current after Q3's cost changed",
+      "component": "ai-research/src/jarvis_research/cognitive_bus.py",
+      "defect_class": "invalidation_semantics",
+      "detector": "user_reproduction",
+      "detected": "2026-11-27 (approximated by fix commit; reproduction preceded it same day)",
+      "fix_commit": "efc14c0",
+      "regression_test": true,
+      "regression_location": "tests/test_cognitive_bus.py: ambiguous -> stale -> resolved Q1",
+      "verification": "full CPU suite; regression test covers the exact sequence",
+      "latency_minutes": null,
+      "notes": "pre-automation baseline event"
+    },
+    {
+      "id": "QA-002",
+      "defect": "Stale-emission metric artifact: renderer counted legitimate resolved outputs as stale emissions by searching for the cached label without restricting to stale scenarios",
+      "component": "ai-research/src/jarvis_research/gate1_8_consumption.py",
+      "defect_class": "measurement_artifact",
+      "detector": "preregistered_metric_audit",
+      "detected": "2026-11-27 (approximated by fix commit)",
+      "fix_commit": "71098c2",
+      "regression_test": true,
+      "regression_location": "non-stale cases assert false",
+      "verification": "corrected metric 0; no prompts or behavioral grades changed",
+      "latency_minutes": null,
+      "notes": "measurement-side failure, not model behavior"
+    },
+    {
+      "id": "QA-003",
+      "defect": "Four replay-fidelity defects: retrieve(at_tick) reported end-state chain-head status (3 cases: selfedit refutation visible at tick 20, contract refutation visible at its own preregistration tick, bus support visible before the fix); initial interpretations took the internal op-counter tick instead of the declared availability tick",
+      "component": "ai-research/src/jarvis_research/sim_memory.py",
+      "defect_class": "replay_fidelity",
+      "detector": "preregistered_preflight_status_fidelity_check",
+      "detected": "2026-11-28T07:08 (first-run commit 1115e95)",
+      "fix_commit": "a4247c4",
+      "regression_test": true,
+      "regression_location": "tests/test_sim_memory.py TestStatusAtTickReplay; tests/test_sim_replay.py status-fidelity detector",
+      "verification": "full re-run with both result sets preserved; 3 catches -> 0; digest comparison",
+      "latency_minutes": 2,
+      "notes": "fourth defect (availability inheritance) surfaced while authoring the regression tests"
+    },
+    {
+      "id": "QA-004",
+      "defect": "retrieve() match keys leaked future state: target-component matching ignored attempt availability; dependency matching used the current chain head's dependencies at replay ticks",
+      "component": "ai-research/src/jarvis_research/sim_memory.py",
+      "defect_class": "replay_fidelity",
+      "detector": "independent_qa_automation",
+      "detected": "2026-11-28T16:40 (same-session detection and fix)",
+      "fix_commit": "d872cc8",
+      "regression_test": true,
+      "regression_location": "tests/test_sim_memory.py test_match_keys_respect_availability",
+      "verification": "independently verified in ac926ff: fast-forward merge, 281/281, frozen preflight digest byte-identical",
+      "latency_minutes": 0,
+      "notes": "latent in the current corpus (constant dependency frames); would surface with dependency-revising chains — exactly the planned SIM-01 corpus expansion"
+    },
+    {
+      "id": "QA-005",
+      "defect": "Amaranth smoke test failed on Windows: text-mode pipes translated LF to CRLF in builtin-yosys stdin; deprecated yosys pass name",
+      "component": "tools/amaranth_smoke.py (hardware-lab side, main lineage)",
+      "defect_class": "environment_platform",
+      "detector": "independent_qa_automation",
+      "detected": "2026-11-28T15:02 (same-session detection and fix)",
+      "fix_commit": "ffa17ab",
+      "regression_test": false,
+      "regression_location": null,
+      "verification": "automation-run smoke test itself is the executing check",
+      "latency_minutes": 0,
+      "notes": "outside ai-research; included for loop-level instrumentation completeness"
+    }
+  ],
+  "summary_v1": {
+    "as_of": "2026-11-28",
+    "events_total": 5,
+    "by_detector": {
+      "user_reproduction": 1,
+      "preregistered_metric_audit": 1,
+      "preregistered_preflight_status_fidelity_check": 1,
+      "independent_qa_automation": 2
+    },
+    "defect_classes": {
+      "invalidation_semantics": 1,
+      "measurement_artifact": 1,
+      "replay_fidelity": 2,
+      "environment_platform": 1
+    },
+    "regression_coverage": 0.8,
+    "median_latency_minutes_known": 1.0,
+    "rejected_patches": 0,
+    "human_interventions": 5,
+    "honest_notes": "N is too small for statistical claims; latencies are commit-timestamp approximations; two events (QA-004, QA-005) are same-session detection-plus-fix, which understates true detection-to-fix latency. The dominant defect class is replay fidelity — the present overwriting the past at replay time — which is now guarded by tests from both the preflight and the automation sides."
+  }
+}

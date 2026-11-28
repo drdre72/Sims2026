@@ -1771,3 +1771,27 @@ The status-fidelity check now compares retrieval-reported status against an inde
 ### Third-party QA catch (match-key availability, d872cc8)
 
 The independent QA automation (branch `devin/1795884041-sim-match-key-availability`) found a third replay-fidelity defect in the same family: `retrieve()`'s match keys leaked future state. Target-component matching considered attempts regardless of availability, and dependency matching used the *current* chain head's dependencies at replay ticks — so a hypothesis could be surfaced at tick T through an attempt or dependency that only existed later. Both now filter by availability, with dependency matching using the at-tick interpretation head. The latent bug was real but invisible in the current corpus (every chain's dependency frame is constant across revisions, and the preflight frames use no target-component keys): the frozen preflight output is byte-identical (digest `9f3361fb…`, independently verified), full suite 281/281 with the QA regression test included. The defect class would have surfaced with the first corpus whose interpretations gain or redeclare dependencies over time — precisely the corpus expansion SIM-01 requires. Merged as a fast-forward; verification and this record are the only additions on our side.
+
+## 44. Reviewer open findings closed: historical effective status, snapshot completeness, status oracle, QA-loop instrumentation
+
+The external review of the correction loop (2026-11-28) left three substrate findings open and one instrumentation request. All four are addressed in this entry; the frozen SIM-00.5 preflight output is byte-identical throughout (digest `9f3361fb…`, verified after each change), full suite 291/291.
+
+### Finding 1 — historical effective-status evaluation (resolved)
+
+`status_at_tick` previously ran dependency checks against the current registry — a version bumped at a later tick could mark a conclusion stale at a tick that predates the bump. The registry is now event-sourced: every register/bump/replace carries a tick, `version_at(dep_type, dep_id, at_tick)` reconstructs the world as of any tick, and `effective_status(at_tick=…)` evaluates all three dependency classes historically — external versions from the event log, interpretation-chain pins against the chain head *as of the tick*, and measurement confounds by confound-registration tick. `revise_ontology` declares its bump tick explicitly. The corpus's ontology v0.2 revision is now honestly encoded as an **encoding-time event at tick 100** (the vocabulary gap was discovered during corpus construction on 2026-11-28, not during simulated history): replay at any historical tick sees the pre-revision ontology, the end state sees v0.2. Regression tests cover bump/replace/confound/basis-revision timing — each invalidation fires only after its tick.
+
+### Finding 2 — snapshot completeness (resolved)
+
+The snapshot recorded interpretation chains as ID lists; chain chronology was unreconstructible from evidence. `snapshot()` now carries full interpretation chains (statuses, dependency frames, availability ticks), confound records, and the registry event log. Corpus evidence re-exported as `evidence/sim_gold_corpus_v2.json` (digest `dce6a743…`, supersedes v1 `09f3423b…` which is preserved in git history); no corpus content changed — v2 adds the chain and event data v1 structurally omitted.
+
+### Finding 3 — intrinsic vs. effective status oracle (resolved)
+
+A hand-derived oracle now tests the status lattice against the substrate: eleven synthetic rows (clean, bump/replace/confound/basis-revision timing, refuted-basis → insufficient evidence, stale propagation, intrinsic-survives-clean-deps, dependency-precedes-intrinsic including over a refuted intrinsic) and nine corpus rows (the self-edit, bus, and contract-repair chains at open/refuted/settled ticks). Every expected value was derived from the documented semantics, not from executing the code; the oracle agrees with the substrate on all rows. Future disagreement is a defect in one of the two and must be resolved, not averaged.
+
+### Instrumentation — the correction loop as an experimental subject
+
+Per the reviewer's observation that the engineering infrastructure now exhibits introspection, discernment, plasticity, selection, and developmental memory: `evidence/qa_loop_ledger_v1.json` records every correction event to date with detector, defect class, fix commit, regression coverage, and detection-to-fix latency — five events across four detector mechanisms (user reproduction, preregistered metric audit, preregistered preflight check, independent QA automation), regression coverage 0.8, zero rejected patches. Honest boundary: N is far too small for statistical claims, two latencies are same-session detection-plus-fix underestimates, and one event (the Amaranth smoke fix) sits outside ai-research. The ledger is append-only; the loop's own metrics become measurable as it accumulates.
+
+### What this positions
+
+The substrate can now answer "was this conclusion valid *then*" mechanically and completely — the last correctness prerequisite for SIM-01 corpus expansion, where chains will gain and redeclare dependencies over time (the exact condition under which the QA automation's match-key catch would have bitten). The three previously-open findings were all in the same adversarial direction: the present overwriting the past. That direction is now guarded from four sides — at-tick status, match-key availability, historical dependency evaluation, and the oracle.

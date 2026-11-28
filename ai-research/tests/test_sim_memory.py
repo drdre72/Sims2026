@@ -340,3 +340,242 @@ class TestStatusAtTickReplay(unittest.TestCase):
             initial_status=TESTING,availability_tick=10)
         self.assertIsNone(mem.status_at_tick('H1',5))
         self.assertEqual(mem.status_at_tick('H1',10),TESTING)
+
+class TestHistoricalEffectiveStatus(unittest.TestCase):
+    """Reviewer finding (open -> resolved): at-tick status evaluation must use
+    the world as of the tick — registry versions from the event log, chain
+    heads as of the tick, confounds as of the tick — never end-state state."""
+
+    def _hyp(self,mem,hid='H1',cat='coherent_dense_edit',deps=None):
+        mem.propose_hypothesis(hid,'h '+hid,'ckpt-base',cat,
+            depends_on=deps if deps is not None else
+            [Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],
+            initial_status=SUPPORTED,availability_tick=10)
+        return mem.hypothesis(hid)
+
+    def test_external_bump_only_invalidates_after_its_tick(self):
+        mem=base_memory()
+        self._hyp(mem)
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+        self.assertEqual(mem.status_at_tick('H1',40),SUPPORTED)
+        self.assertEqual(mem.status_at_tick('H1',60),STALE)
+        self.assertEqual(mem.hypothesis_status('H1'),STALE)
+
+    def test_replacement_invalidates_only_after_its_tick(self):
+        mem=base_memory()
+        self._hyp(mem)
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next',tick=70)
+        self.assertEqual(mem.status_at_tick('H1',40),SUPPORTED)
+        self.assertEqual(mem.status_at_tick('H1',65),STALE)
+        self.assertEqual(mem.status_at_tick('H1',80),APPLICABILITY_UNKNOWN)
+        self.assertEqual(mem.hypothesis_status('H1'),APPLICABILITY_UNKNOWN)
+
+    def test_confound_only_invalidates_after_its_tick(self):
+        mem=base_memory()
+        mem.record_measurement('m-x','accuracy',{'value':1},'evolve',
+            {'source':'x'},availability_tick=5)
+        self._hyp(mem,deps=[Dependency(DEP_MEASUREMENT,'m-x',1)])
+        mem.register_confound('m-x','late confound',{'p':1},availability_tick=30)
+        self.assertEqual(mem.status_at_tick('H1',20),SUPPORTED)
+        self.assertEqual(mem.status_at_tick('H1',40),STALE)
+        self.assertEqual(mem.hypothesis_status('H1'),STALE)
+
+    def test_basis_revision_only_invalidates_after_its_tick(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','basis','ckpt-base','coherent_dense_edit',
+            depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],
+            initial_status=SUPPORTED,availability_tick=5)
+        mem.propose_hypothesis('H2','dependent','ckpt-base','coherent_dense_edit',
+            depends_on=[Dependency(DEP_INTERPRETATION,'H1:interp:1',1)],
+            initial_status=SUPPORTED,availability_tick=10)
+        mem.add_interpretation('H1',REFUTED_CONDITIONAL,'revised','r',availability_tick=50)
+        self.assertEqual(mem.status_at_tick('H2',40),SUPPORTED)
+        self.assertEqual(mem.status_at_tick('H2',60),STALE)
+        self.assertEqual(mem.hypothesis_status('H2'),STALE)
+
+    def test_unregistered_entity_is_unknown_at_early_tick(self):
+        mem=base_memory()
+        mem.registry.register(DEP_EVAL,'suite-x',1,tick=40)
+        self._hyp(mem,deps=[Dependency(DEP_EVAL,'suite-x',1)])
+        self.assertEqual(mem.status_at_tick('H1',20),APPLICABILITY_UNKNOWN)
+        self.assertEqual(mem.status_at_tick('H1',60),SUPPORTED)
+
+    def test_corpus_ontology_revision_is_encoding_time_event(self):
+        from jarvis_research.sim_corpus import build_gold_corpus
+        mem=build_gold_corpus()
+        self.assertEqual(mem.registry.version_at(DEP_ONTOLOGY,'sim_ontology',50),1)
+        self.assertEqual(mem.registry.version_at(DEP_ONTOLOGY,'sim_ontology',150),2)
+        self.assertEqual(mem.registry.version(DEP_ONTOLOGY,'sim_ontology'),2)
+        self.assertEqual(mem.status_at_tick('H-EPI05-BINDING',60),SUPPORTED)
+        self.assertEqual(mem.hypothesis_status('H-EPI05-BINDING'),SUPPORTED)
+
+class TestSnapshotCompleteness(unittest.TestCase):
+    """Reviewer finding (open -> resolved): the snapshot must carry enough to
+    reconstruct chain chronology — full interpretation chains with availability
+    ticks, confound records, and the registry event log — not ID lists alone."""
+
+    def test_snapshot_contains_full_chains_and_events(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','basis','ckpt-base','coherent_dense_edit',
+            depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],
+            initial_status=TESTING,availability_tick=10)
+        mem.add_interpretation('H1',REFUTED_CONDITIONAL,'revised','r',availability_tick=30)
+        mem.record_measurement('m-x','accuracy',{'value':1},'evolve',
+            {'source':'x'},availability_tick=5)
+        mem.register_confound('m-x','c',{'p':1},availability_tick=40)
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+        snap=mem.snapshot()
+        self.assertIn('interpretations',snap)
+        self.assertIn('confounds',snap)
+        self.assertIn('registry_events',snap)
+        chain=snap['interpretations']['H1:interp:1']
+        self.assertEqual([v['status'] for v in chain],['testing'])
+        self.assertEqual([v['availability_tick'] for v in chain],[10])
+        chain2=snap['interpretations']['H1:interp:2']
+        self.assertEqual([v['status'] for v in chain2],['refuted_conditional'])
+        self.assertEqual([v['availability_tick'] for v in chain2],[30])
+        self.assertEqual(snap['confounds']['m-x'][0]['tick'],40)
+        kinds=[e['kind'] for e in snap['registry_events']]
+        self.assertIn('bump',kinds)
+
+    def test_corpus_snapshot_reconstructs_chain_chronology(self):
+        from jarvis_research.sim_corpus import build_gold_corpus
+        snap=build_gold_corpus().snapshot()
+        selfedit=snap['interpretations']['H-G05-SELFEDIT-MECHANISM:interp:1']
+        self.assertEqual(len(selfedit),1)
+        self.assertEqual(selfedit[0]['status'],'testing')
+        self.assertEqual(selfedit[0]['availability_tick'],17)
+        selfedit2=snap['interpretations']['H-G05-SELFEDIT-MECHANISM:interp:2']
+        self.assertEqual(selfedit2[0]['status'],'refuted_conditional')
+        self.assertEqual(selfedit2[0]['availability_tick'],23)
+        # every hypothesis interpretation id resolves in the snapshot
+        ids={i for h in snap['hypotheses'] for i in h['interpretations']}
+        self.assertTrue(ids.issubset(set(snap['interpretations'])))
+        # registry history: pre-history registrations plus the encoding-time ontology bump
+        events=snap['registry_events']
+        self.assertEqual(len([e for e in events if e['kind']=='register']),4)
+        bump=[e for e in events if e['kind']=='bump']
+        self.assertEqual(bump[0]['tick'],100)
+
+class TestStatusOracle(unittest.TestCase):
+    """Reviewer finding (open -> resolved): an independent oracle for
+    intrinsic-vs-effective status. Every expected value below is hand-derived
+    from the documented semantics (dependency-before-intrinsic precedence;
+    conditional refutation is not staleness; invalidation propagates through
+    interpretation deps; at-tick evaluation uses the world as of the tick).
+    Disagreement between the oracle and the substrate is a defect in one of
+    them and must be resolved, not averaged."""
+
+    def _clean(self,mem,hid,cat='coherent_dense_edit',status=SUPPORTED,at=10,
+               deps=None):
+        mem.propose_hypothesis(hid,'h '+hid,'ckpt-base',cat,
+            depends_on=deps if deps is not None else
+            [Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],
+            initial_status=status,availability_tick=at)
+        return mem.hypothesis(hid)
+
+    def test_oracle_substrate_rows(self):
+        def row_clean():
+            m=base_memory(); self._clean(m,'H1')
+            return m,[('end','H1',SUPPORTED),('at50','H1',SUPPORTED,50)]
+        def row_bump():
+            m=base_memory(); self._clean(m,'H1')
+            m.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+            return m,[('end','H1',STALE),('at40','H1',SUPPORTED,40),
+                      ('at60','H1',STALE,60)]
+        def row_replace():
+            m=base_memory(); self._clean(m,'H1')
+            m.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next',tick=70)
+            return m,[('end','H1',APPLICABILITY_UNKNOWN),
+                      ('at60','H1',SUPPORTED,60),
+                      ('at80','H1',APPLICABILITY_UNKNOWN,80)]
+        def row_unregistered():
+            m=base_memory()
+            self._clean(m,'H1',deps=[Dependency(DEP_EVAL,'never-registered',1)])
+            return m,[('end','H1',APPLICABILITY_UNKNOWN),
+                      ('at50','H1',APPLICABILITY_UNKNOWN,50)]
+        def row_confound():
+            m=base_memory()
+            m.record_measurement('m-x','accuracy',{'value':1},'evolve',
+                {'source':'x'},availability_tick=5)
+            self._clean(m,'H1',deps=[Dependency(DEP_MEASUREMENT,'m-x',1)])
+            m.register_confound('m-x','c',{'p':1},availability_tick=30)
+            return m,[('end','H1',STALE),('at20','H1',SUPPORTED,20),
+                      ('at40','H1',STALE,40)]
+        def row_missing_measurement():
+            m=base_memory()
+            self._clean(m,'H1',deps=[Dependency(DEP_MEASUREMENT,'m-ghost',1)])
+            return m,[('end','H1',STALE)]
+        def row_basis_revision():
+            m=base_memory()
+            self._clean(m,'H1',at=5)
+            self._clean(m,'H2',at=10,
+                        deps=[Dependency(DEP_INTERPRETATION,'H1:interp:1',1)])
+            m.add_interpretation('H1',REFUTED_CONDITIONAL,'revised','r',
+                availability_tick=50)
+            return m,[('H2at40','H2',SUPPORTED,40),('H2at60','H2',STALE,60),
+                      ('H2end','H2',STALE)]
+        def row_refuted_basis():
+            m=base_memory()
+            self._clean(m,'H1',status=REFUTED_CONDITIONAL,at=5)
+            self._clean(m,'H2',at=10,
+                        deps=[Dependency(DEP_INTERPRETATION,'H1:interp:1',1)])
+            return m,[('end','H2',INSUFFICIENT_EVIDENCE)]
+        def row_stale_propagation():
+            m=base_memory()
+            self._clean(m,'H1',at=5)
+            self._clean(m,'H2',at=10,
+                        deps=[Dependency(DEP_INTERPRETATION,'H1:interp:1',1)])
+            m.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+            return m,[('H1end','H1',STALE),('H2end','H2',STALE)]
+        def row_intrinsic_survives():
+            m=base_memory()
+            self._clean(m,'H1',status=REFUTED_CONDITIONAL)
+            self._clean(m,'H2',status=INSUFFICIENT_EVIDENCE,at=11)
+            return m,[('refuted','H1',REFUTED_CONDITIONAL),
+                      ('insufficient','H2',INSUFFICIENT_EVIDENCE)]
+        def row_dep_precedence():
+            m=base_memory()
+            self._clean(m,'H1',status=SUPPORTED)
+            self._clean(m,'H2',status=REFUTED_CONDITIONAL,at=11)
+            m.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+            return m,[('supported-intrinsic','H1',STALE),
+                      ('refuted-intrinsic','H2',STALE)]
+        rows=[('clean',row_clean),('external-bump-timing',row_bump),
+              ('replacement-timing',row_replace),('never-registered',row_unregistered),
+              ('confound-timing',row_confound),('missing-measurement',row_missing_measurement),
+              ('basis-revision-timing',row_basis_revision),('refuted-basis',row_refuted_basis),
+              ('stale-propagation',row_stale_propagation),
+              ('intrinsic-survives-clean-deps',row_intrinsic_survives),
+              ('dependency-precedes-intrinsic',row_dep_precedence)]
+        for name,builder in rows:
+            with self.subTest(oracle_row=name):
+                mem,checks=builder()
+                for check in checks:
+                    label,hid,expected=check[0],check[1],check[2]
+                    tick=check[3] if len(check)>3 else None
+                    got=(mem.status_at_tick(hid,tick) if tick is not None
+                         else mem.hypothesis_status(hid))
+                    self.assertEqual(got,expected,
+                        f"{name}/{label}: expected {expected}, got {got}")
+
+    def test_oracle_corpus_rows(self):
+        from jarvis_research.sim_corpus import build_gold_corpus
+        mem=build_gold_corpus()
+        rows=[
+            ('selfedit-open-at-20','H-G05-SELFEDIT-MECHANISM',20,TESTING),
+            ('selfedit-refuted-at-25','H-G05-SELFEDIT-MECHANISM',25,REFUTED_CONDITIONAL),
+            ('selfedit-end','H-G05-SELFEDIT-MECHANISM',None,REFUTED_CONDITIONAL),
+            ('bus-supported-at-61','H-BUS-STALE-PRECEDENCE',61,SUPPORTED),
+            ('bus-refuted-at-83','H-BUS-STALE-PRECEDENCE',83,REFUTED_CONDITIONAL),
+            ('bus-supported-end','H-BUS-STALE-PRECEDENCE',None,SUPPORTED),
+            ('contract-testing-at-92','H-EPI06-CONTRACT-REPAIR',92,TESTING),
+            ('contract-refuted-at-95','H-EPI06-CONTRACT-REPAIR',95,REFUTED_CONDITIONAL),
+            ('contract-refuted-end','H-EPI06-CONTRACT-REPAIR',None,REFUTED_CONDITIONAL),
+        ]
+        for name,hid,tick,expected in rows:
+            with self.subTest(oracle_row=name):
+                got=(mem.status_at_tick(hid,tick) if tick is not None
+                     else mem.hypothesis_status(hid))
+                self.assertEqual(got,expected,f"{name}: expected {expected}, got {got}")

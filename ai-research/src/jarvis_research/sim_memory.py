@@ -352,28 +352,59 @@ class Lineage:
 # External dependency registry — current versions of the world memory depends on
 # ---------------------------------------------------------------------------
 class DependencyRegistry:
+    """Current versions plus an append-only event log with ticks, so the
+    version of any entity can be reconstructed as of any replay tick.
+    Historical effective-status evaluation depends on this: an end-state
+    version bump must not mark a conclusion stale at a tick that predates it."""
+
     def __init__(self):
         self._entities = {}  # (dep_type, dep_id) -> version
+        self._events = []   # append-only: dicts with kind/dep_type/dep_id/version/tick
 
-    def register(self, dep_type, dep_id, version=1):
+    def _log(self, kind, dep_type, dep_id, version, tick):
+        self._events.append({"kind": kind, "dep_type": dep_type, "dep_id": dep_id,
+                             "version": version, "tick": tick})
+
+    def register(self, dep_type, dep_id, version=1, tick=0):
         self._entities[(dep_type, dep_id)] = version
+        self._log("register", dep_type, dep_id, version, tick)
 
     def version(self, dep_type, dep_id):
         return self._entities.get((dep_type, dep_id))
 
-    def bump(self, dep_type, dep_id):
+    def version_at(self, dep_type, dep_id, at_tick):
+        """Version as of the tick — the latest event at or before at_tick.
+        None when the entity was not yet registered, or had been substituted
+        away, as of that tick."""
+        best = None
+        for e in self._events:
+            if (e["dep_type"] == dep_type and e["dep_id"] == dep_id
+                    and e["tick"] <= at_tick
+                    and (best is None or e["tick"] >= best["tick"])):
+                best = e
+        if best is None or best["kind"] == "remove":
+            return None
+        return best["version"]
+
+    def bump(self, dep_type, dep_id, tick=0):
         key = (dep_type, dep_id)
         if key not in self._entities:
             raise KeyError(dep_id)
         self._entities[key] += 1
+        self._log("bump", dep_type, dep_id, self._entities[key], tick)
         return self._entities[key]
 
-    def replace(self, dep_type, old_id, new_id, version=1):
+    def replace(self, dep_type, old_id, new_id, version=1, tick=0):
         """Entity substitution (different model family, different benchmark):
         the old entity ceases to be current entirely."""
         if (dep_type, old_id) in self._entities:
+            self._log("remove", dep_type, old_id, None, tick)
             del self._entities[(dep_type, old_id)]
         self._entities[(dep_type, new_id)] = version
+        self._log("register", dep_type, new_id, version, tick)
+
+    def events(self):
+        return tuple(dict(e) for e in self._events)
 
 
 # ---------------------------------------------------------------------------
@@ -460,14 +491,17 @@ class SimMemory:
                 and cur.availability_tick == orig.availability_tick
                 and cur.created_tick == orig.created_tick)
 
-    def register_confound(self, measurement_id, note, provenance):
+    def register_confound(self, measurement_id, note, provenance, availability_tick=None):
         """A confound does not modify the measurement. It is recorded as new
         evidence; interpretations depending on the measurement inherit
-        invalidation through effective-status computation."""
+        invalidation through effective-status computation. The tick is the
+        confound's availability — replay at earlier ticks must not see it."""
         if measurement_id not in self._measurements:
             raise KeyError(measurement_id)
         record = {"measurement_id": measurement_id, "note": note,
-                  "provenance": provenance, "tick": self._next_tick()}
+                  "provenance": provenance,
+                  "tick": (availability_tick if availability_tick is not None
+                           else self._next_tick())}
         self._confounds.setdefault(measurement_id, []).append(record)
         cur = self._measurements[measurement_id]
         self._measurements[measurement_id] = replace(cur, confounded=True)
@@ -605,8 +639,18 @@ class SimMemory:
     def interpretation_history(self, interpretation_id):
         return tuple(self._interpretations.get(interpretation_id, ()))
 
+    def confounded_at(self, measurement_id, at_tick):
+        """Confound state as of the tick — a confound registered later must
+        not invalidate a conclusion at a tick that predates it."""
+        return any(c["tick"] <= at_tick for c in self._confounds.get(measurement_id, []))
+
     # -- effective status: dependency checking precedes intrinsic status -------
-    def effective_status(self, interpretation_or_id, _seen=None):
+    def effective_status(self, interpretation_or_id, _seen=None, at_tick=None):
+        """at_tick None evaluates against current state; with at_tick, every
+        dependency check runs against the world as of that tick: registry
+        versions via the event log, chain heads as of the tick, confound
+        registrations as of the tick. Dependency-before-intrinsic precedence
+        holds at every tick."""
         interp = (self.interpretation(interpretation_or_id)
                   if isinstance(interpretation_or_id, str) else interpretation_or_id)
         if interp is None:
@@ -621,14 +665,24 @@ class SimMemory:
                 if versions is None:
                     return STALE
                 dep_interp = versions[-1]
+                if at_tick is not None and dep_interp.availability_tick > at_tick:
+                    continue  # basis did not exist at the tick — cannot have influenced it
                 # Pins track the chain head: the dependency was written against the
                 # basis chain as it was, so any revision of that chain — however
                 # minor — flags dependent conclusions for re-examination.
                 owner = self._hypotheses.get(dep_interp.hypothesis_id)
-                chain_head_version = len(owner.interpretations) if owner else 0
+                if owner is None:
+                    chain_head_version = 0
+                elif at_tick is None:
+                    chain_head_version = len(owner.interpretations)
+                else:
+                    chain_head_version = sum(
+                        1 for x in owner.interpretations
+                        if self.interpretation(x) is not None
+                        and self.interpretation(x).availability_tick <= at_tick)
                 if chain_head_version != dep.version:
                     return STALE  # basis was revised — dependent conclusions need re-examination
-                dep_status = self.effective_status(dep_interp, seen)
+                dep_status = self.effective_status(dep_interp, seen, at_tick)
                 if dep_status in (STALE, APPLICABILITY_UNKNOWN):
                     return STALE
                 if dep_status in (REFUTED_CONDITIONAL, INSUFFICIENT_EVIDENCE, SUPERSEDED):
@@ -637,14 +691,19 @@ class SimMemory:
                 m = self._measurements.get(dep.dep_id)
                 if m is None:
                     return STALE
-                if m.confounded:
+                confounded = (self.confounded_at(dep.dep_id, at_tick)
+                              if at_tick is not None else m.confounded)
+                if confounded:
                     return STALE  # basis evidence confounded — conclusions need re-examination
             else:
-                current = self.registry.version(dep.dep_type, dep.dep_id)
+                if at_tick is None:
+                    current = self.registry.version(dep.dep_type, dep.dep_id)
+                else:
+                    current = self.registry.version_at(dep.dep_type, dep.dep_id, at_tick)
                 if current is None:
-                    return APPLICABILITY_UNKNOWN  # entity substituted away (transfer)
+                    return APPLICABILITY_UNKNOWN  # entity absent (transfer or unregistered) at this tick
                 if current != dep.version:
-                    return STALE  # newer version of the same entity exists
+                    return STALE  # newer version of the same entity exists (as of the tick)
         return interp.status
 
     def hypothesis_status(self, hypothesis_id):
@@ -656,14 +715,14 @@ class SimMemory:
 
     def status_at_tick(self, hypothesis_id, tick):
         """Chain-head status as of a replay tick: interpretation revision
-        history is replayed, not just availability. Dependency-version checks
-        still run against the current registry (not tick-versioned) — a
-        documented approximation. Returns None when no interpretation was
-        available at the tick."""
+        history is replayed, not just availability, and every dependency
+        check runs against the world as of the tick (registry event log,
+        chain heads, confound registrations). Returns None when no
+        interpretation was available at the tick."""
         head = self.interpretation_head_at_tick(hypothesis_id, tick)
         if head is None:
             return None
-        return self.effective_status(head)
+        return self.effective_status(head, at_tick=tick)
 
     def interpretation_head_at_tick(self, hypothesis_id, tick):
         """Latest interpretation available at the tick (None if none was)."""
@@ -714,13 +773,16 @@ class SimMemory:
         return tuple(self._reconsideration_events)
 
     # -- ontology revision -------------------------------------------------------
-    def revise_ontology(self, **kwargs):
+    def revise_ontology(self, effective_tick=None, **kwargs):
         """Ontology revision is itself versioned and dependency-aware: entries
         keep their original classification and pinned ontology version. The
         registry bump makes ontology-dependent interpretations stale until
-        re-examined — revision is not silent."""
+        re-examined — revision is not silent. The bump is an event with a
+        tick: replay at earlier ticks must see the pre-revision ontology."""
         self.ontology = self.ontology.revise(**kwargs)
-        self.registry.bump(DEP_ONTOLOGY, "sim_ontology")
+        self.registry.bump(DEP_ONTOLOGY, "sim_ontology",
+                           tick=effective_tick if effective_tick is not None
+                           else self._next_tick())
         return self.ontology
 
     # -- structural retrieval: no LLM anywhere ---------------------------------
@@ -798,8 +860,16 @@ class SimMemory:
             "n_lineage_nodes": len(self.lineage.nodes()),
             "hypotheses": [self._hypotheses[k].as_dict() for k in sorted(self._hypotheses)],
             "measurements": [self._measurements[k].as_dict() for k in sorted(self._measurements)],
+            "interpretations": {iid: [v.as_dict() for v in versions]
+                                for iid, versions in sorted(self._interpretations.items())},
+            "confounds": {mid: list(records)
+                          for mid, records in sorted(self._confounds.items())},
+            "registry_events": [dict(e) for e in self._events_snapshot()],
             "reconsideration_events": list(self._reconsideration_events),
         }
+
+    def _events_snapshot(self):
+        return self.registry.events()
 
     def digest(self):
         return sha256_text(canonical_json(self.snapshot()))

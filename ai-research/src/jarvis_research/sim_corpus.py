@@ -194,7 +194,12 @@ def build_gold_corpus():
         provenance={"curation": "manual"}, availability_tick=18)
 
     # ---- ontology revision v0.2: corpus encoding reveals vocabulary gaps -----
+    # The vocabulary gap was discovered during corpus construction (2026-11-28),
+    # not during simulated history — the revision is an encoding-time event at
+    # tick 100, after all historical ticks (11-99). Replay at any historical
+    # tick sees the pre-revision ontology; the end state sees v0.2.
     mem.revise_ontology(
+        effective_tick=100,
         add=[OntologyCategory("observation_channel_correspondence", "domain", 2, None,
                               "feedback value determined by correspondence with intervention"),
              OntologyCategory("measurement_confound", "domain", 2, None,
