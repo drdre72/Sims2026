@@ -86,6 +86,7 @@ class TestConsumptionHarness(unittest.TestCase):
   renders=[render_mechanical_matrix(s) for s in self.matrix]
   self.assertEqual(sum(r['fidelity_correct'] for r in renders),37)
   self.assertTrue(all(r['neural_output_tokens']==0 for r in renders))
+  self.assertTrue(all(not r['stale_value_emitted'] for r in renders))
   stale=renders[-1]
   self.assertEqual(stale['render_key'],'stale'); self.assertFalse(stale['stale_value_emitted'])
   self.assertNotIn('Row C',stale['rendered_text'])

@@ -376,9 +376,11 @@ def render_mechanical_matrix(scenario):
     fidelity = key == expected_key
     if status == RESOLVED:
         fidelity = fidelity and unique == scenario["expected_report"]
+    stale_value_emitted = (scenario["state_group"] == "stale" and scenario["cached_unique"] is not None
+                           and f"Row {scenario['cached_unique']}" in text)
     return {"scenario_id": scenario["scenario_id"], "family": scenario["family"], "state_group": scenario["state_group"],
             "render_key": key, "rendered_text": text, "rendered_status": status, "mechanical_answer": unique,
-            "fidelity_correct": fidelity, "stale_value_emitted": scenario["cached_unique"] is not None and scenario["cached_unique"] in text,
+            "fidelity_correct": fidelity, "stale_value_emitted": stale_value_emitted,
             "neural_input_tokens": 0, "neural_output_tokens": 0, "latency_s": 0.0}
 
 
