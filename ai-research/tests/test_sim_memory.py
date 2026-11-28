@@ -188,6 +188,27 @@ class TestAcceptance6ReplayIsolation(unittest.TestCase):
         self.assertEqual(mem.retrieve(ontology_category='sparse_scalar_edit',at_tick=50),())
         self.assertEqual(len(mem.retrieve(ontology_category='sparse_scalar_edit',at_tick=100)),1)
 
+    def test_match_keys_respect_availability(self):
+        """A visible hypothesis must not be found through a target or dependency
+        that only became available later; the at-tick interpretation head's
+        dependencies are what match."""
+        mem=base_memory()
+        mem.propose_hypothesis('H1','h','ckpt-base','sparse_scalar_edit',
+            depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],availability_tick=5)
+        mem.record_attempt('H1','a1','layer_11','sparse_additive','ckpt-base',availability_tick=5)
+        mem.record_attempt('H1','a2','layer_12','sparse_additive','ckpt-base',availability_tick=45)
+        mem.record_measurement('m-x','accuracy',{'value':1},'evolve',{'source':'x'},availability_tick=45)
+        mem.add_interpretation('H1',SUPPORTED,'later','r',
+            depends_on=[Dependency(DEP_MEASUREMENT,'m-x',1)],availability_tick=45)
+        self.assertEqual(mem.retrieve(target_component='layer_12',at_tick=10),())
+        self.assertEqual(mem.retrieve(dep_type=DEP_MEASUREMENT,at_tick=10),())
+        self.assertEqual(len(mem.retrieve(target_component='layer_11',at_tick=10)),1)
+        self.assertEqual(len(mem.retrieve(dep_type=DEP_MODEL,at_tick=10)),1)
+        self.assertEqual(len(mem.retrieve(target_component='layer_12',at_tick=45)),1)
+        self.assertEqual(len(mem.retrieve(dep_type=DEP_MEASUREMENT,at_tick=45)),1)
+        self.assertEqual(mem.retrieve(dep_type=DEP_MODEL,at_tick=45),())
+        self.assertEqual(len(mem.retrieve(dep_type=DEP_MEASUREMENT)),1)
+
 
 class TestAcceptance7SimilarityNotEquivalence(unittest.TestCase):
     def test_structural_similarity_never_merges(self):

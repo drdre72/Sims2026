@@ -660,15 +660,19 @@ class SimMemory:
         still run against the current registry (not tick-versioned) — a
         documented approximation. Returns None when no interpretation was
         available at the tick."""
-        hyp = self._hypotheses[hypothesis_id]
-        head = None
-        for iid in hyp.interpretations:
-            interp = self.interpretation(iid)
-            if interp is not None and interp.availability_tick <= tick:
-                head = interp
+        head = self.interpretation_head_at_tick(hypothesis_id, tick)
         if head is None:
             return None
         return self.effective_status(head)
+
+    def interpretation_head_at_tick(self, hypothesis_id, tick):
+        """Latest interpretation available at the tick (None if none was)."""
+        head = None
+        for iid in self._hypotheses[hypothesis_id].interpretations:
+            interp = self.interpretation(iid)
+            if interp is not None and interp.availability_tick <= tick:
+                head = interp
+        return head
 
     # -- reconsideration -------------------------------------------------------
     def reevaluate(self, event):
@@ -749,11 +753,16 @@ class SimMemory:
                 elif self.ontology.resolve(ontology_category) == hyp.ontology_category:
                     keys.append("ontology_category_renamed")
             if target_component is not None:
-                if any(a.target == target_component for a in hyp.attempts):
+                if any(a.target == target_component and visible(a.availability_tick)
+                       for a in hyp.attempts):
                     keys.append("target_component")
             if dep_type is not None:
-                iid = hyp.current_interpretation_id()
-                deps = self.interpretation(iid).depends_on if iid else ()
+                if at_tick is None:
+                    iid = hyp.current_interpretation_id()
+                    interp = self.interpretation(iid) if iid else None
+                else:
+                    interp = self.interpretation_head_at_tick(hyp.hypothesis_id, at_tick)
+                deps = interp.depends_on if interp is not None else ()
                 if any(d.dep_type == dep_type and (dep_id is None or d.dep_id == dep_id) for d in deps):
                     keys.append("dependency_overlap")
             if not keys:
