@@ -1685,3 +1685,36 @@ The immediate architectural consequence is stronger than “use better prompts.�
 
 The next open problem is therefore not merely typed-state consumption. It is **policy-boundary grounding**: how to represent action vocabularies and state-to-policy constraints so that `none`, `unknown`, `invalid`, `insufficient_evidence`, and `abstain` cannot collapse into one another.
 
+
+## 41. HZN-SIM-00 — self-improvement memory substrate (CPU-only, 247/247 tests)
+
+Evidence: `evidence/sim_gold_corpus_v1.json`. Implementation: `src/jarvis_research/sim_memory.py`, `sim_corpus.py`. Design: `hzn_sim_01_design.md` with the binding review disposition of 2026-11-28. No GPU execution; no neural consumption measured. This is substrate construction with deterministic semantics, following the cognitive-bus pattern.
+
+External motivation: Yu et al. (arXiv:2611.18856v1) showed process memory improves continual harness optimization, but their applicability checking is advisory prose consumed by the proposer LLM. HZN-SIM-00 implements the missing alternative: **mechanical, dependency-scoped invalidation** over a hypothesis-centric developmental record.
+
+### What exists now
+
+- **Immutable measurements** with partition discipline (`practice`/`evolve`/`held_out`/`sealed`), availability ticks for chronological replay, and confound registration that never mutates the underlying measurement. Sealed measurements must be reference-only and never enter any retrieval context.
+- **Revisable interpretations** as versioned chains: original interpretations are preserved with supersession links; revisions append, never rewrite. Retrospective encodings are flagged honestly; contemporaneous predictions are the only ones permitted (fabrication of retrospective predictions is prohibited at insertion).
+- **Hypothesis-centric organization** with machine-checkable versus judgment-requiring reconsideration conditions kept structurally distinct.
+- **State-lineage DAG** where rollback creates a new node with an explicit rollback edge — computational state returns, epistemic state is untouched by construction (rollback without amnesia, verified by digest comparison).
+- **Three-layer versioned ontology** seeded from the gate0_5 failure taxonomy, revised to v0.2 during corpus encoding itself when gate1_2 observation work required vocabulary the seed lacked — exactly the refinement dynamic the review predicted. `unknown` is mandatory and cannot be deprecated; renames resolve to candidates, never equivalences.
+- **Structural retrieval** with clearance filtering, availability-time replay isolation, and an explicit `candidate_not_equivalent` contract: structural similarity produces candidates for comparison, never merges distinct causal hypotheses.
+
+### Three design decisions that emerged from implementation
+
+1. **Dependency pins track chain heads, not frozen objects.** Because interpretations revise by appending new chain links, pinning a dependency to a specific interpretation object could never detect revision. Pins therefore track the hypothesis chain's head version: any revision of a basis — however minor — flags dependent conclusions `stale` for re-examination. This is what makes "revised interpretations propagate invalidation downstream" mechanical rather than advisory.
+2. **Revisions inherit their dependency frame by default.** Corpus encoding exposed the failure mode: the refuted revision of the EPI-06 contract hypothesis initially dropped its entire dependency frame, making it immune to transfer invalidation. A revision re-examines the same evidential basis unless it explicitly redeclares; inheritance is now the default and redeclaration is explicit.
+3. **Acyclicity is enforced at hypothesis-chain granularity.** Object-level interpretation graphs cannot become cyclic (revisions are new nodes), but chain semantics can: H2 depending on H1's chain while H1's revision depends on H2's chain would make invalidation propagation circular. Cycles are rejected at insertion.
+
+### Acceptance tests — all eight review requirements pass deterministically
+
+Confound discovery invalidates dependent interpretations without modifying measurements; revision propagates downstream; rollback preserves epistemic state; conditional refutations become eligible for reconsideration when their recorded conditions change (and hypotheses in good standing on intact evidence do not over-trigger); ontology revision preserves historical classification and provenance; replay cannot access evidence before its availability tick; structural similarity never merges; unrelated state changes do not invalidate independent evidence (the bus-semantics entry survives model checkpoint bumps and transfers that stale or applicability-unknown every model-dependent entry).
+
+### The gold corpus is real developmental history
+
+13 hypotheses, 14 measurements, encoded with hybrid discipline: objective metrics extracted programmatically from evidence JSONs (extraction derives counts from raw records rather than trusting summary aggregation), causal interpretation curated. The corpus deliberately includes the revision chains: the Phase A self-edit prediction that Phase B refuted (proposed → refuted_conditional, original preserved), the bus invalidation semantics chain (retrospective-flagged assumption → refuted by user reproduction → supported post-efc14c0), and the EPI-06 contract hypothesis carrying the corpus's first real contemporaneous prediction — preregistered ≥15/18, observed 11/18, prediction error 0.222 computed mechanically, never narrated. The abstain pair is encoded as the division-of-labor demonstration: identical typed inputs, mechanical policy replay 49/49 by construction, neural decision 26/49 measured.
+
+### What this does not establish
+
+Nothing neural has been measured. SIM-00 shows the semantics can be implemented and tested deterministically; it says nothing about whether memory-informed proposal improves development direction. That is HZN-SIM-01's question, and it remains unpreregistered. The corpus is also small and curated by one author — the semi-automatic ingestion path exists only for the two metric extraction helpers and has not been validated at scale.
