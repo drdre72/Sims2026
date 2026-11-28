@@ -1730,3 +1730,29 @@ Five scored decision points carry seven required landmarks (Phase B design → t
 Binding thresholds are go/no-go design signals for SIM-01A only, not evidence of loop-level utility: landmark recall ≥ 5/7, full-hit on ≥ 3/5 scored DPs, structural ≥ random and ≥ recency on a DP majority, zero temporal leakage, and a precision warning if mean candidate-set size exceeds half the visible corpus. Misses are classified by cause (`category_absent`, `vocabulary_mismatch`, `dependency_not_declared`, `not_available_at_tick`); vocabulary-gap failures direct ontology refinement before SIM-01A and are never rescored after post-hoc category additions. Single-author confound is stated in the spec: this measures structural connectivity of the curated graph, not unbiased discoverability.
 
 Related-work pass (same day, `hzn_sim_related_work.md`): the honest position after a focused literature comparison is that HZN-SIM is not the first system to remember failures (RRSI, Google SIM), record predictions of its own interventions (IDM, arXiv:2610.13991), revise beliefs with supersession chains (BELIEFMEM), apply mechanical dependency retraction (Doyle's TMS, 1979), or evaluate memory by prefix-only replay (LSREP, arXiv:2609.16730). The defensible claim narrows to the synthesis: TMS-grade mechanical dependency semantics — including versioned external dependencies (model/benchmark/harness), conditional refutation with machine-checkable reconsideration conditions, and interpretations as invalidatable derived states — applied to a self-improvement system's own developmental record, evaluated by replay and calibration endpoints. Independent support found: agent-memory surveys name self-reinforcing error and missing versioning/retirement/rollback as recognized open gaps, and RRSI's documented accepted-flag conflation is a live instance of the failure mode SIM-00's reconsideration machinery addresses.
+
+## 43. HZN-SIM-00.5 first run — retrieval works, through breadth; three replay-fidelity bugs caught
+
+Evidence: `evidence/sim_00_5_replay_v1.json` (digest `e5e56ea6…`, seeded, deterministic). Implementation `src/jarvis_research/sim_replay.py`, tests `tests/test_sim_replay.py` (29), runner `results/sim_00_5/run_replay.py`. Full CPU suite 276/276. No GPU, no neural calls.
+
+### Verdict (mechanically applied from the preregistered thresholds)
+
+**SUPPORTED_WITH_PRECISION_WARNING.** Landmark recall 6/7, full-hit 4/5 scored DPs, structural ≥ random on 4/5 DPs, structural ≥ recency on 4/5 DPs, zero temporal leakage, availability filter demonstrably load-bearing (arm L surfaces future evidence at 5 of 6 DPs). But mean candidate fraction 0.824 — recall is achieved through breadth, and SIM-01A must add deterministic narrowing/ranking before any loop.
+
+### The one miss and what it diagnoses
+
+`H-EPI05-M02` unsurfaced at DP-3 (EPI-06 battery design), classified `vocabulary_mismatch`. The prereg's own vocabulary ("neural retranscription") maps to `transcription_failure`, which had no visible holder; the m02 landmark sits pinned under `display_order_copying` with no harness dependency declared. Both a category-fragmentation finding and a dependency-encoding gap — exactly the preflight's purpose. Per the frozen discipline this is **not** rescored after any post-hoc fix; it informs SIM-01's ontology refinement.
+
+The no-landmark control (DP-4, tie-bug fix) behaved: 4 candidates returned, none scored as should-have-been-surfaced — memory did not manufacture relevance on a genuinely novel decision.
+
+### The bug catches (status fidelity)
+
+The preregistered bug detector found three real replay-fidelity defects: `retrieve(at_tick=…)` reports each hypothesis's **end-state** chain-head status, not the status as of the replay tick. A tick-20 view of the self-edit hypothesis reports `refuted_conditional` when the question was then open (`testing`); a tick-90 view of the EPI-06 contract hypothesis reports its post-hoc refutation during the very decision that preregistered it; a tick-83 view of the bus-semantics entry reports `supported` before the fix landed. Replay filters availability, not interpretation-chain history. Per the frozen spec §7 these are fixed in a follow-up commit with regression tests and the preflight re-run in full with both result sets preserved — the fix and re-run follow this entry.
+
+### Cascade breadth (secondary, descriptive)
+
+Synthetic transfer probes on the final corpus state: model replacement invalidates 10/13 hypotheses to `applicability_unknown`; harness bump stales 6/13; eval bump stales 1/13. The historical probes returned zero — not a substrate failure but a corpus finding: the gold corpus declares **no interpretation-to-interpretation edges, no direct measurement dependencies, and no ontology dependencies**, so recursive invalidation is exercised only by unit tests, not by real history. Corpus expansion for SIM-01 must declare measurement and interpretation dependencies or the recursive machinery has nothing to propagate along.
+
+### Honest boundary
+
+This is a structural-connectivity measurement on a small single-authored curated graph (13 hypotheses), not an unbiased discoverability test, and it says nothing about neural consumption. The verdict's real content: retrieval does not miss what the documents name — but it finds it by sweeping broadly, and the vocabulary gap is real.

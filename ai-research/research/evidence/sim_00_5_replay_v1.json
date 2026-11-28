@@ -1,0 +1,521 @@
+{
+  "cascade": {
+    "historical": {
+      "H1_bus_chain_revision": {
+        "affected": [],
+        "count": 0,
+        "note": "no interpretation-to-interpretation edges exist in the corpus \u2014 dependency-declaration gap, not a substrate failure"
+      },
+      "H2_ontology_revision": {
+        "affected": [],
+        "count": 0,
+        "note": "no interpretation declares an ontology dependency \u2014 gap finding"
+      }
+    },
+    "synthetic": {
+      "P1_model_replacement": {
+        "affected": [
+          "H-EPI05-BINDING",
+          "H-EPI05-M02",
+          "H-EPI06-CONTRACT-REPAIR",
+          "H-EPI06-POLICY-BOUNDARY",
+          "H-G05-COHERENT-LETHAL",
+          "H-G05-DEPTH-GRADIENT",
+          "H-G05-SAFE-NULL",
+          "H-G05-SELFEDIT-MECHANISM",
+          "H-G05-SPARSE-SAFE",
+          "H-G12-CORRESPONDENCE"
+        ],
+        "count": 10
+      },
+      "P2_harness_bump": {
+        "affected": [
+          "H-BUS-STALE-PRECEDENCE",
+          "H-EPI05-BINDING",
+          "H-EPI06-CONTRACT-REPAIR",
+          "H-EPI06-MECH-RENDER",
+          "H-G12-CORRESPONDENCE",
+          "H-G12-SHARED-PARENT"
+        ],
+        "count": 6
+      },
+      "P3_eval_bump": {
+        "affected": [
+          "H-EPI06-CONTRACT-REPAIR"
+        ],
+        "count": 1
+      },
+      "P4_confound_registration": {
+        "affected": [],
+        "count": 0,
+        "note": "no direct measurement dependencies declared \u2014 gap finding"
+      },
+      "P5_ontology_bump": {
+        "affected": [],
+        "count": 0
+      }
+    }
+  },
+  "decision_points": [
+    {
+      "arms": {
+        "R_analytic": 1.0,
+        "R_sampled": {
+          "per_landmark_rate": {
+            "H-G05-SELFEDIT-MECHANISM": 1.0
+          },
+          "sampled_hit_rate": 1.0
+        },
+        "S_ge_R": true,
+        "S_ge_Y": true,
+        "S_hit": 1,
+        "Y_hit": true,
+        "Y_per_landmark": {
+          "H-G05-SELFEDIT-MECHANISM": true
+        },
+        "k": 5,
+        "n_visible": 5
+      },
+      "control": false,
+      "dp_id": "DP-1",
+      "frame_full": {
+        "candidates": [
+          "H-G05-COHERENT-LETHAL",
+          "H-G05-DEPTH-GRADIENT",
+          "H-G05-SAFE-NULL",
+          "H-G05-SELFEDIT-MECHANISM",
+          "H-G05-SPARSE-SAFE"
+        ],
+        "distractor_load": 2,
+        "fraction_of_visible": 1.0,
+        "hit": true,
+        "landmarks": {
+          "H-G05-COHERENT-LETHAL": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-G05-DEPTH-GRADIENT": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-G05-SELFEDIT-MECHANISM": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 5
+      },
+      "frame_minimal": {
+        "candidates": [
+          "H-G05-SELFEDIT-MECHANISM"
+        ],
+        "distractor_load": 0,
+        "fraction_of_visible": 0.2,
+        "hit": true,
+        "landmarks": {
+          "H-G05-COHERENT-LETHAL": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-G05-DEPTH-GRADIENT": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-G05-SELFEDIT-MECHANISM": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 1
+      },
+      "n_visible": 5,
+      "status_mismatches": [
+        {
+          "at_tick_status": "testing",
+          "dp_tick": 20,
+          "end_state_status": "refuted_conditional",
+          "hypothesis_id": "H-G05-SELFEDIT-MECHANISM"
+        }
+      ],
+      "tick": 20
+    },
+    {
+      "arms": {
+        "R_analytic": 1.0,
+        "R_sampled": {
+          "per_landmark_rate": {
+            "H-G05-SAFE-NULL": 1.0
+          },
+          "sampled_hit_rate": 1.0
+        },
+        "S_ge_R": true,
+        "S_ge_Y": true,
+        "S_hit": 1,
+        "Y_hit": true,
+        "Y_per_landmark": {
+          "H-G05-SAFE-NULL": true
+        },
+        "k": 5,
+        "n_visible": 5
+      },
+      "control": false,
+      "dp_id": "DP-2",
+      "frame_full": {
+        "candidates": [
+          "H-G05-COHERENT-LETHAL",
+          "H-G05-DEPTH-GRADIENT",
+          "H-G05-SAFE-NULL",
+          "H-G05-SELFEDIT-MECHANISM",
+          "H-G05-SPARSE-SAFE"
+        ],
+        "distractor_load": 2,
+        "fraction_of_visible": 1.0,
+        "hit": true,
+        "landmarks": {
+          "H-G05-COHERENT-LETHAL": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-G05-DEPTH-GRADIENT": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-G05-SAFE-NULL": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 5
+      },
+      "frame_minimal": {
+        "candidates": [
+          "H-G05-SAFE-NULL"
+        ],
+        "distractor_load": 0,
+        "fraction_of_visible": 0.2,
+        "hit": true,
+        "landmarks": {
+          "H-G05-COHERENT-LETHAL": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-G05-DEPTH-GRADIENT": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-G05-SAFE-NULL": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 1
+      },
+      "n_visible": 5,
+      "status_mismatches": [],
+      "tick": 30
+    },
+    {
+      "arms": {
+        "R_analytic": 0.06060606060606061,
+        "R_sampled": {
+          "per_landmark_rate": {
+            "H-BUS-STALE-PRECEDENCE": 0.479,
+            "H-EPI05-BINDING": 0.441,
+            "H-EPI05-M02": 0.43
+          },
+          "sampled_hit_rate": 0.06
+        },
+        "S_ge_R": false,
+        "S_ge_Y": false,
+        "S_hit": 0,
+        "Y_hit": true,
+        "Y_per_landmark": {
+          "H-BUS-STALE-PRECEDENCE": true,
+          "H-EPI05-BINDING": true,
+          "H-EPI05-M02": true
+        },
+        "k": 5,
+        "n_visible": 11
+      },
+      "control": false,
+      "dp_id": "DP-3",
+      "frame_full": {
+        "candidates": [
+          "H-BUS-STALE-PRECEDENCE",
+          "H-EPI05-BINDING",
+          "H-EPI06-CONTRACT-REPAIR",
+          "H-G12-CORRESPONDENCE",
+          "H-G12-SHARED-PARENT"
+        ],
+        "distractor_load": 3,
+        "fraction_of_visible": 0.45454545454545453,
+        "hit": false,
+        "landmarks": {
+          "H-BUS-STALE-PRECEDENCE": {
+            "surfaced": true
+          },
+          "H-EPI05-BINDING": {
+            "surfaced": true
+          },
+          "H-EPI05-M02": {
+            "miss_cause": "vocabulary_mismatch",
+            "surfaced": false
+          }
+        },
+        "partial": true,
+        "size": 5
+      },
+      "frame_minimal": {
+        "candidates": [
+          "H-BUS-STALE-PRECEDENCE"
+        ],
+        "distractor_load": 0,
+        "fraction_of_visible": 0.09090909090909091,
+        "hit": false,
+        "landmarks": {
+          "H-BUS-STALE-PRECEDENCE": {
+            "surfaced": true
+          },
+          "H-EPI05-BINDING": {
+            "miss_cause": "vocabulary_mismatch",
+            "surfaced": false
+          },
+          "H-EPI05-M02": {
+            "miss_cause": "vocabulary_mismatch",
+            "surfaced": false
+          }
+        },
+        "partial": true,
+        "size": 1
+      },
+      "n_visible": 11,
+      "status_mismatches": [
+        {
+          "at_tick_status": "testing",
+          "dp_tick": 90,
+          "end_state_status": "refuted_conditional",
+          "hypothesis_id": "H-EPI06-CONTRACT-REPAIR"
+        }
+      ],
+      "tick": 90
+    },
+    {
+      "control": true,
+      "dp_id": "DP-4",
+      "frame_full": {
+        "candidates": [
+          "H-BUS-STALE-PRECEDENCE",
+          "H-EPI05-BINDING",
+          "H-G12-CORRESPONDENCE",
+          "H-G12-SHARED-PARENT"
+        ],
+        "distractor_load": 4,
+        "fraction_of_visible": 0.4,
+        "hit": false,
+        "landmarks": {},
+        "partial": false,
+        "size": 4
+      },
+      "frame_minimal": {
+        "candidates": [
+          "H-BUS-STALE-PRECEDENCE"
+        ],
+        "distractor_load": 1,
+        "fraction_of_visible": 0.1,
+        "hit": false,
+        "landmarks": {},
+        "partial": false,
+        "size": 1
+      },
+      "n_visible": 10,
+      "status_mismatches": [
+        {
+          "at_tick_status": "refuted_conditional",
+          "dp_tick": 83,
+          "end_state_status": "supported",
+          "hypothesis_id": "H-BUS-STALE-PRECEDENCE"
+        }
+      ],
+      "tick": 83
+    },
+    {
+      "arms": {
+        "R_analytic": 0.8461538461538461,
+        "R_sampled": {
+          "per_landmark_rate": {
+            "H-EPI06-POLICY-BOUNDARY": 0.857
+          },
+          "sampled_hit_rate": 0.857
+        },
+        "S_ge_R": true,
+        "S_ge_Y": true,
+        "S_hit": 1,
+        "Y_hit": true,
+        "Y_per_landmark": {
+          "H-EPI06-POLICY-BOUNDARY": true
+        },
+        "k": 11,
+        "n_visible": 13
+      },
+      "control": false,
+      "dp_id": "DP-5",
+      "frame_full": {
+        "candidates": [
+          "H-EPI05-BINDING",
+          "H-EPI05-M02",
+          "H-EPI06-CONTRACT-REPAIR",
+          "H-EPI06-MECH-RENDER",
+          "H-EPI06-POLICY-BOUNDARY",
+          "H-G05-COHERENT-LETHAL",
+          "H-G05-DEPTH-GRADIENT",
+          "H-G05-SAFE-NULL",
+          "H-G05-SELFEDIT-MECHANISM",
+          "H-G05-SPARSE-SAFE",
+          "H-G12-CORRESPONDENCE"
+        ],
+        "distractor_load": 8,
+        "fraction_of_visible": 0.8461538461538461,
+        "hit": true,
+        "landmarks": {
+          "H-EPI05-BINDING": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-EPI06-MECH-RENDER": {
+            "surfaced": true,
+            "unscored": true
+          },
+          "H-EPI06-POLICY-BOUNDARY": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 11
+      },
+      "frame_minimal": {
+        "candidates": [
+          "H-EPI06-POLICY-BOUNDARY"
+        ],
+        "distractor_load": 0,
+        "fraction_of_visible": 0.07692307692307693,
+        "hit": true,
+        "landmarks": {
+          "H-EPI05-BINDING": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-EPI06-MECH-RENDER": {
+            "surfaced": false,
+            "unscored": true
+          },
+          "H-EPI06-POLICY-BOUNDARY": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 1
+      },
+      "n_visible": 13,
+      "status_mismatches": [],
+      "tick": 99
+    },
+    {
+      "arms": {
+        "R_analytic": 0.8181818181818182,
+        "R_sampled": {
+          "per_landmark_rate": {
+            "H-EPI05-M02": 0.799
+          },
+          "sampled_hit_rate": 0.799
+        },
+        "S_ge_R": true,
+        "S_ge_Y": true,
+        "S_hit": 1,
+        "Y_hit": true,
+        "Y_per_landmark": {
+          "H-EPI05-M02": true
+        },
+        "k": 9,
+        "n_visible": 11
+      },
+      "control": false,
+      "dp_id": "DP-6",
+      "frame_full": {
+        "candidates": [
+          "H-EPI05-BINDING",
+          "H-EPI05-M02",
+          "H-EPI06-CONTRACT-REPAIR",
+          "H-G05-COHERENT-LETHAL",
+          "H-G05-DEPTH-GRADIENT",
+          "H-G05-SAFE-NULL",
+          "H-G05-SELFEDIT-MECHANISM",
+          "H-G05-SPARSE-SAFE",
+          "H-G12-CORRESPONDENCE"
+        ],
+        "distractor_load": 8,
+        "fraction_of_visible": 0.8181818181818182,
+        "hit": true,
+        "landmarks": {
+          "H-EPI05-M02": {
+            "surfaced": true
+          }
+        },
+        "partial": false,
+        "size": 9
+      },
+      "frame_minimal": {
+        "candidates": [],
+        "distractor_load": 0,
+        "fraction_of_visible": 0.0,
+        "hit": false,
+        "landmarks": {
+          "H-EPI05-M02": {
+            "miss_cause": "category_absent",
+            "surfaced": false
+          }
+        },
+        "partial": false,
+        "size": 0
+      },
+      "n_visible": 11,
+      "status_mismatches": [],
+      "tick": 94
+    }
+  ],
+  "decision_points_path": "C:\\Users\\Shadow\\Documents\\Sims2026\\ai-research\\research\\evidence\\sim_00_5_decision_points_v1.json",
+  "digest": "e5e56ea62fc795a7d9c3a48b78790459fad1aedf75da902a1ce1df50597e9942",
+  "leakage": {
+    "arm_L_future_counts": {
+      "DP-1": 5,
+      "DP-2": 5,
+      "DP-3": 1,
+      "DP-4": 2,
+      "DP-5": 0,
+      "DP-6": 1
+    },
+    "arm_L_validity": true,
+    "at_tick_violations": 0
+  },
+  "metrics": {
+    "full_hit_dps": 4,
+    "landmark_recall": 0.8571428571428571,
+    "mean_candidate_fraction": 0.8237762237762238,
+    "miss_causes": [
+      "vocabulary_mismatch"
+    ],
+    "s_ge_r_dps": 4,
+    "s_ge_y_dps": 4,
+    "scored_dps": 5,
+    "surfaced_required": 6,
+    "total_required": 7
+  },
+  "n_draws": 1000,
+  "preflight": "HZN-SIM-00.5",
+  "seed": 20261128,
+  "spec": "research/hzn_sim_00_5_replay_preflight.md",
+  "verdict": {
+    "reason": "recall achieved through breadth; SIM-01A must add deterministic narrowing/ranking before the loop",
+    "verdict": "SUPPORTED_WITH_PRECISION_WARNING"
+  },
+  "version": 1
+}
