@@ -60,14 +60,14 @@ class TestGoldCorpus(unittest.TestCase):
         mem=build_gold_corpus()
         self.assertEqual(mem.hypothesis_status('H-BUS-STALE-PRECEDENCE'),SUPPORTED)
         self.assertEqual(mem.hypothesis_status('H-EPI05-M02'),SUPPORTED)
-        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16')
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=110)
         self.assertEqual(mem.hypothesis_status('H-EPI05-M02'),STALE)
         self.assertEqual(mem.hypothesis_status('H-BUS-STALE-PRECEDENCE'),SUPPORTED)
         self.assertEqual(mem.hypothesis_status('H-EPI06-MECH-RENDER'),SUPPORTED)
 
     def test_model_transfer_produces_applicability_unknown(self):
         mem=build_gold_corpus()
-        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1)
+        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1,tick=110)
         self.assertEqual(mem.hypothesis_status('H-EPI06-CONTRACT-REPAIR'),APPLICABILITY_UNKNOWN)
         self.assertEqual(mem.hypothesis_status('H-BUS-STALE-PRECEDENCE'),SUPPORTED)
 
@@ -75,7 +75,7 @@ class TestGoldCorpus(unittest.TestCase):
         """gate0_5 fragility hypotheses carry machine-checkable reconsideration
         on model change; entries in non-good standing become eligible."""
         mem=build_gold_corpus()
-        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1)
+        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1,tick=110)
         events=mem.reevaluate({'kind':'dependency_changed','dep_type':DEP_MODEL,'dep_id':'qwen-next'})
         ids={e['hypothesis_id'] for e in events}
         self.assertIn('H-G05-SPARSE-SAFE',ids)

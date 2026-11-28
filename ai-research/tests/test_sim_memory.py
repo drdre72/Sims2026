@@ -6,10 +6,10 @@ from jarvis_research.sim_memory import *
 
 def base_memory():
     mem=SimMemory()
-    mem.registry.register(DEP_MODEL,'qwen3.5-4b-bf16',1)
-    mem.registry.register(DEP_HARNESS,'gate1_harness',1)
-    mem.registry.register(DEP_EVAL,'gate1_eval_v4',1)
-    mem.registry.register(DEP_ONTOLOGY,'sim_ontology',1)
+    mem.registry.register(DEP_MODEL,'qwen3.5-4b-bf16',1,tick=0)
+    mem.registry.register(DEP_HARNESS,'gate1_harness',1,tick=0)
+    mem.registry.register(DEP_EVAL,'gate1_eval_v4',1,tick=0)
+    mem.registry.register(DEP_ONTOLOGY,'sim_ontology',1,tick=0)
     mem.lineage.add_node('ckpt-base','checkpoint','base qwen3.5-4b',tick=0)
     return mem
 
@@ -154,7 +154,7 @@ class TestAcceptance5OntologyRevision(unittest.TestCase):
         mem=base_memory()
         add_simple_hypothesis(mem,'H1','coherent_dense_edit')
         before=mem.hypothesis('H1')
-        mem.revise_ontology(note='v0.2 refinement')
+        mem.revise_ontology(effective_tick=50,note='v0.2 refinement')
         after=mem.hypothesis('H1')
         self.assertEqual(after.ontology_category,'coherent_dense_edit')
         self.assertEqual(after.ontology_version,1)
@@ -235,14 +235,14 @@ class TestAcceptance8ScopedInvalidation(unittest.TestCase):
             depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],initial_status=SUPPORTED)
         mem.propose_hypothesis('H-BUS','bus semantics are model independent','ckpt-base','invalidation_semantics',
             depends_on=[Dependency(DEP_HARNESS,'gate1_harness',1)],initial_status=SUPPORTED)
-        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16')
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
         self.assertEqual(mem.hypothesis_status('H-MODEL'),STALE)
         self.assertEqual(mem.hypothesis_status('H-BUS'),SUPPORTED)
     def test_transfer_to_different_entity_gives_applicability_unknown(self):
         mem=base_memory()
         mem.propose_hypothesis('H1','model dependent','ckpt-base','quality_collapse_perplexity',
             depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],initial_status=SUPPORTED)
-        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1)
+        mem.registry.replace(DEP_MODEL,'qwen3.5-4b-bf16','qwen-next-7b',1,tick=50)
         self.assertEqual(mem.hypothesis_status('H1'),APPLICABILITY_UNKNOWN)
 
 
@@ -579,3 +579,54 @@ class TestStatusOracle(unittest.TestCase):
                 got=(mem.status_at_tick(hid,tick) if tick is not None
                      else mem.hypothesis_status(hid))
                 self.assertEqual(got,expected,f"{name}: expected {expected}, got {got}")
+
+
+class TestAdversarialReplayFindings(unittest.TestCase):
+    def test_future_ontology_rename_does_not_match_historical_query(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','old category','ckpt-base','coherent_dense_edit',
+            availability_tick=10)
+        mem.revise_ontology(renames={'later_alias':'coherent_dense_edit'},
+            effective_tick=30)
+        self.assertEqual(mem.retrieve(ontology_category='later_alias',at_tick=20),())
+        self.assertEqual(len(mem.retrieve(ontology_category='later_alias',at_tick=40)),1)
+
+    def test_untimed_registry_mutation_cannot_rewrite_history(self):
+        mem=base_memory()
+        mem.propose_hypothesis('H1','old dependency','ckpt-base','coherent_dense_edit',
+            depends_on=[Dependency(DEP_MODEL,'qwen3.5-4b-bf16',1)],
+            initial_status=SUPPORTED,availability_tick=10)
+        with self.assertRaises(ValueError):
+            mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16')
+        self.assertEqual(mem.status_at_tick('H1',20),SUPPORTED)
+
+    def test_lineage_structure_changes_digest_even_at_same_node_count(self):
+        left=base_memory()
+        right=base_memory()
+        left.lineage.add_node('child','checkpoint','child',
+            parents=(('ckpt-base','intervention','a1'),),tick=20)
+        right.lineage.add_node('child','checkpoint','child',
+            parents=(('ckpt-base','rollback',None),),tick=20)
+        self.assertNotEqual(left.digest(),right.digest())
+        self.assertNotEqual(left.snapshot()['lineage'],right.snapshot()['lineage'])
+
+    def test_ontology_revision_sequence_changes_digest(self):
+        left=base_memory()
+        right=base_memory()
+        left.revise_ontology(renames={'a':'unknown'},effective_tick=40)
+        left.revise_ontology(renames={'b':'unknown'},effective_tick=50)
+        right.revise_ontology(renames={'b':'unknown'},effective_tick=40)
+        right.revise_ontology(renames={'a':'unknown'},effective_tick=50)
+        self.assertEqual(left.ontology.version,right.ontology.version)
+        self.assertEqual(left.ontology.renames,right.ontology.renames)
+        self.assertNotEqual(left.digest(),right.digest())
+
+    def test_registry_rejects_backdated_event_without_mutating_state(self):
+        mem=base_memory()
+        mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=50)
+        before=mem.digest()
+        with self.assertRaises(ValueError):
+            mem.registry.bump(DEP_MODEL,'qwen3.5-4b-bf16',tick=20)
+        self.assertEqual(mem.digest(),before)
+        self.assertEqual(mem.registry.version_at(DEP_MODEL,'qwen3.5-4b-bf16',40),1)
+        self.assertEqual(mem.registry.version_at(DEP_MODEL,'qwen3.5-4b-bf16',60),2)

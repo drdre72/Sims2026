@@ -230,6 +230,18 @@ class TestPreflightRun(unittest.TestCase):
         self.assertEqual(m[0]["at_tick_status"],TESTING)
         self.assertEqual(m[0]["reported_status"],"refuted_conditional")
 
+    def test_effective_stale_is_not_a_status_fidelity_mismatch(self):
+        from jarvis_research.sim_replay import status_fidelity
+        mem=build_gold_corpus()
+        mem.registry.bump("model_checkpoint","qwen3.5-4b-bf16",tick=110)
+        dp={"tick":120}
+        actual=mem.status_at_tick("H-EPI05-M02",120)
+        self.assertEqual(actual,"stale")
+        row={"H-EPI05-M02":{"match_keys":[],"status":actual}}
+        self.assertEqual(status_fidelity(mem,dp,row),[])
+        row["H-EPI05-M02"]["status"]="supported"
+        self.assertEqual(len(status_fidelity(mem,dp,row)),1)
+
     def test_expected_battery_outcome(self):
         m=self.result["metrics"]
         self.assertEqual(m["surfaced_required"],6)

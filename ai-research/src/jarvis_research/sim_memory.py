@@ -361,13 +361,22 @@ class DependencyRegistry:
         self._entities = {}  # (dep_type, dep_id) -> version
         self._events = []   # append-only: dicts with kind/dep_type/dep_id/version/tick
 
+    def _validate_tick(self, tick):
+        if isinstance(tick, bool) or not isinstance(tick, int) or tick < 0:
+            raise ValueError("registry tick must be a non-negative integer")
+        if self._events and tick < self._events[-1]["tick"]:
+            raise ValueError("registry events must be appended in tick order")
+
     def _log(self, kind, dep_type, dep_id, version, tick):
+        self._validate_tick(tick)
         self._events.append({"kind": kind, "dep_type": dep_type, "dep_id": dep_id,
                              "version": version, "tick": tick})
 
-    def register(self, dep_type, dep_id, version=1, tick=0):
-        self._entities[(dep_type, dep_id)] = version
+    def register(self, dep_type, dep_id, version=1, tick=None):
+        if tick is None:
+            raise ValueError("registry changes require an explicit availability tick")
         self._log("register", dep_type, dep_id, version, tick)
+        self._entities[(dep_type, dep_id)] = version
 
     def version(self, dep_type, dep_id):
         return self._entities.get((dep_type, dep_id))
@@ -386,17 +395,23 @@ class DependencyRegistry:
             return None
         return best["version"]
 
-    def bump(self, dep_type, dep_id, tick=0):
+    def bump(self, dep_type, dep_id, tick=None):
+        if tick is None:
+            raise ValueError("registry changes require an explicit availability tick")
         key = (dep_type, dep_id)
         if key not in self._entities:
             raise KeyError(dep_id)
-        self._entities[key] += 1
-        self._log("bump", dep_type, dep_id, self._entities[key], tick)
+        new_version = self._entities[key] + 1
+        self._log("bump", dep_type, dep_id, new_version, tick)
+        self._entities[key] = new_version
         return self._entities[key]
 
-    def replace(self, dep_type, old_id, new_id, version=1, tick=0):
+    def replace(self, dep_type, old_id, new_id, version=1, tick=None):
         """Entity substitution (different model family, different benchmark):
         the old entity ceases to be current entirely."""
+        if tick is None:
+            raise ValueError("registry changes require an explicit availability tick")
+        self._validate_tick(tick)
         if (dep_type, old_id) in self._entities:
             self._log("remove", dep_type, old_id, None, tick)
             del self._entities[(dep_type, old_id)]
@@ -779,11 +794,25 @@ class SimMemory:
         registry bump makes ontology-dependent interpretations stale until
         re-examined — revision is not silent. The bump is an event with a
         tick: replay at earlier ticks must see the pre-revision ontology."""
+        if effective_tick is None:
+            raise ValueError("ontology revisions require an explicit availability tick")
+        self.registry._validate_tick(effective_tick)
+        if self.registry.version(DEP_ONTOLOGY, "sim_ontology") is None:
+            raise ValueError("ontology dependency must be registered before revision")
         self.ontology = self.ontology.revise(**kwargs)
         self.registry.bump(DEP_ONTOLOGY, "sim_ontology",
-                           tick=effective_tick if effective_tick is not None
-                           else self._next_tick())
+                           tick=effective_tick)
         return self.ontology
+
+    def ontology_at_tick(self, tick):
+        """Use only vocabulary revisions already available at the replay tick."""
+        version = self.registry.version_at(DEP_ONTOLOGY, "sim_ontology", tick)
+        ontology = self.ontology
+        if version is None:
+            return None
+        while ontology is not None and ontology.version > version:
+            ontology = ontology.prior
+        return ontology if ontology is not None and ontology.version == version else None
 
     # -- structural retrieval: no LLM anywhere ---------------------------------
     def retrieve(self, target_component=None, ontology_category=None,
@@ -793,6 +822,12 @@ class SimMemory:
         comparison — never merges hypotheses, never establishes equivalence.
         Results carry the keys they matched so callers can judge."""
         max_clearance = CLEARANCE[clearance]
+        ontology = self.ontology if at_tick is None else self.ontology_at_tick(at_tick)
+        if (ontology_category is not None and at_tick is not None
+                and (ontology is None or (
+                    ontology.category(ontology_category) is None
+                    and ontology_category not in ontology.renames))):
+            return ()
 
         def visible(tick):
             return at_tick is None or tick <= at_tick
@@ -812,7 +847,7 @@ class SimMemory:
             if ontology_category is not None:
                 if hyp.ontology_category == ontology_category:
                     keys.append("ontology_category")
-                elif self.ontology.resolve(ontology_category) == hyp.ontology_category:
+                elif ontology is not None and ontology.resolve(ontology_category) == hyp.ontology_category:
                     keys.append("ontology_category_renamed")
             if target_component is not None:
                 if any(a.target == target_component and visible(a.availability_tick)
@@ -852,12 +887,27 @@ class SimMemory:
 
     # -- snapshot / serialization ------------------------------------------------
     def snapshot(self):
+        ontology_history = []
+        ontology = self.ontology
+        while ontology is not None:
+            ontology_history.append(ontology.as_dict())
+            ontology = ontology.prior
         return {
             "tick": self._tick,
             "ontology": self.ontology.as_dict(),
+            "ontology_history": list(reversed(ontology_history)),
             "n_hypotheses": len(self._hypotheses),
             "n_measurements": len(self._measurements),
             "n_lineage_nodes": len(self.lineage.nodes()),
+            "lineage": {
+                "current": self.lineage.current,
+                "nodes": [
+                    {"node_id": node.node_id, "kind": node.kind,
+                     "label": node.label, "parents": [list(p) for p in node.parents],
+                     "created_tick": node.created_tick}
+                    for node in self.lineage.nodes()
+                ],
+            },
             "hypotheses": [self._hypotheses[k].as_dict() for k in sorted(self._hypotheses)],
             "measurements": [self._measurements[k].as_dict() for k in sorted(self._measurements)],
             "interpretations": {iid: [v.as_dict() for v in versions]

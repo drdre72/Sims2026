@@ -1,0 +1,1546 @@
+{
+  "confounds": {},
+  "corpus_meta": {
+    "delta": "v3 adds full lineage DAG and ontology version history to snapshot; registry writes require explicit ticks. No historical corpus measurements or interpretations changed.",
+    "digest": "345eddf69b420f55963916a086f3ee8ea669e5cfe3f3c68c6b57e298feefbc0d",
+    "encoding": "hybrid: automatic objective extraction, curated interpretation",
+    "name": "sim_gold_corpus_v3",
+    "supersedes": "sim_gold_corpus_v2 (retained unchanged)"
+  },
+  "hypotheses": [
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 60,
+      "created_tick": 32,
+      "failure_conditions": [],
+      "hypothesis_id": "H-BUS-STALE-PRECEDENCE",
+      "interpretations": [
+        "H-BUS-STALE-PRECEDENCE:interp:1",
+        "H-BUS-STALE-PRECEDENCE:interp:2",
+        "H-BUS-STALE-PRECEDENCE:interp:3"
+      ],
+      "ontology_category": "invalidation_semantics",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual",
+        "note": "implicit design assumption, never contemporaneously tested"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Dependency-version invalidation precedes intrinsic derived status in effective_status"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 53,
+      "created_tick": 27,
+      "failure_conditions": [],
+      "hypothesis_id": "H-EPI05-BINDING",
+      "interpretations": [
+        "H-EPI05-BINDING:interp:1"
+      ],
+      "ontology_category": "structural_binding_success",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual",
+        "doc": "research/gate1_3_channel_preflight.md section 39"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Structural binding preserves mechanical results exactly; retranscription is the fragile boundary"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 55,
+      "created_tick": 30,
+      "failure_conditions": [],
+      "hypothesis_id": "H-EPI05-M02",
+      "interpretations": [
+        "H-EPI05-M02:interp:1"
+      ],
+      "ontology_category": "display_order_copying",
+      "ontology_version": 2,
+      "provenance": {
+        "atlas": "horizon_cognitive_atlas.html scenario m02",
+        "curation": "manual"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Neural retranscription copies operand order from display rather than structure; comparator symmetry can mask the reversal while downstream readout still fails"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [
+        {
+          "attempt_id": "epi06-armB",
+          "availability_tick": 91,
+          "consequences": [
+            "epi06-h1-nonnormal"
+          ],
+          "created_tick": 41,
+          "decision": "rejected",
+          "mechanism": "fewshot_nonnormal_examples",
+          "parent_state": "ckpt-qwen3.5-4b-base",
+          "prediction": {
+            "comparison": ">=",
+            "contemporaneous": true,
+            "metric": "nonnormal_strict_accuracy",
+            "predicted_value": 0.8333333333333334,
+            "source": "research/hzn_epi_06_consumption_prereg.md @ 8d8e2b0"
+          },
+          "prediction_error": 0.2222222222222222,
+          "provenance": {
+            "prereg": "binding threshold pre-committed before GPU execution"
+          },
+          "target": "readout_prompt_contract"
+        }
+      ],
+      "availability_tick": 90,
+      "created_tick": 39,
+      "failure_conditions": [],
+      "hypothesis_id": "H-EPI06-CONTRACT-REPAIR",
+      "interpretations": [
+        "H-EPI06-CONTRACT-REPAIR:interp:1",
+        "H-EPI06-CONTRACT-REPAIR:interp:2"
+      ],
+      "ontology_category": "output_contract_failure",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual",
+        "prereg": "hzn_epi_06_consumption_prereg.md"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Non-normal readout failures are output-contract failures repairable by explicit few-shot contract examples (H1)"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 98,
+      "created_tick": 49,
+      "failure_conditions": [],
+      "hypothesis_id": "H-EPI06-MECH-RENDER",
+      "interpretations": [
+        "H-EPI06-MECH-RENDER:interp:1"
+      ],
+      "ontology_category": "structural_binding_success",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Deterministic rendering of mechanical facts with neural generation confined to genuinely unresolved tie selection executes the battery faithfully at minimal neural cost"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 96,
+      "created_tick": 46,
+      "failure_conditions": [],
+      "hypothesis_id": "H-EPI06-POLICY-BOUNDARY",
+      "interpretations": [
+        "H-EPI06-POLICY-BOUNDARY:interp:1"
+      ],
+      "ontology_category": "policy_boundary_confusion",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual",
+        "note": "the user's Atlas pair"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "The neural layer collapses mechanically distinct action semantics \u2014 none vs unknown, insufficient_evidence vs abstain \u2014 while the typed state itself carries the distinction perfectly (mechanical replay 49/49 on the same inputs)"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 14,
+      "created_tick": 8,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G05-COHERENT-LETHAL",
+      "interpretations": [
+        "H-G05-COHERENT-LETHAL:interp:1"
+      ],
+      "ontology_category": "input_boundary_fragility",
+      "ontology_version": 1,
+      "provenance": {
+        "curation": "manual"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [
+        {
+          "dep_id": "qwen-next",
+          "dep_type": "model_checkpoint",
+          "kind": "dependency_changed"
+        }
+      ],
+      "statement": "Coherent dense edits at the input boundary cause quality collapse at low magnitude"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 16,
+      "created_tick": 11,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G05-DEPTH-GRADIENT",
+      "interpretations": [
+        "H-G05-DEPTH-GRADIENT:interp:1"
+      ],
+      "ontology_category": "input_boundary_fragility",
+      "ontology_version": 1,
+      "provenance": {
+        "curation": "manual"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Coherent-edit fragility decays steeply with depth; layer 0 is uniquely catastrophic"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 18,
+      "created_tick": 19,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G05-SAFE-NULL",
+      "interpretations": [
+        "H-G05-SAFE-NULL:interp:1"
+      ],
+      "ontology_category": "safe_null_surface",
+      "ontology_version": 1,
+      "provenance": {
+        "curation": "manual"
+      },
+      "reconsider_judgment": [
+        "reconsider if attenuation-arm leverage measurements emerge",
+        "reconsider if any sparse edit shows held-out improvement"
+      ],
+      "reconsider_machine": [],
+      "statement": "The provably safe edit surface (sparse scalar, mid/late layers) may be disjoint from the effective edit surface \u2014 constraints may land in safe-but-null territory"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [
+        {
+          "attempt_id": "g05-phaseb-runs",
+          "availability_tick": 21,
+          "consequences": [
+            "g05-phaseb-survival"
+          ],
+          "created_tick": 16,
+          "decision": "rejected",
+          "mechanism": "unconstrained_self_edit_768_2048",
+          "parent_state": "ckpt-qwen3.5-4b-base",
+          "prediction": null,
+          "prediction_error": null,
+          "provenance": {
+            "note": "no quantitative prediction recorded contemporaneously; none fabricated"
+          },
+          "target": "full_model"
+        }
+      ],
+      "availability_tick": 17,
+      "created_tick": 13,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G05-SELFEDIT-MECHANISM",
+      "interpretations": [
+        "H-G05-SELFEDIT-MECHANISM:interp:1",
+        "H-G05-SELFEDIT-MECHANISM:interp:2"
+      ],
+      "ontology_category": "self_edit_avoidance",
+      "ontology_version": 1,
+      "provenance": {
+        "curation": "manual",
+        "doc": "research/gate0_5_taxonomy.md",
+        "note": "Phase A closing hypothesis, documented before Phase B ran"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "The source paper's '4B broke itself' collapse was caused by the self-editor selecting coherent additive edits; Phase B will confirm coherent-edit selection"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [
+        {
+          "attempt_id": "g05-sparse-sweep",
+          "availability_tick": 11,
+          "consequences": [
+            "g05-sparse-collapse-count"
+          ],
+          "created_tick": 4,
+          "decision": "accepted",
+          "mechanism": "sparse_scalar_additive",
+          "parent_state": "ckpt-qwen3.5-4b-base",
+          "prediction": null,
+          "prediction_error": null,
+          "provenance": {
+            "extraction": "documented"
+          },
+          "target": "multi_family_multi_region"
+        }
+      ],
+      "availability_tick": 12,
+      "created_tick": 2,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G05-SPARSE-SAFE",
+      "interpretations": [
+        "H-G05-SPARSE-SAFE:interp:1"
+      ],
+      "ontology_category": "sparse_scalar_edit",
+      "ontology_version": 1,
+      "provenance": {
+        "curation": "manual",
+        "doc": "research/gate0_5_taxonomy.md"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [
+        {
+          "dep_id": "qwen-next",
+          "dep_type": "model_checkpoint",
+          "kind": "dependency_changed"
+        }
+      ],
+      "statement": "Sparse scalar edits (<=512 scalars, bounded magnitude) do not collapse the model"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 32,
+      "created_tick": 22,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G12-CORRESPONDENCE",
+      "interpretations": [
+        "H-G12-CORRESPONDENCE:interp:1"
+      ],
+      "ontology_category": "observation_channel_correspondence",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Observation-channel value is determined by correspondence between feedback content and the intervention it informs"
+    },
+    {
+      "ancestry": "ckpt-qwen3.5-4b-base",
+      "attempts": [],
+      "availability_tick": 33,
+      "created_tick": 24,
+      "failure_conditions": [],
+      "hypothesis_id": "H-G12-SHARED-PARENT",
+      "interpretations": [
+        "H-G12-SHARED-PARENT:interp:1"
+      ],
+      "ontology_category": "measurement_confound",
+      "ontology_version": 2,
+      "provenance": {
+        "curation": "manual",
+        "doc": "research/gate1_2_observation_layer_spec.md"
+      },
+      "reconsider_judgment": [],
+      "reconsider_machine": [],
+      "statement": "Parameters sharing a hooked parent module yield identical observations; treating them as independent evidence is a measurement confound"
+    }
+  ],
+  "interpretations": {
+    "H-BUS-STALE-PRECEDENCE:interp:1": [
+      {
+        "availability_tick": 60,
+        "created_tick": 33,
+        "depends_on": [
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-BUS-STALE-PRECEDENCE",
+        "interpretation_id": "H-BUS-STALE-PRECEDENCE:interp:1",
+        "ontology_category": "invalidation_semantics",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "note": "implicit design assumption, never contemporaneously tested"
+        },
+        "rationale": "assumed correct by design before user reproduction",
+        "retrospective": true,
+        "statement": "Dependency-version invalidation precedes intrinsic derived status in effective_status",
+        "status": "supported",
+        "superseded_by": "H-BUS-STALE-PRECEDENCE:interp:2",
+        "version": 1
+      }
+    ],
+    "H-BUS-STALE-PRECEDENCE:interp:2": [
+      {
+        "availability_tick": 82,
+        "created_tick": 35,
+        "depends_on": [
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-BUS-STALE-PRECEDENCE",
+        "interpretation_id": "H-BUS-STALE-PRECEDENCE:interp:2",
+        "ontology_category": "invalidation_semantics",
+        "ontology_version": 2,
+        "provenance": {
+          "commit": "pre-efc14c0 behavior",
+          "curation": "manual"
+        },
+        "rationale": "user reproduction showed ambiguous persisted post-change; refutation is of the implementation, conditioned on the pre-fix bus code",
+        "retrospective": false,
+        "statement": "Refuted as implemented: intrinsic ambiguous outranked dependency invalidation; the old tie was presented as current after Q3's cost changed",
+        "status": "refuted_conditional",
+        "superseded_by": "H-BUS-STALE-PRECEDENCE:interp:3",
+        "version": 2
+      }
+    ],
+    "H-BUS-STALE-PRECEDENCE:interp:3": [
+      {
+        "availability_tick": 84,
+        "created_tick": 37,
+        "depends_on": [
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-BUS-STALE-PRECEDENCE",
+        "interpretation_id": "H-BUS-STALE-PRECEDENCE:interp:3",
+        "ontology_category": "invalidation_semantics",
+        "ontology_version": 2,
+        "provenance": {
+          "commit": "efc14c0",
+          "curation": "manual"
+        },
+        "rationale": "targeted bus tests and full EPI-05 substrate tests pass post-fix",
+        "retrospective": false,
+        "statement": "Supported as of efc14c0: dependency-version checking precedes intrinsic status; regression test covers ambiguous -> stale -> resolved Q1",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 3
+      }
+    ],
+    "H-EPI05-BINDING:interp:1": [
+      {
+        "availability_tick": 53,
+        "created_tick": 28,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI05-BINDING",
+        "interpretation_id": "H-EPI05-BINDING:interp:1",
+        "ontology_category": "structural_binding_success",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "doc": "research/gate1_3_channel_preflight.md section 39"
+        },
+        "rationale": "BOUND_INVOKE preservation 18/18; AUTO_DISPATCH 18/18 with zero neural tokens",
+        "retrospective": false,
+        "statement": "Structural binding preserves mechanical results exactly; retranscription is the fragile boundary",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-EPI05-M02:interp:1": [
+      {
+        "availability_tick": 55,
+        "created_tick": 31,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI05-M02",
+        "interpretation_id": "H-EPI05-M02:interp:1",
+        "ontology_category": "display_order_copying",
+        "ontology_version": 2,
+        "provenance": {
+          "atlas": "horizon_cognitive_atlas.html scenario m02",
+          "curation": "manual"
+        },
+        "rationale": "m02 recorded trace: C:0/1 emitted for correct H1/H2 order 1/0; comparator returned unique=C because inequality is reversal-symmetric; fresh readout answered none",
+        "retrospective": false,
+        "statement": "Neural retranscription copies operand order from display rather than structure; comparator symmetry can mask the reversal while downstream readout still fails",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-EPI06-CONTRACT-REPAIR:interp:1": [
+      {
+        "availability_tick": 90,
+        "created_tick": 40,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_eval_v4",
+            "dep_type": "eval_suite",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI06-CONTRACT-REPAIR",
+        "interpretation_id": "H-EPI06-CONTRACT-REPAIR:interp:1",
+        "ontology_category": "output_contract_failure",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "prereg": "hzn_epi_06_consumption_prereg.md"
+        },
+        "rationale": "preregistered threshold: >=15/18 strict non-normal plus stale correct",
+        "retrospective": false,
+        "statement": "Non-normal readout failures are output-contract failures repairable by explicit few-shot contract examples (H1)",
+        "status": "testing",
+        "superseded_by": "H-EPI06-CONTRACT-REPAIR:interp:2",
+        "version": 1
+      }
+    ],
+    "H-EPI06-CONTRACT-REPAIR:interp:2": [
+      {
+        "availability_tick": 94,
+        "created_tick": 43,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_eval_v4",
+            "dep_type": "eval_suite",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI06-CONTRACT-REPAIR",
+        "interpretation_id": "H-EPI06-CONTRACT-REPAIR:interp:2",
+        "ontology_category": "output_contract_failure",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "evidence": "gate1_8_consumption_v1.json"
+        },
+        "rationale": "all seven residual failures emitted target=none; refutation conditioned on this contract-repair formulation and model",
+        "retrospective": false,
+        "statement": "H1 fails the binding threshold: 11/18 < 15/18 despite format validity 37/37 and resolved 18/18. Contract repair has a large real effect but is insufficient. Residual failure is specific: incomplete/unknown evidence collapses to the negative completed result 'none' \u2014 an epistemic distinction failure, not a format failure",
+        "status": "refuted_conditional",
+        "superseded_by": null,
+        "version": 2
+      }
+    ],
+    "H-EPI06-MECH-RENDER:interp:1": [
+      {
+        "availability_tick": 98,
+        "created_tick": 50,
+        "depends_on": [
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI06-MECH-RENDER",
+        "interpretation_id": "H-EPI06-MECH-RENDER:interp:1",
+        "ontology_category": "structural_binding_success",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual"
+        },
+        "rationale": "matrix 37/37 + epistemic 12/12 fidelity, ties 2/2, 2 generations / 14 tokens, zero stale-value emissions after metric correction",
+        "retrospective": false,
+        "statement": "Deterministic rendering of mechanical facts with neural generation confined to genuinely unresolved tie selection executes the battery faithfully at minimal neural cost",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-EPI06-POLICY-BOUNDARY:interp:1": [
+      {
+        "availability_tick": 96,
+        "created_tick": 47,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-EPI06-POLICY-BOUNDARY",
+        "interpretation_id": "H-EPI06-POLICY-BOUNDARY:interp:1",
+        "ontology_category": "policy_boundary_confusion",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "note": "the user's Atlas pair"
+        },
+        "rationale": "consistent_nodisc expected insufficient_evidence, observed abstain (0/2); resolved controls correctly abstained (4/4) \u2014 same token, opposite correctness; mechanical policy replay matches all 49 expected actions without a model call",
+        "retrospective": false,
+        "statement": "The neural layer collapses mechanically distinct action semantics \u2014 none vs unknown, insufficient_evidence vs abstain \u2014 while the typed state itself carries the distinction perfectly (mechanical replay 49/49 on the same inputs)",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G05-COHERENT-LETHAL:interp:1": [
+      {
+        "availability_tick": 14,
+        "created_tick": 9,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-COHERENT-LETHAL",
+        "interpretation_id": "H-G05-COHERENT-LETHAL:interp:1",
+        "ontology_category": "input_boundary_fragility",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual"
+        },
+        "rationale": "L0 conv1d k=0.25 additive drives ppl 11.4 -> 1315; collapse is quality not numeric",
+        "retrospective": false,
+        "statement": "Coherent dense edits at the input boundary cause quality collapse at low magnitude",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G05-DEPTH-GRADIENT:interp:1": [
+      {
+        "availability_tick": 16,
+        "created_tick": 12,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-DEPTH-GRADIENT",
+        "interpretation_id": "H-G05-DEPTH-GRADIENT:interp:1",
+        "ontology_category": "input_boundary_fragility",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual"
+        },
+        "rationale": "collapse threshold rises 0.25 -> 2 -> 4 -> never across depth",
+        "retrospective": false,
+        "statement": "Coherent-edit fragility decays steeply with depth; layer 0 is uniquely catastrophic",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G05-SAFE-NULL:interp:1": [
+      {
+        "availability_tick": 18,
+        "created_tick": 20,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-SAFE-NULL",
+        "interpretation_id": "H-G05-SAFE-NULL:interp:1",
+        "ontology_category": "safe_null_surface",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual"
+        },
+        "rationale": "safety evidence is strong but leverage evidence does not exist yet; the taxonomy document itself flags this as the real Gate 1 risk",
+        "retrospective": false,
+        "statement": "The provably safe edit surface (sparse scalar, mid/late layers) may be disjoint from the effective edit surface \u2014 constraints may land in safe-but-null territory",
+        "status": "insufficient_evidence",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G05-SELFEDIT-MECHANISM:interp:1": [
+      {
+        "availability_tick": 17,
+        "created_tick": 14,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-SELFEDIT-MECHANISM",
+        "interpretation_id": "H-G05-SELFEDIT-MECHANISM:interp:1",
+        "ontology_category": "self_edit_avoidance",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual",
+          "doc": "research/gate0_5_taxonomy.md",
+          "note": "Phase A closing hypothesis, documented before Phase B ran"
+        },
+        "rationale": "fragility surface shows coherent early edits are lethal; a goal-directed editor can select exactly the lethal direction",
+        "retrospective": false,
+        "statement": "The source paper's '4B broke itself' collapse was caused by the self-editor selecting coherent additive edits; Phase B will confirm coherent-edit selection",
+        "status": "testing",
+        "superseded_by": "H-G05-SELFEDIT-MECHANISM:interp:2",
+        "version": 1
+      }
+    ],
+    "H-G05-SELFEDIT-MECHANISM:interp:2": [
+      {
+        "availability_tick": 23,
+        "created_tick": 18,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-SELFEDIT-MECHANISM",
+        "interpretation_id": "H-G05-SELFEDIT-MECHANISM:interp:2",
+        "ontology_category": "self_edit_avoidance",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual",
+          "doc": "research/gate0_5_phaseb_selfedit.md"
+        },
+        "rationale": "documented Phase B outcome contradicts the documented Phase A expectation; rejection conditioned on this proposer scaffolding and budget",
+        "retrospective": false,
+        "statement": "The self-editor did NOT select coherent additive edits: all 6 runs survived via attenuation-only selections. The Phase A selection hypothesis is refuted as stated; the paper's collapse mechanism remains unexplained (possibly scaffolding or batch effects). The underlying fragility findings are unaffected \u2014 the editor simply never went there.",
+        "status": "refuted_conditional",
+        "superseded_by": null,
+        "version": 2
+      }
+    ],
+    "H-G05-SPARSE-SAFE:interp:1": [
+      {
+        "availability_tick": 12,
+        "created_tick": 3,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G05-SPARSE-SAFE",
+        "interpretation_id": "H-G05-SPARSE-SAFE:interp:1",
+        "ontology_category": "sparse_scalar_edit",
+        "ontology_version": 1,
+        "provenance": {
+          "curation": "manual",
+          "doc": "research/gate0_5_taxonomy.md"
+        },
+        "rationale": "0/136 collapses across the sparse scalar sweep; negligible L2 when scattered",
+        "retrospective": false,
+        "statement": "Sparse scalar edits (<=512 scalars, bounded magnitude) do not collapse the model",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G12-CORRESPONDENCE:interp:1": [
+      {
+        "availability_tick": 32,
+        "created_tick": 23,
+        "depends_on": [
+          {
+            "dep_id": "qwen3.5-4b-bf16",
+            "dep_type": "model_checkpoint",
+            "version": 1
+          },
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G12-CORRESPONDENCE",
+        "interpretation_id": "H-G12-CORRESPONDENCE:interp:1",
+        "ontology_category": "observation_channel_correspondence",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual"
+        },
+        "rationale": "cleanest mechanistic finding of the gate1_2 campaign",
+        "retrospective": false,
+        "statement": "Observation-channel value is determined by correspondence between feedback content and the intervention it informs",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ],
+    "H-G12-SHARED-PARENT:interp:1": [
+      {
+        "availability_tick": 33,
+        "created_tick": 25,
+        "depends_on": [
+          {
+            "dep_id": "gate1_harness",
+            "dep_type": "harness",
+            "version": 1
+          }
+        ],
+        "hypothesis_id": "H-G12-SHARED-PARENT",
+        "interpretation_id": "H-G12-SHARED-PARENT:interp:1",
+        "ontology_category": "measurement_confound",
+        "ontology_version": 2,
+        "provenance": {
+          "curation": "manual",
+          "doc": "research/gate1_2_observation_layer_spec.md"
+        },
+        "rationale": "observation-layer spec rule: catalog records obs_group so identical values are not mistaken for independent evidence",
+        "retrospective": false,
+        "statement": "Parameters sharing a hooked parent module yield identical observations; treating them as independent evidence is a measurement confound",
+        "status": "supported",
+        "superseded_by": null,
+        "version": 1
+      }
+    ]
+  },
+  "lineage": {
+    "current": "ckpt-qwen3.5-4b-base",
+    "nodes": [
+      {
+        "created_tick": 0,
+        "kind": "checkpoint",
+        "label": "Qwen3.5-4B bf16 base",
+        "node_id": "ckpt-qwen3.5-4b-base",
+        "parents": []
+      }
+    ]
+  },
+  "measurements": [
+    {
+      "availability_tick": 83,
+      "confounded": false,
+      "created_tick": 36,
+      "kind": "regression_test",
+      "measurement_id": "bus-tie-fix",
+      "partition": "practice",
+      "provenance": {
+        "extraction": "documented",
+        "source": "cognitive_bus_fix"
+      },
+      "value": {
+        "value": {
+          "commit": "efc14c0",
+          "sequence": "ambiguous -> stale -> resolved Q1",
+          "test": "test_ambiguous_derived_result_stales_before_refresh"
+        }
+      }
+    },
+    {
+      "availability_tick": 81,
+      "confounded": false,
+      "created_tick": 34,
+      "kind": "behavioral_sequence",
+      "measurement_id": "bus-tie-reproduction",
+      "partition": "practice",
+      "provenance": {
+        "extraction": "documented",
+        "note": "user-reported local reproduction",
+        "source": "user_reproduction"
+      },
+      "value": {
+        "value": {
+          "after_cost_change_before_redispatch": "ambiguous (WRONG \u2014 should be stale)",
+          "after_redispatch": "resolved Q1",
+          "initial": "ambiguous [Q1,Q3] cost 1/1"
+        }
+      }
+    },
+    {
+      "availability_tick": 52,
+      "confounded": false,
+      "created_tick": 26,
+      "kind": "exact_accuracy",
+      "measurement_id": "epi05-binding-preservation",
+      "partition": "evolve",
+      "provenance": {
+        "evidence": "research/evidence/gate1_7_substrate_v1.json",
+        "extraction": "automatic",
+        "source": "gate1_7_substrate"
+      },
+      "value": {
+        "condition": "BOUND_INVOKE",
+        "total": 18,
+        "value": 18
+      }
+    },
+    {
+      "availability_tick": 54,
+      "confounded": false,
+      "created_tick": 29,
+      "kind": "readout_correctness",
+      "measurement_id": "epi05-m02-readout",
+      "partition": "evolve",
+      "provenance": {
+        "evidence": "research/evidence/gate1_7_substrate_v1.json",
+        "extraction": "documented",
+        "source": "gate1_7_substrate_m02"
+      },
+      "value": {
+        "value": {
+          "expected": "C",
+          "input_tokens": 67,
+          "latency_s": 0.53,
+          "masking": "binary inequality symmetric under bit reversal",
+          "observed": "none",
+          "transcription": "C:0/1 display-order copy (correct: C:1/0)"
+        }
+      }
+    },
+    {
+      "availability_tick": 95,
+      "confounded": false,
+      "created_tick": 45,
+      "kind": "mechanical_policy_replay",
+      "measurement_id": "epi06-decision-mechanical",
+      "partition": "evolve",
+      "provenance": {
+        "extraction": "documented",
+        "source": "gate1_8_consumption_prereg"
+      },
+      "value": {
+        "correct": 49,
+        "note": "by construction: preregistered policy is a deterministic function of typed state",
+        "total": 49,
+        "value": 1.0
+      }
+    },
+    {
+      "availability_tick": 95,
+      "confounded": false,
+      "created_tick": 44,
+      "kind": "decision_appropriateness",
+      "measurement_id": "epi06-decision-neural",
+      "partition": "evolve",
+      "provenance": {
+        "evidence": "research/evidence/gate1_8_consumption_v1.json",
+        "extraction": "automatic",
+        "source": "gate1_8_consumption"
+      },
+      "value": {
+        "correct": 26,
+        "total": 49,
+        "value": 0.5306122448979592
+      }
+    },
+    {
+      "availability_tick": 93,
+      "confounded": false,
+      "created_tick": 38,
+      "kind": "nonnormal_strict_accuracy",
+      "measurement_id": "epi06-h1-nonnormal",
+      "partition": "evolve",
+      "provenance": {
+        "evidence": "research/evidence/gate1_8_consumption_v1.json",
+        "extraction": "automatic",
+        "source": "gate1_8_consumption"
+      },
+      "value": {
+        "correct": 11,
+        "total": 18,
+        "value": 0.6111111111111112
+      }
+    },
+    {
+      "availability_tick": 97,
+      "confounded": false,
+      "created_tick": 48,
+      "kind": "mechanical_render_fidelity",
+      "measurement_id": "epi06-mech-render",
+      "partition": "evolve",
+      "provenance": {
+        "evidence": "research/evidence/gate1_8_consumption_v1.json",
+        "extraction": "automatic",
+        "source": "gate1_8_consumption"
+      },
+      "value": {
+        "value": {
+          "epistemic": 12,
+          "matrix": 37,
+          "neural_generations": 2,
+          "stale_emissions": 0,
+          "tie_correct": 2
+        }
+      }
+    },
+    {
+      "availability_tick": 13,
+      "confounded": false,
+      "created_tick": 7,
+      "kind": "mechanism_observation",
+      "measurement_id": "g05-collapse-mechanism",
+      "partition": "practice",
+      "provenance": {
+        "extraction": "documented",
+        "source": "gate0_5_phaseA"
+      },
+      "value": {
+        "note": "only embed_tokens->0 produced true degenerate output",
+        "value": "perplexity_explosion_not_nan"
+      }
+    },
+    {
+      "availability_tick": 15,
+      "confounded": false,
+      "created_tick": 10,
+      "kind": "collapse_threshold_by_layer",
+      "measurement_id": "g05-depth-gradient",
+      "partition": "practice",
+      "provenance": {
+        "extraction": "documented",
+        "source": "gate0_5_phaseA"
+      },
+      "value": {
+        "value": {
+          "L0": 0.25,
+          "L1": 2.0,
+          "L12": 4.0,
+          "L22_plus": "never"
+        }
+      }
+    },
+    {
+      "availability_tick": 13,
+      "confounded": false,
+      "created_tick": 6,
+      "kind": "perplexity",
+      "measurement_id": "g05-l0-conv1d-k025-ppl",
+      "partition": "practice",
+      "provenance": {
+        "evidence": "results/gate0.5_failure_boundary.json",
+        "extraction": "documented",
+        "source": "gate0_5_phaseA"
+      },
+      "value": {
+        "baseline": 11.4,
+        "family": "linear_attn.conv1d",
+        "k": 0.25,
+        "layer": 0,
+        "value": 1315
+      }
+    },
+    {
+      "availability_tick": 22,
+      "confounded": false,
+      "created_tick": 15,
+      "kind": "self_edit_survival",
+      "measurement_id": "g05-phaseb-survival",
+      "partition": "practice",
+      "provenance": {
+        "doc": "research/gate0_5_phaseb_selfedit.md",
+        "extraction": "documented",
+        "source": "gate0_5_phaseB"
+      },
+      "value": {
+        "value": {
+          "collapses": 0,
+          "cumulative_edits": 123,
+          "op_classes": "attenuating scale only (x0.85-0.997)",
+          "runs_survived": 6,
+          "runs_total": 6
+        }
+      }
+    },
+    {
+      "availability_tick": 11,
+      "confounded": false,
+      "created_tick": 1,
+      "kind": "collapse_count",
+      "measurement_id": "g05-sparse-collapse-count",
+      "partition": "practice",
+      "provenance": {
+        "doc": "research/gate0_5_taxonomy.md",
+        "evidence": "results/gate0.5_failure_taxonomy.json",
+        "extraction": "documented",
+        "source": "gate0_5_phaseA"
+      },
+      "value": {
+        "note": "sparse scalar sweep, any family/region",
+        "probes": 136,
+        "value": 0
+      }
+    },
+    {
+      "availability_tick": 31,
+      "confounded": false,
+      "created_tick": 21,
+      "kind": "correspondence_effect",
+      "measurement_id": "g12-correspondence",
+      "partition": "practice",
+      "provenance": {
+        "doc": "research/gate1_2_campaign_report.md",
+        "extraction": "documented",
+        "source": "gate1_2_campaign"
+      },
+      "value": {
+        "value": "channel read, followed, correspondence determines value"
+      }
+    }
+  ],
+  "n_hypotheses": 13,
+  "n_lineage_nodes": 1,
+  "n_measurements": 14,
+  "ontology": {
+    "categories": [
+      {
+        "deprecated_in": null,
+        "description": "directed all-elements perturbation of a tensor",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "coherent_dense_edit"
+      },
+      {
+        "deprecated_in": null,
+        "description": "uniform-random or otherwise degenerate generations",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "degenerate_output"
+      },
+      {
+        "deprecated_in": null,
+        "description": "operand order copied from display rather than structure",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "display_order_copying"
+      },
+      {
+        "deprecated_in": null,
+        "description": "optimizing the evaluator rather than the objective",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "evaluator_exploitation"
+      },
+      {
+        "deprecated_in": null,
+        "description": "early-layer / embedding-boundary catastrophic sensitivity",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "input_boundary_fragility"
+      },
+      {
+        "deprecated_in": null,
+        "description": "outcome correlated with intervention count, not content",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "intervention_frequency_confound"
+      },
+      {
+        "deprecated_in": null,
+        "description": "staleness/dependency precedence defect",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "invalidation_semantics"
+      },
+      {
+        "deprecated_in": null,
+        "description": "measurement design confounds evidence independence or interpretation",
+        "introduced_in": 2,
+        "layer": "domain",
+        "name": "measurement_confound"
+      },
+      {
+        "deprecated_in": null,
+        "description": "feedback value determined by correspondence with intervention",
+        "introduced_in": 2,
+        "layer": "domain",
+        "name": "observation_channel_correspondence"
+      },
+      {
+        "deprecated_in": null,
+        "description": "format/contract misuse despite correct latent content",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "output_contract_failure"
+      },
+      {
+        "deprecated_in": null,
+        "description": "none/unknown/invalid/insufficient/abstain collapse",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "policy_boundary_confusion"
+      },
+      {
+        "deprecated_in": null,
+        "description": "perplexity explosion without numeric blowup",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "quality_collapse_perplexity"
+      },
+      {
+        "deprecated_in": null,
+        "description": "provably-safe intervention surface is also low-leverage",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "safe_null_surface"
+      },
+      {
+        "deprecated_in": null,
+        "description": "proposer avoids coherent additive edits under self-editing",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "self_edit_avoidance"
+      },
+      {
+        "deprecated_in": null,
+        "description": "scattered low-count scalar perturbation",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "sparse_scalar_edit"
+      },
+      {
+        "deprecated_in": null,
+        "description": "structural binding preserves mechanical results",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "structural_binding_success"
+      },
+      {
+        "deprecated_in": null,
+        "description": "neural retranscription corrupts mechanical state",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "transcription_failure"
+      },
+      {
+        "deprecated_in": null,
+        "description": "unexplained observation; mandatory escape hatch",
+        "introduced_in": 1,
+        "layer": "domain",
+        "name": "unknown"
+      }
+    ],
+    "renames": {},
+    "revision_note": "v0.2: corpus encoding of gate1_2 observation work required vocabulary the seed lacked",
+    "version": 2
+  },
+  "ontology_history": [
+    {
+      "categories": [
+        {
+          "deprecated_in": null,
+          "description": "directed all-elements perturbation of a tensor",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "coherent_dense_edit"
+        },
+        {
+          "deprecated_in": null,
+          "description": "uniform-random or otherwise degenerate generations",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "degenerate_output"
+        },
+        {
+          "deprecated_in": null,
+          "description": "operand order copied from display rather than structure",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "display_order_copying"
+        },
+        {
+          "deprecated_in": null,
+          "description": "optimizing the evaluator rather than the objective",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "evaluator_exploitation"
+        },
+        {
+          "deprecated_in": null,
+          "description": "early-layer / embedding-boundary catastrophic sensitivity",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "input_boundary_fragility"
+        },
+        {
+          "deprecated_in": null,
+          "description": "outcome correlated with intervention count, not content",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "intervention_frequency_confound"
+        },
+        {
+          "deprecated_in": null,
+          "description": "staleness/dependency precedence defect",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "invalidation_semantics"
+        },
+        {
+          "deprecated_in": null,
+          "description": "format/contract misuse despite correct latent content",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "output_contract_failure"
+        },
+        {
+          "deprecated_in": null,
+          "description": "none/unknown/invalid/insufficient/abstain collapse",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "policy_boundary_confusion"
+        },
+        {
+          "deprecated_in": null,
+          "description": "perplexity explosion without numeric blowup",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "quality_collapse_perplexity"
+        },
+        {
+          "deprecated_in": null,
+          "description": "provably-safe intervention surface is also low-leverage",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "safe_null_surface"
+        },
+        {
+          "deprecated_in": null,
+          "description": "proposer avoids coherent additive edits under self-editing",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "self_edit_avoidance"
+        },
+        {
+          "deprecated_in": null,
+          "description": "scattered low-count scalar perturbation",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "sparse_scalar_edit"
+        },
+        {
+          "deprecated_in": null,
+          "description": "structural binding preserves mechanical results",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "structural_binding_success"
+        },
+        {
+          "deprecated_in": null,
+          "description": "neural retranscription corrupts mechanical state",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "transcription_failure"
+        },
+        {
+          "deprecated_in": null,
+          "description": "unexplained observation; mandatory escape hatch",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "unknown"
+        }
+      ],
+      "renames": {},
+      "revision_note": null,
+      "version": 1
+    },
+    {
+      "categories": [
+        {
+          "deprecated_in": null,
+          "description": "directed all-elements perturbation of a tensor",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "coherent_dense_edit"
+        },
+        {
+          "deprecated_in": null,
+          "description": "uniform-random or otherwise degenerate generations",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "degenerate_output"
+        },
+        {
+          "deprecated_in": null,
+          "description": "operand order copied from display rather than structure",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "display_order_copying"
+        },
+        {
+          "deprecated_in": null,
+          "description": "optimizing the evaluator rather than the objective",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "evaluator_exploitation"
+        },
+        {
+          "deprecated_in": null,
+          "description": "early-layer / embedding-boundary catastrophic sensitivity",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "input_boundary_fragility"
+        },
+        {
+          "deprecated_in": null,
+          "description": "outcome correlated with intervention count, not content",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "intervention_frequency_confound"
+        },
+        {
+          "deprecated_in": null,
+          "description": "staleness/dependency precedence defect",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "invalidation_semantics"
+        },
+        {
+          "deprecated_in": null,
+          "description": "measurement design confounds evidence independence or interpretation",
+          "introduced_in": 2,
+          "layer": "domain",
+          "name": "measurement_confound"
+        },
+        {
+          "deprecated_in": null,
+          "description": "feedback value determined by correspondence with intervention",
+          "introduced_in": 2,
+          "layer": "domain",
+          "name": "observation_channel_correspondence"
+        },
+        {
+          "deprecated_in": null,
+          "description": "format/contract misuse despite correct latent content",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "output_contract_failure"
+        },
+        {
+          "deprecated_in": null,
+          "description": "none/unknown/invalid/insufficient/abstain collapse",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "policy_boundary_confusion"
+        },
+        {
+          "deprecated_in": null,
+          "description": "perplexity explosion without numeric blowup",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "quality_collapse_perplexity"
+        },
+        {
+          "deprecated_in": null,
+          "description": "provably-safe intervention surface is also low-leverage",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "safe_null_surface"
+        },
+        {
+          "deprecated_in": null,
+          "description": "proposer avoids coherent additive edits under self-editing",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "self_edit_avoidance"
+        },
+        {
+          "deprecated_in": null,
+          "description": "scattered low-count scalar perturbation",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "sparse_scalar_edit"
+        },
+        {
+          "deprecated_in": null,
+          "description": "structural binding preserves mechanical results",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "structural_binding_success"
+        },
+        {
+          "deprecated_in": null,
+          "description": "neural retranscription corrupts mechanical state",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "transcription_failure"
+        },
+        {
+          "deprecated_in": null,
+          "description": "unexplained observation; mandatory escape hatch",
+          "introduced_in": 1,
+          "layer": "domain",
+          "name": "unknown"
+        }
+      ],
+      "renames": {},
+      "revision_note": "v0.2: corpus encoding of gate1_2 observation work required vocabulary the seed lacked",
+      "version": 2
+    }
+  ],
+  "reconsideration_events": [],
+  "registry_events": [
+    {
+      "dep_id": "qwen3.5-4b-bf16",
+      "dep_type": "model_checkpoint",
+      "kind": "register",
+      "tick": 0,
+      "version": 1
+    },
+    {
+      "dep_id": "gate1_harness",
+      "dep_type": "harness",
+      "kind": "register",
+      "tick": 0,
+      "version": 1
+    },
+    {
+      "dep_id": "gate1_eval_v4",
+      "dep_type": "eval_suite",
+      "kind": "register",
+      "tick": 0,
+      "version": 1
+    },
+    {
+      "dep_id": "sim_ontology",
+      "dep_type": "ontology",
+      "kind": "register",
+      "tick": 0,
+      "version": 1
+    },
+    {
+      "dep_id": "sim_ontology",
+      "dep_type": "ontology",
+      "kind": "bump",
+      "tick": 100,
+      "version": 2
+    }
+  ],
+  "tick": 50
+}

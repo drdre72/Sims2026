@@ -91,10 +91,10 @@ def build_gold_corpus():
     gate0_5 (10-29), gate1_2 (30-39), EPI-01..05 (40-79), tie bug (80-89),
     EPI-06 (90-99)."""
     mem = SimMemory()
-    mem.registry.register(DEP_MODEL, "qwen3.5-4b-bf16", 1)
-    mem.registry.register(DEP_HARNESS, "gate1_harness", 1)
-    mem.registry.register(DEP_EVAL, "gate1_eval_v4", 1)
-    mem.registry.register("ontology", "sim_ontology", 1)
+    mem.registry.register(DEP_MODEL, "qwen3.5-4b-bf16", 1, tick=0)
+    mem.registry.register(DEP_HARNESS, "gate1_harness", 1, tick=0)
+    mem.registry.register(DEP_EVAL, "gate1_eval_v4", 1, tick=0)
+    mem.registry.register("ontology", "sim_ontology", 1, tick=0)
     mem.lineage.add_node("ckpt-qwen3.5-4b-base", "checkpoint", "Qwen3.5-4B bf16 base", tick=0)
 
     # ---- gate0_5: sparse scalar safety ------------------------------------

@@ -183,18 +183,12 @@ def run_arm_Y(visible_hyps, required, k):
 # Status fidelity (bug detector)
 # ---------------------------------------------------------------------------
 def status_fidelity(mem, dp, frame_result):
-    """The retrieval-reported status vs an independent reconstruction of the
-    chain head as of the tick. Catches replay reporting post-hoc status:
-    before the substrate fix this flagged three real defects; a regression
-    back to end-state status would flag them again."""
+    """Check the reported *effective* status at the tick. The separate
+    hand-derived status oracle tests the dependency evaluator itself; intrinsic
+    status is not a valid oracle after a version bump or confound."""
     mismatches = []
     for hid, entry in frame_result.items():
-        hyp = mem.hypothesis(hid)
-        at_tick = None
-        for iid in hyp.interpretations:
-            interp = mem.interpretation(iid)
-            if interp is not None and interp.availability_tick <= dp["tick"]:
-                at_tick = interp.status
+        at_tick = mem.status_at_tick(hid, dp["tick"])
         if at_tick is not None and entry["status"] != at_tick:
             mismatches.append({"hypothesis_id": hid, "dp_tick": dp["tick"],
                                "at_tick_status": at_tick,
@@ -238,13 +232,13 @@ def cascade_probes():
         return build_gold_corpus()
 
     m = fresh()
-    m.registry.replace(DEP_MODEL, "qwen3.5-4b-bf16", "qwen-next-4b")
+    m.registry.replace(DEP_MODEL, "qwen3.5-4b-bf16", "qwen-next-4b", tick=110)
     p1 = _affected_by_status_change(m)
     m = fresh()
-    m.registry.bump(DEP_HARNESS, "gate1_harness")
+    m.registry.bump(DEP_HARNESS, "gate1_harness", tick=110)
     p2 = _affected_by_status_change(m)
     m = fresh()
-    m.registry.bump(DEP_EVAL, "gate1_eval_v4")
+    m.registry.bump(DEP_EVAL, "gate1_eval_v4", tick=110)
     p3 = _affected_by_status_change(m)
     m = fresh()
     m.register_confound("epi06-h1-nonnormal", "synthetic probe confound",
@@ -253,7 +247,7 @@ def cascade_probes():
           if any(d.dep_type == DEP_MEASUREMENT and d.dep_id == "epi06-h1-nonnormal"
                  for d in m.interpretation(h.current_interpretation_id()).depends_on)]
     m = fresh()
-    m.revise_ontology(note="synthetic probe v3")
+    m.revise_ontology(effective_tick=110, note="synthetic probe v3")
     p5 = _affected_by_status_change(m)
     synthetic = {
         "P1_model_replacement": {"affected": p1, "count": len(p1)},
