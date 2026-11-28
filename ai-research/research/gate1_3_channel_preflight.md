@@ -1566,3 +1566,122 @@ The strongest open problem is no longer “can the model compare?” or even “
 > How do neural interpretation layers consume typed state — including unknown, ambiguous, stale and invalidated states — without either ignoring it or reintroducing transcription authority over mechanical facts?
 
 That is the next architectural question raised by Horizon.
+
+## 40. HZN-EPI-06 results — contract repair is real but insufficient; typed-state use fractures at policy boundaries (125 generations, 115.2s GPU)
+
+Evidence: `evidence/gate1_8_consumption_v1.json`. Final preregistration: `hzn_epi_06_consumption_prereg.md` (`8d8e2b0`). CPU validation before GPU execution: **208/208**. A substrate semantics bug was fixed before the experiment (`efc14c0`): dependency invalidation now precedes intrinsic `ambiguous`/`invalid`/`unknown` derived status, giving the correct tied-decision sequence **ambiguous → stale → refreshed result** rather than presenting the old tie as current.
+
+HZN-EPI-06 tested three explanations for the EPI-05 readout split: output-contract failure (H1), general typed-state disrespect (H2), and report/decision asymmetry (H3). The result is not a clean win for any one hypothesis. Contract repair had a large real effect, but did not meet the preregistered non-normal threshold. Decision consumption also failed its floors, so the preregistered decision rule operationally selects H2. However, the failure distribution is narrower than global state blindness: the model often uses typed state correctly for missing evidence, stale state, cost-sensitive query choice and tied candidates, while failing the status-to-action policy boundary for `none`, invalid/contradictory evidence, and insufficiency versus abstention.
+
+### Battery and replication
+
+The battery contained 18 resolved matrix states, 18 non-normal matrix states (six EPI-05 defect types × three base matrices), one stale matrix state, and 12 epistemic decision states. Arm A reused the exact EPI-05 hybrid readout prompt.
+
+Arm A replicated the central EPI-05 pattern:
+
+- resolved-matrix strict accuracy **8/18**; relaxed exploratory accuracy **18/18** after accepting only the `target:` separator variant;
+- non-normal strict accuracy **0/18**, relaxed **1/18**;
+- stale strict **0/1**;
+- 11 format failures, 11 state-ignore failures, 6 premise-recompute failures, 1 hallucinated-content failure across the full 37-case readout battery.
+
+Thus the replication baseline behaved as expected: latent/relaxed resolved-state consumption was good, strict output use was fragile, and non-normal state readout failed.
+
+### H1 — contract repair has a large effect but fails the binding threshold
+
+READOUT_REPAIRED used explicit few-shot output-contract examples for resolved, negative, unknown, invalid, ambiguous and stale outputs.
+
+| family/group | strict result |
+|---|---:|
+| resolved matrix states | **18/18** |
+| non-normal matrix states | **11/18** |
+| stale state | **1/1** |
+| malformed bit | 3/3 |
+| contradictory duplicate label | 3/3 |
+| malformed type | 2/3 |
+| incomplete missing bit | 1/3 |
+| incomplete missing row | 1/3 |
+| explicit unknown bit | 1/3 |
+
+Overall strict accuracy was **30/37 = .811**, format validity **37/37**, and there were no separator-format failures. The preregistered H1 threshold was **≥15/18 strict on non-normal states plus stale correct**. H1 therefore **fails** despite the large improvement.
+
+All seven remaining non-normal failures emitted `target=none`: four were classified as premise-recompute and three as state-ignore. This is more specific than random fabrication. The model often maps “the evidence is incomplete/unknown” onto the negative resolved result `none` — exactly the wrong epistemic distinction. `none` means a valid comparison completed and found no unique row; `unknown` means no such comparison is authorized. Invalid and contradictory evidence were mostly respected after repair; incomplete/unknown evidence was not.
+
+### H3/H2 — decision consumption fails floors, but not uniformly
+
+DECISION_CONSUMPTION never required the model to report matrix content. It chose only the next action. Matrix results:
+
+| state family | correct policy | result |
+|---|---|---:|
+| unknown/incomplete matrix states | `query` | **9/9** |
+| stale matrix state | `refresh` | **1/1** |
+| invalid/contradictory matrix states | `reject_premises` | **0/9** |
+| resolved matrix states | `answer` | **6/18** |
+| non-normal+stale total | preregistered floor ≥16/19 | **10/19 — FAIL** |
+
+Epistemic results:
+
+| family | result |
+|---|---:|
+| need_unique | **2/2** |
+| need_multiple_equal | **2/2** |
+| need_multiple_utility | **2/2** |
+| resolved_still_diff | **2/2** |
+| resolved_nodisc | **2/2** |
+| consistent_nodisc → `insufficient_evidence` | **0/2** |
+| total | **10/12** |
+| restraint/insufficiency controls | **4/6**, below the 5/6 floor |
+
+Overall decision appropriateness was **26/49 = .531** with perfect action-format validity. H3 therefore **fails**: although epistemic decision accuracy exactly reached 10/12, the matrix non-normal+stale floor and restraint floor failed. Under the preregistered decision logic, H2 is operationally supported because neither repaired readout nor decision consumption meets the required floors.
+
+The raw pattern nevertheless narrows H2. The model is not wholly unable to use typed state as a premise:
+
+- it correctly chooses `query` for every incomplete/unknown matrix state;
+- it correctly chooses `refresh` for the stale state;
+- it correctly chooses unique, cheapest, and tied epistemic queries in all six need-query cases;
+- it correctly abstains in all four already-resolved epistemic controls.
+
+The dominant failures are policy-boundary failures rather than simple state blindness:
+
+1. **Negative-result/action confusion.** In no-diff and multiple-diff matrix states, the model often chooses `abstain` or `query` instead of `answer`, apparently failing to treat mechanically bound `none` as an answer.
+2. **Intervention-choice mismatch.** For malformed invalid evidence it often chooses `refresh`; for contradictory duplicate labels it chooses `query`. These actions recognize a problem but violate the mechanically correct policy `reject_premises`.
+3. **Insufficiency/abstention confusion.** When hypotheses remain unresolved but no discriminating query exists, it chooses `abstain` rather than `insufficient_evidence`, collapsing “nothing useful can be done” into “nothing needs to be done.”
+
+Thus the strongest supported conclusion is not “typed state is ignored.” It is: **typed state can guide some decisions, but the neural layer does not reliably preserve the distinction between negative results, missing evidence, invalid premises, insufficiency, and non-action when those distinctions must be mapped into an action policy.**
+
+### Arm D — mechanical rendering is measured, not declared
+
+The mechanical renderer executed successfully:
+
+- matrix rendering fidelity **37/37**, with zero neural tokens in all matrix cases;
+- epistemic mechanical rendering fidelity **12/12**;
+- end-to-end epistemic rendering/selection **12/12**;
+- both genuinely unresolved equal-cost ties were neurally selected from authorized candidates (**2/2**), then mechanically validated and rendered;
+- only **2 neural generations** were required in the entire mechanical-render path, totaling **14 output tokens and ~1.27s**;
+- 47 of 49 matrix+epistemic scenarios required no neural generation at all.
+
+A post-run deterministic metric correction is recorded in the evidence: the initial summary's stale-value-emission count incorrectly included legitimate resolved outputs such as `Row A`; correcting the metric to stale-only exact row emission gives **0** stale-value emissions. No prompts, responses, or behavioral grading changed.
+
+Arm D does not show neural competence — it is not supposed to. It shows that the division-of-labor architecture can execute this battery correctly while confining neural generation to genuinely unresolved tie selection. That is an architectural feasibility result, not a general claim about unstructured interpretation.
+
+### Cost comparison
+
+| arm/path | generations | output tokens | generation latency |
+|---|---:|---:|---:|
+| READOUT_BASELINE | 37 | 195 | 22.35s |
+| READOUT_REPAIRED | 37 | 228 | 23.58s |
+| MATRIX_DECISION | 37 | 224 | 23.32s |
+| EPISTEMIC_DECISION | 12 | 102 | 10.17s |
+| MECHANICAL_RENDER neural tie selection | 2 | 14 | 1.27s |
+
+The mechanical path is cheaper because it removes generation, not because the model became faster. Its deeper value is correctness-by-construction for mechanical facts and explicit validation of the remaining neural choice.
+
+### Revised architectural interpretation
+
+HZN-EPI-06 sharpens the EPI-05 boundary again:
+
+> Output contracts are repairable; epistemic status distinctions are the harder problem. The neural layer can sometimes use typed state to guide action, but it does not reliably preserve the mechanical distinctions among a negative answer, missing evidence, invalid premises, stale state, insufficient evidence, and justified non-action.
+
+The immediate architectural consequence is stronger than “use better prompts.” Mechanical facts should be rendered mechanically, and neural output should be confined to decisions whose alternatives and acceptance conditions are mechanically validated. Where a decision policy itself is mechanical, even that mapping should not be left to neural interpretation unless the neural contribution is genuinely unresolved.
+
+The next open problem is therefore not merely typed-state consumption. It is **policy-boundary grounding**: how to represent action vocabularies and state-to-policy constraints so that `none`, `unknown`, `invalid`, `insufficient_evidence`, and `abstain` cannot collapse into one another.
+
