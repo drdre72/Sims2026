@@ -1,4 +1,4 @@
-import sys,unittest
+import copy,sys,unittest
 from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/"src"))
 from jarvis_research.cognitive_bus import *
@@ -71,6 +71,21 @@ class TestCognitiveBus(unittest.TestCase):
   auto_dispatch(bus); obj=bus.binding('epistemic.choice')
   self.assertEqual(bus.effective_status(obj),AMBIGUOUS)
   self.assertEqual(sorted(thaw(obj.value)['candidates']),['Q1','Q3'])
+ def test_ambiguous_derived_result_stales_before_refresh(self):
+  value={'consistent':[True,True],'queries':[
+   {'label':'Q1','cost':1,'h1':True,'h2':False},
+   {'label':'Q2','cost':4,'h1':True,'h2':False},
+   {'label':'Q3','cost':1,'h1':False,'h2':True}]}
+  bus=CognitiveBus(); src=bus.put('epistemic_matrix_problem',value)
+  auto_dispatch(bus)
+  self.assertEqual(bus.effective_status(bus.binding('epistemic.choice')),AMBIGUOUS)
+  changed=copy.deepcopy(value); changed['queries'][2]['cost']=2
+  bus.update(src.object_id,changed,{'source':'test_update'})
+  self.assertEqual(bus.effective_status(bus.binding('epistemic.choice')),STALE)
+  auto_dispatch(bus)
+  obj=bus.binding('epistemic.choice')
+  self.assertEqual(bus.effective_status(obj),RESOLVED)
+  self.assertEqual(thaw(obj.value)['choice'],'Q1')
  def test_rule_consistency_and_discrimination(self):
   value={'rules':[{'kind':'conj','a':.5,'b':.5},{'kind':'either','a':.5,'b':.5}],
    'observations':[{'x':.7,'y':.7,'outcome':True},{'x':.2,'y':.2,'outcome':False}],

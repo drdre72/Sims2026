@@ -357,8 +357,6 @@ class CognitiveBus:
         if obj.object_id in seen:
             return AMBIGUOUS
         seen.add(obj.object_id)
-        if obj.status in (INVALID, UNKNOWN, AMBIGUOUS):
-            return obj.status
         for dep in obj.depends_on:
             cur = self._current.get(dep.object_id)
             if cur is None or cur.version != dep.version:
