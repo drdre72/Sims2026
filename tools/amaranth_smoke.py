@@ -50,7 +50,31 @@ with sim.write_vcd("counter.vcd"):
 print("simulation OK -> counter.vcd written")
 
 from amaranth.back import verilog  # noqa: E402
+from amaranth._toolchain import yosys as yosys_toolchain  # noqa: E402
 
+
+def patch_builtin_yosys_stdin():
+    """Keep Windows text-mode pipes from translating LF to CRLF."""
+    def run_binary_stdin(cls, args, stdin="", *, ignore_warnings=False, src_loc_at=0):
+        popen = subprocess.Popen(
+            [sys.executable, "-m", cls.YOSYS_PACKAGE, *args],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = popen.communicate(stdin.encode("utf-8"))
+        return cls._process_result(
+            popen.returncode,
+            stdout.decode("utf-8"),
+            stderr.decode("utf-8"),
+            ignore_warnings,
+            src_loc_at,
+        )
+
+    yosys_toolchain._BuiltinYosys.run = classmethod(run_binary_stdin)
+
+
+patch_builtin_yosys_stdin()
 vlog = verilog.convert(dut, ports=[dut.count, dut.ovf])
 Path("counter.v").write_text(vlog)
 print("verilog.emit OK -> counter.v written")
@@ -60,12 +84,12 @@ print("verilog.emit OK -> counter.v written")
 # process->optimize->inspect path it does have.
 result = subprocess.run(
     [sys.executable, "-m", "amaranth_yosys", "-Q", "-T",
-     "-p", "read_verilog counter.v; proc; opt; ls"],
+     "-p", "read_verilog counter.v; proc; opt_expr; ls"],
     capture_output=True, text=True,
 )
 assert result.returncode == 0, result.stderr + result.stdout
 ls_out = result.stdout.strip().splitlines()
-print("yosys read/proc/opt/ls OK:")
+print("yosys read/proc/opt_expr/ls OK:")
 for line in ls_out[-8:]:
     print("  ", line.rstrip())
 print("ALL CHECKS PASSED")
